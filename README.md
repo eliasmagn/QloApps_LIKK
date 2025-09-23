@@ -6,11 +6,20 @@ This repository is a lean fork of QloApps that is being transformed into a resid
 Key characteristics of the fork:
 - 🚫 **Marketplace free** – outbound calls to the QloApps / Prestashop module stores are disabled by default.
 - 🧩 **Extensible from source** – custom modules can still be developed and dropped into `modules/` without depending on proprietary services.
-- 📆 **Calendar first** – upcoming development focuses on a resource timeline covering rooms, ateliers, seminar rooms and programme spaces.
+- 📆 **Calendar first** – the admin booking view now opens on a resource timeline covering rooms, ateliers, seminar rooms and programme spaces, with the legacy month grid available on demand.
 - 📨 **Inquiry workflow** – the shopping-cart driven booking journey will be replaced with curated requests that staff confirm manually.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 
 The high-level concept and roadmap live in [`concept.md`](concept.md). Tactical progress is tracked in [`checklist.md`](checklist.md).
+
+## Admin Booking Timeline
+The back-office path **Hotel Reservation System → Booking** now presents a tabbed layout with a top-aligned tab bar instead of the previous side menu:
+
+- **Timeline**: a fast-loading occupancy grid grouped by room type; cells are colour-coded for booked, in-cart, unavailable and partially available stays, and the fetched dataset is cached while the tab remains active to keep reloads instant.
+- **Calendar**: the familiar month grid rendered lazily only when the tab is opened.
+- **Search & Filters**: the booking form, occupancy selector and availability stats.
+
+Edits performed from the availability list or cart refresh both the timeline and (when initialised) the month grid so that staff always see the latest state.
 
 ## Requirements
 The project still runs on the QloApps/PrestaShop stack. For development you will need:
@@ -42,7 +51,7 @@ All Kunstort-specific flags live in `config/defines_custom.inc.php`:
 Use these constants in future contributions to gate legacy commerce flows.
 
 ## Development Priorities
-- Transform the admin booking calendar into a per-resource timeline with drag-and-drop management.
+- Finish drag-and-drop management and resource annotations on the new tabbed booking timeline.
 - Introduce a unified resource taxonomy (rooms, ateliers, gastronomy) in the database and admin forms.
 - Replace the front-office room list with storytelling-driven templates and an enquiry form.
 - Provide CSV/ICS exports to support residency and seminar scheduling outside the app.

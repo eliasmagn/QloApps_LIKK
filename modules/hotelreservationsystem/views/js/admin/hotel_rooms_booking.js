@@ -22,9 +22,37 @@
 
 $(document).ready(function() {
 
-    // calender
-    if ($('#fullcalendar').length) {
-        var calendar = new FullCalendar.Calendar($('#fullcalendar').get(0), {
+    var calendar = null;
+    var calendarInitialized = false;
+    var timelineState = {
+        loaded: false,
+        loading: false,
+    };
+    var timelineContainer = $('#booking-timeline');
+    var timelineLoading = $('#timeline-loading');
+    var DAY_MS = 24 * 60 * 60 * 1000;
+    var timelineLocale = $('html').attr('lang') || navigator.language || 'en-US';
+    var timelineLabels = window.timeline_labels || {
+        noData: 'No occupancy data for the selected period.',
+        error: 'Unable to load occupancy data.',
+        headerRoom: 'Room',
+        roomLabel: 'Room %id%',
+        summaryTemplate: 'Booked: %booked% | Available: %available% | Partial: %partial% | Unavailable: %unavailable%',
+        statusLabels: {
+            booked: 'Booked',
+            cart: 'In cart',
+            unavailable: 'Unavailable',
+            partial: 'Partially available',
+            available: 'Available',
+        },
+    };
+
+    function initFullCalendar() {
+        if (!$('#fullcalendar').length || calendarInitialized) {
+            return;
+        }
+
+        calendar = new FullCalendar.Calendar($('#fullcalendar').get(0), {
             initialView: 'dayGridMonth',
             initialDate: initialDate,
             events: {
@@ -39,7 +67,7 @@ $(document).ready(function() {
                             action: 'getCalenderData',
                         },
                         getSearchData()
-                    )
+                    );
                 },
 
 
@@ -186,6 +214,439 @@ $(document).ready(function() {
             }
         });
         calendar.render();
+        calendarInitialized = true;
+    }
+
+    function ensureTimeline(forceReload) {
+        if (!timelineContainer.length) {
+            return;
+        }
+        if (forceReload) {
+            timelineState.loaded = false;
+        }
+        if (timelineState.loading || timelineState.loaded) {
+            return;
+        }
+        timelineState.loading = true;
+        if (timelineLoading.length) {
+            timelineLoading.removeClass('hidden');
+        }
+        timelineContainer.addClass('hidden').empty();
+
+        $.ajax({
+            url: rooms_booking_url,
+            method: 'POST',
+            dataType: 'json',
+            data: $.extend({
+                ajax: true,
+                action: 'getCalenderData',
+                start: $('#search_date_from').val(),
+                end: $('#search_date_to').val(),
+            }, getSearchData()),
+        }).done(function(response) {
+            renderTimeline(response);
+            timelineState.loaded = true;
+        }).fail(function() {
+            var message = $('<div class="timeline-empty alert alert-warning"/>').text(timelineLabels.error || 'Unable to load occupancy data.');
+            timelineContainer.empty().append(message);
+            timelineState.loaded = false;
+        }).always(function() {
+            timelineState.loading = false;
+            timelineContainer.removeClass('hidden');
+            if (timelineLoading.length) {
+                timelineLoading.addClass('hidden');
+            }
+        });
+    }
+
+    function queueTimelineRefresh() {
+        if (!timelineContainer.length) {
+            return;
+        }
+        timelineState.loaded = false;
+        if ($('#timeline-tab').hasClass('active')) {
+            ensureTimeline(true);
+        }
+    }
+
+    function computeTimelineRange() {
+        var startTs = normalizeDateInput($('#search_date_from').val());
+        var endTs = normalizeDateInput($('#search_date_to').val());
+        if (startTs === null) {
+            startTs = normalizeDateInput(initialDate) || normalizeDateInput((new Date()).toISOString().slice(0, 10));
+        }
+        if (endTs === null || endTs <= startTs) {
+            endTs = startTs + DAY_MS;
+        }
+        var days = [];
+        for (var ts = startTs; ts < endTs; ts += DAY_MS) {
+            days.push(ts);
+        }
+        if (!days.length) {
+            days.push(startTs);
+        }
+        return {
+            start: startTs,
+            end: endTs,
+            days: days,
+        };
+    }
+
+    function normalizeDateInput(value) {
+        if (!value) {
+            return null;
+        }
+        var normalized = value.toString().replace(' ', 'T');
+        var date = new Date(normalized);
+        if (isNaN(date.getTime())) {
+            return null;
+        }
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    }
+
+    function formatDateDisplay(ts) {
+        try {
+            return new Date(ts).toLocaleDateString(timelineLocale, { day: '2-digit', month: 'short' });
+        } catch (error) {
+            var date = new Date(ts);
+            return ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2);
+        }
+    }
+
+    function formatDateFromString(value) {
+        var ts = normalizeDateInput(value);
+        if (ts === null) {
+            return value || '';
+        }
+        return formatDateDisplay(ts);
+    }
+
+    function renderTimeline(response) {
+        timelineContainer.empty();
+
+        if (!timelineContainer.length) {
+            return;
+        }
+
+        var events = $.isArray(response) ? response : [];
+        var dataset = null;
+        $.each(events, function(index, event) {
+            if (!event.is_notification && event.data) {
+                dataset = event.data;
+                return false;
+            }
+        });
+
+        if (!dataset || !dataset.rm_data || $.isEmptyObject(dataset.rm_data)) {
+            var emptyMessage = $('<div class="timeline-empty alert alert-info"/>').text(timelineLabels.noData || 'No occupancy data for the selected period.');
+            timelineContainer.append(emptyMessage);
+            return;
+        }
+
+        var range = computeTimelineRange();
+        var table = $('<div class="timeline-table"/>');
+        table.append(buildTimelineHeader(range.days));
+
+        var roomTypeKeys = Object.keys(dataset.rm_data).sort(function(a, b) {
+            return a.localeCompare(b);
+        });
+
+        $.each(roomTypeKeys, function(_, roomTypeKey) {
+            var roomType = dataset.rm_data[roomTypeKey];
+            table.append(buildRoomTypeHeader(roomType));
+
+            var rooms = buildRoomsForRoomType(roomType, range);
+            if (!rooms.length) {
+                var emptyRow = $('<div class="timeline-row room-row empty-row"/>');
+                emptyRow.append($('<div class="timeline-room-column room-label"/>').text(timelineLabels.noData || 'No occupancy data for the selected period.'));
+                var emptyGrid = $('<div class="timeline-grid"/>');
+                $.each(range.days, function() {
+                    emptyGrid.append($('<div class="timeline-cell status-empty"/>'));
+                });
+                emptyRow.append(emptyGrid);
+                table.append(emptyRow);
+            } else {
+                $.each(rooms, function(_, room) {
+                    table.append(buildRoomRow(room, range));
+                });
+            }
+        });
+
+        timelineContainer.append(table);
+    }
+
+    function buildTimelineHeader(days) {
+        var header = $('<div class="timeline-row timeline-header-row"/>');
+        header.append($('<div class="timeline-room-column header-label"/>').text(timelineLabels.headerRoom || 'Room'));
+        var grid = $('<div class="timeline-grid timeline-header-grid"/>');
+        $.each(days, function(_, ts) {
+            grid.append($('<div class="timeline-cell timeline-day-label"/>').text(formatDateDisplay(ts)));
+        });
+        header.append(grid);
+        return header;
+    }
+
+    function buildRoomTypeHeader(roomType) {
+        var header = $('<div class="timeline-row room-type-header"/>');
+        header.append($('<div class="timeline-room-column room-type-title"/>').text(roomType.name || timelineLabels.headerRoom || 'Room'));
+        var stats = roomType.stats || {};
+        var summary = (timelineLabels.summaryTemplate || '')
+            .replace('%booked%', stats.num_booked || 0)
+            .replace('%available%', stats.num_avail || 0)
+            .replace('%partial%', stats.num_part_avai || 0)
+            .replace('%unavailable%', stats.num_unavail || 0);
+        if (!summary.trim()) {
+            summary = [
+                (timelineLabels.statusLabels.booked || 'Booked') + ': ' + (stats.num_booked || 0),
+                (timelineLabels.statusLabels.available || 'Available') + ': ' + (stats.num_avail || 0),
+                (timelineLabels.statusLabels.partial || 'Partially available') + ': ' + (stats.num_part_avai || 0),
+                (timelineLabels.statusLabels.unavailable || 'Unavailable') + ': ' + (stats.num_unavail || 0)
+            ].join(' | ');
+        }
+        header.append($('<div class="timeline-room-stats"/>').text(summary));
+        return header;
+    }
+
+    function buildRoomsForRoomType(roomType, range) {
+        var roomsMap = {};
+        var data = roomType.data || {};
+
+        function ensureRoom(info) {
+            if (!info) {
+                return null;
+            }
+            var id = parseInt(info.id_room || info.id, 10);
+            if (!id) {
+                return null;
+            }
+            if (!roomsMap[id]) {
+                var label = info.room_num || (timelineLabels.roomLabel || 'Room %id%').replace('%id%', id);
+                roomsMap[id] = {
+                    id: id,
+                    label: label,
+                    sortValue: label.toString().toLowerCase(),
+                    periods: [],
+                };
+            }
+            return roomsMap[id];
+        }
+
+        function addPeriod(room, from, to, status, meta) {
+            if (!room) {
+                return;
+            }
+            var startTs = normalizeDateInput(from);
+            var endTs = normalizeDateInput(to);
+            if (startTs === null) {
+                startTs = range.start;
+            }
+            if (endTs === null) {
+                endTs = range.end;
+            }
+            if (endTs <= startTs) {
+                endTs = startTs + DAY_MS;
+            }
+            room.periods.push({
+                start: startTs,
+                end: endTs,
+                status: status,
+                meta: meta || {},
+            });
+        }
+
+        if (data.available) {
+            $.each(data.available, function(_, info) {
+                ensureRoom(info);
+            });
+        }
+
+        if (data.booked) {
+            $.each(data.booked, function(_, info) {
+                var room = ensureRoom(info);
+                if (room && $.isArray(info.detail)) {
+                    $.each(info.detail, function(__, detail) {
+                        addPeriod(room, detail.date_from, detail.date_to, 'booked', detail);
+                    });
+                }
+            });
+        }
+
+        if (data.cart_rooms) {
+            $.each(data.cart_rooms, function(_, detail) {
+                addPeriod(ensureRoom(detail), detail.date_from, detail.date_to, 'cart', detail);
+            });
+        }
+
+        if (data.unavailable) {
+            $.each(data.unavailable, function(_, info) {
+                var room = ensureRoom(info);
+                if (room && $.isArray(info.detail) && info.detail.length) {
+                    $.each(info.detail, function(__, detail) {
+                        addPeriod(room, detail.date_from, detail.date_to, 'unavailable', detail);
+                    });
+                } else {
+                    addPeriod(room, null, null, 'unavailable', info);
+                }
+            });
+        }
+
+        if (data.partially_available) {
+            $.each(data.partially_available, function(_, partial) {
+                var rooms = partial.rooms || partial;
+                $.each(rooms, function(__, info) {
+                    addPeriod(ensureRoom(info), partial.date_from, partial.date_to, 'partial', partial);
+                });
+            });
+        }
+
+        var rooms = $.map(roomsMap, function(room) {
+            return room;
+        });
+
+        rooms.sort(function(a, b) {
+            return a.sortValue.localeCompare(b.sortValue, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        return rooms;
+    }
+
+    function resolveStatusForDay(room, dayTs, range) {
+        var statusPriority = {
+            booked: 5,
+            cart: 4,
+            unavailable: 3,
+            partial: 2,
+            available: 1,
+        };
+
+        var selected = {
+            status: 'available',
+            meta: {},
+            priority: 1,
+        };
+
+        $.each(room.periods, function(_, period) {
+            var start = period.start != null ? period.start : range.start;
+            var end = period.end != null ? period.end : range.end;
+            if (dayTs >= start && dayTs < end) {
+                var priority = statusPriority[period.status] || 1;
+                if (priority >= selected.priority) {
+                    selected = {
+                        status: period.status,
+                        meta: period.meta || {},
+                        priority: priority,
+                    };
+                }
+            }
+        });
+
+        return selected;
+    }
+
+    function buildTooltip(info, dayTs) {
+        var labels = timelineLabels.statusLabels || {};
+        var label = labels[info.status] || labels.available || 'Available';
+        var details = '';
+        if (info.meta) {
+            if (info.meta.date_from && info.meta.date_to) {
+                details = ' (' + formatDateFromString(info.meta.date_from) + ' - ' + formatDateFromString(info.meta.date_to) + ')';
+            } else if (info.meta.date_from) {
+                details = ' (' + formatDateFromString(info.meta.date_from) + ')';
+            } else if (info.meta.room_comment) {
+                details = ' – ' + info.meta.room_comment;
+            } else if (info.meta.comment) {
+                details = ' – ' + info.meta.comment;
+            }
+        }
+        return label + details;
+    }
+
+    function buildRoomRow(room, range) {
+        var row = $('<div class="timeline-row room-row"/>');
+        row.append($('<div class="timeline-room-column room-label"/>').text(room.label));
+        var grid = $('<div class="timeline-grid"/>');
+        $.each(range.days, function(_, ts) {
+            var info = resolveStatusForDay(room, ts, range);
+            var cell = $('<div class="timeline-cell"/>').addClass('status-' + info.status);
+            cell.attr('title', buildTooltip(info, ts));
+            grid.append(cell);
+        });
+        row.append(grid);
+        return row;
+    }
+    function ensureTimeline(forceReload) {
+        if (!timelineContainer.length) {
+            return;
+        }
+        if (forceReload) {
+            timelineState.loaded = false;
+        }
+        if (timelineState.loading || timelineState.loaded) {
+            return;
+        }
+        timelineState.loading = true;
+        if (timelineLoading.length) {
+            timelineLoading.removeClass('hidden');
+        }
+        timelineContainer.addClass('hidden').empty();
+
+        $.ajax({
+            url: rooms_booking_url,
+            method: 'POST',
+            dataType: 'json',
+            data: $.extend({
+                ajax: true,
+                action: 'getCalenderData',
+                start: $('#search_date_from').val(),
+                end: $('#search_date_to').val(),
+            }, getSearchData()),
+        }).done(function(response) {
+            renderTimeline(response);
+            timelineState.loaded = true;
+        }).fail(function() {
+            var message = $('<div class="timeline-empty alert alert-warning"/>').text(timelineLabels.error || 'Unable to load occupancy data.');
+            timelineContainer.empty().append(message);
+            timelineState.loaded = false;
+        }).always(function() {
+            timelineState.loading = false;
+            timelineContainer.removeClass('hidden');
+            if (timelineLoading.length) {
+                timelineLoading.addClass('hidden');
+            }
+        });
+    }
+
+    function queueTimelineRefresh() {
+        if (!timelineContainer.length) {
+            return;
+        }
+        timelineState.loaded = false;
+        if ($('#timeline-tab').hasClass('active')) {
+            ensureTimeline(true);
+        }
+    }
+
+    function computeTimelineRange() {
+        var startTs = normalizeDateInput($('#search_date_from').val());
+        var endTs = normalizeDateInput($('#search_date_to').val());
+        if (startTs === null) {
+            startTs = normalizeDateInput(initialDate) || normalizeDateInput((new Date()).toISOString().slice(0, 10));
+        }
+        if (endTs === null || endTs <= startTs) {
+            endTs = startTs + DAY_MS;
+        }
+        var days = [];
+        for (var ts = startTs; ts < endTs; ts += DAY_MS) {
+            days.push(ts);
+        }
+        if (!days.length) {
+            days.push(startTs);
+        }
+        return {
+            start: startTs,
+            end: endTs,
+            days: days,
+        };
     }
 
     function removeInitializedTooltips() {
@@ -394,7 +855,10 @@ $(document).ready(function() {
                         btn.attr('data-id-cart-book-data', result.data.id_cart_book_data);
                         refreshCartData();
                         refreshStatsData();
-                        calendar.refetchEvents();
+                        if (calendar) {
+                            calendar.refetchEvents();
+                        }
+                        queueTimelineRefresh();
                     }
                 }
             });
@@ -461,7 +925,10 @@ $(document).ready(function() {
                         btn.attr('data-id-cart-book-data', result.data.id_cart_book_data);
                         refreshCartData();
                         refreshStatsData();
-                        calendar.refetchEvents();
+                        if (calendar) {
+                            calendar.refetchEvents();
+                        }
+                        queueTimelineRefresh();
                     }
                 }
             });
@@ -515,7 +982,10 @@ $(document).ready(function() {
                     $("#htl_rooms_list").empty().append(result.data.room_tpl);
                     refreshCartData();
                     refreshStatsData();
-                    calendar.refetchEvents();
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                    queueTimelineRefresh();
                     initBookingList();
                     var panel_btn = $(".tab-pane tr td button[data-id-cart-book-data='" + id_cart_book_data + "']");
 
@@ -575,7 +1045,10 @@ $(document).ready(function() {
                     $(".cart_tbody tr td button[data-id-cart-book-data='" + id_cart_book_data + "']").parent().parent().remove();
                     refreshCartData();
                     refreshStatsData();
-                    calendar.refetchEvents();
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                    queueTimelineRefresh();
 
                     btn.attr('data-id-cart', '');
                     btn.attr('data-id-cart-book-data', '');
@@ -999,6 +1472,20 @@ $(document).ready(function() {
             }
         });
     }
+
+    $('a[href="#calendar-tab"]').on('shown.bs.tab', function () {
+        initFullCalendar();
+    });
+
+    $('a[href="#timeline-tab"]').on('shown.bs.tab', function () {
+        ensureTimeline(false);
+    });
+
+    if ($('#calendar-tab').hasClass('active')) {
+        initFullCalendar();
+    }
+
+    ensureTimeline(false);
 
     var allotmentTypes = {
 		auto: ALLOTMENT_AUTO,

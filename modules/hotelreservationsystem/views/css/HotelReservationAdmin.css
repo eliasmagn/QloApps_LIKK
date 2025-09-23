@@ -635,3 +635,242 @@ body.adminhotelroomsbooking .ui-tooltip {
 .error-border {
     outline: rgb(210, 124, 130) solid 1px;
     border-radius: 2px;}
+
+.panel-booking-timeline .panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.panel-booking-timeline .panel-heading .btn {
+    margin-left: auto;
+}
+
+.occupancy-tabs {
+    margin-bottom: 15px;
+    background: #f1f4f9;
+    border-bottom: 2px solid #c8d6ec;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px 6px 0;
+}
+
+.occupancy-tabs > li {
+    float: none;
+}
+
+.occupancy-tabs > li > a {
+    font-weight: 600;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    color: #405b82;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.occupancy-tabs > li.active > a,
+.occupancy-tabs > li.active > a:focus,
+.occupancy-tabs > li.active > a:hover {
+    border-color: #c8d6ec #c8d6ec #ffffff;
+    background: #ffffff;
+    color: #1c3d66;
+}
+
+.occupancy-tabs > li > a:hover {
+    background: #ffffff;
+    color: #1c3d66;
+}
+
+.occupancy-tabs-content .tab-pane {
+    padding-top: 15px;
+}
+
+.timeline-wrapper {
+    position: relative;
+    min-height: 220px;
+}
+
+.timeline-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #666;
+    padding: 12px 0;
+}
+
+.timeline-loading .icon-spin {
+    font-size: 18px;
+}
+
+.booking-timeline {
+    overflow-x: auto;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.booking-timeline.hidden {
+    display: none;
+}
+
+.timeline-table {
+    min-width: 640px;
+}
+
+.timeline-row {
+    display: flex;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.timeline-row:last-child {
+    border-bottom: none;
+}
+
+.timeline-room-column {
+    flex: 0 0 200px;
+    padding: 12px;
+    background: #f9f9fb;
+    border-right: 1px solid #e6e6e6;
+    font-weight: 600;
+    color: #444;
+}
+
+.room-row .timeline-room-column {
+    font-weight: 500;
+    background: #fbfbfd;
+}
+
+.timeline-room-stats {
+    padding: 12px;
+    background: #fdfdfd;
+    border-left: 1px solid #e6e6e6;
+    flex: 1;
+    font-size: 13px;
+    color: #666;
+}
+
+.timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    flex: 1;
+}
+
+.timeline-header-grid {
+    background: #f1f4f9;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #4f5d75;
+}
+
+.timeline-cell {
+    min-height: 48px;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.timeline-cell:last-child {
+    border-right: none;
+}
+
+.timeline-day-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+}
+
+.timeline-row.room-row .timeline-cell {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,1));
+}
+
+.timeline-cell.status-booked {
+    background: #7EC77B;
+    color: #fff;
+}
+
+.timeline-cell.status-cart {
+    background: #FFC224;
+    color: #684c00;
+}
+
+.timeline-cell.status-unavailable {
+    background: #FF6B6B;
+    color: #fff;
+}
+
+.timeline-cell.status-partial {
+    background: #9BD3F8;
+    color: #094f7f;
+}
+
+.timeline-cell.status-available {
+    background: #E7F5E9;
+    color: #3a6f3e;
+}
+
+.timeline-cell.status-empty {
+    background: #fafafa;
+}
+
+.timeline-cell::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.18);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.timeline-cell:hover::after {
+    opacity: 1;
+}
+
+.timeline-legend {
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.timeline-legend .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #555;
+}
+
+.timeline-legend .legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.legend-item.status-booked .legend-color { background: #7EC77B; }
+.legend-item.status-cart .legend-color { background: #FFC224; }
+.legend-item.status-unavailable .legend-color { background: #FF6B6B; }
+.legend-item.status-partial .legend-color { background: #9BD3F8; }
+.legend-item.status-available .legend-color {
+    background: #E7F5E9;
+    border: 1px solid #c8e1cc;
+}
+
+.panel-booking-timeline .panel-body {
+    padding-top: 20px;
+}
+
+@media (max-width: 991px) {
+    .timeline-room-column {
+        flex-basis: 160px;
+    }
+    .timeline-grid {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    }
+}
