@@ -84,31 +84,6 @@ UPDATE `PREFIX_hook_module` SET position = 3
 WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockcmsinfo')
 AND id_hook = @id_hook;
 
-/* displayNav */
-SET @id_hook = (SELECT id_hook FROM `PREFIX_hook` WHERE name = 'displayNav');
-UPDATE `PREFIX_hook_module` SET position = 1
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockuserinfo')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 2
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockcurrencies')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 3
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blocklanguages')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 4
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockcontact')
-AND id_hook = @id_hook;
-
-/* displayTop */
-SET @id_hook = (SELECT id_hook FROM `PREFIX_hook` WHERE name = 'displayTop');
-
-UPDATE `PREFIX_hook_module` SET position = 3
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blocktopmenu')
-AND id_hook = @id_hook;
-
 UPDATE `PREFIX_hook_module` SET position = 4
 WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'themeconfigurator')
 AND id_hook = @id_hook;
@@ -140,24 +115,12 @@ WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'wkhotelfi
 AND id_hook = @id_hook;
 
 UPDATE `PREFIX_hook_module` SET position = 3
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockmyaccount')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 4
 WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'hotelreservationsystem')
 AND id_hook = @id_hook;
 
 /* displayFooter */
 SET @id_hook = (SELECT id_hook FROM `PREFIX_hook` WHERE name = 'displayFooter');
 UPDATE `PREFIX_hook_module` SET position = 1
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blocknewsletter')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 2
-WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blocksocial')
-AND id_hook = @id_hook;
-
-UPDATE `PREFIX_hook_module` SET position = 5
 WHERE id_module = (SELECT id_module FROM `PREFIX_module` WHERE name = 'blockmyaccountfooter')
 AND id_hook = @id_hook;
 
@@ -177,7 +140,7 @@ INSERT INTO `PREFIX_hook_module_exceptions` (`id_shop`, `id_module`, `id_hook`, 
 	FROM `PREFIX_hook` h
 	JOIN `PREFIX_hook_module` hm ON (hm.id_hook = h.id_hook)
 	JOIN `PREFIX_module` m ON (m.id_module = hm.id_module)
-	WHERE
-	h.name='displayLeftColumn' AND m.name IN ('blockbestsellers', 'blockmanufacturer', 'blocksupplier', 'blockmyaccount', 'blockpaymentlogo')
+        WHERE
+        h.name='displayLeftColumn' AND m.name IN ('blockbestsellers', 'blockmanufacturer', 'blocksupplier', 'blockpaymentlogo')
 	GROUP BY m.id_module
 );

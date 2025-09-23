@@ -96,17 +96,30 @@
 							</div>
 						</div>
 					</div>
-					{block name='header_nav'}
-						<div id="nav-main">
-							<div class="container">
-								<div class="row">
-									{block name='displayNav'}
-										<nav>{hook h="displayNav"}</nav>
-									{/block}
-								</div>
-							</div>
-						</div>
-					{/block}
+                                        {block name='header_nav'}
+                                                <div id="nav-main" class="residency-nav">
+                                                        <div class="container">
+                                                                <div class="row">
+                                                                        <div class="col-xs-12">
+                                                                                {assign var='residencyChainName' value=Configuration::get('WK_HTL_CHAIN_NAME', $cookie->id_lang)}
+                                                                                <nav class="residency-primary-nav" role="navigation" aria-label="{l s='Residency primary navigation'}">
+                                                                                        <ul class="nav nav-pills nav-justified">
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#residences-overview">{l s='Residences'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#extended-stays">{l s='Long stays'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#amenities">{l s='Amenities'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#experiences">{l s='Experiences'}</a></li>
+                                                                                                <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
+                                                                                        </ul>
+                                                                                </nav>
+                                                                                {if $residencyChainName}
+                                                                                        <p class="residency-nav-tagline">{l s='A curated selection by'} {$residencyChainName|escape:'html':'UTF-8'}</p>
+                                                                                {/if}
+                                                                        </div>
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        {/block}
 					{block name='header_top'}
 						<div class="header-top">
 							<div class="container">
@@ -117,43 +130,72 @@
 												<img class="logo img-responsive" src="{$logo_url}" alt="{$shop_name|escape:'html':'UTF-8'}"/>
 											</a>
 										</div>
-										<div class="header-top-menu">
-											{block name='displayTop'}
-												{if isset($HOOK_TOP)}{$HOOK_TOP}{/if}
-											{/block}
-											{if isset($WK_DISPLAY_PROPERTIES_LINK_IN_HEADER) && $WK_DISPLAY_PROPERTIES_LINK_IN_HEADER}
-												<div>
-													<a href="{$link->getPageLink('our-properties')}" class="our_properties_link">{l s='Our Properties'}</a>
-												</div>
-											{/if}
-										</div>
-									</div>
-								</div>
-								{block name='displaySearchHotelPanel'}
-									{hook h='displaySearchHotelPanel'}
-								{/block}
-							</div>
-						</div>
-					{/block}
-					{block name='displayAfterHookTop'}
-						{hook h='displayAfterHookTop'}
-					{/block}
-				</header>
-			</div>
-			<div class="columns-container">
-				<div id="columns" class="container">
-					{if $show_breadcrump}
-						{block name='breadcrumb'}
-							{include file="$tpl_dir./breadcrumb.tpl"}
-						{/block}
-					{/if}
-					<div id="slider_row" class="row">
-						<div id="top_column" class="center_column col-xs-12 col-sm-12">{hook h="displayTopColumn"}</div>
-					</div>
-					<div class="row">
-						{if isset($left_column_size) && !empty($left_column_size)}
-						<div id="left_column" class="column col-xs-12 col-sm-{$left_column_size|intval}">{$HOOK_LEFT_COLUMN}</div>
-						{/if}
-						{if isset($left_column_size) && isset($right_column_size)}{assign var='cols' value=(12 - $left_column_size - $right_column_size)}{else}{assign var='cols' value=12}{/if}
-						<div id="center_column" class="center_column col-xs-12 col-sm-{$cols|intval}">
-	{/if}
+                                                                                <div class="header-top-menu residency-header-actions">
+                                                                                        <div class="residency-contact-links">
+                                                                                                {assign var='residencySupportEmail' value=Configuration::get('WK_CUSTOMER_SUPPORT_EMAIL')}
+                                                                                                {assign var='residencySupportPhone' value=Configuration::get('WK_CUSTOMER_SUPPORT_PHONE_NUMBER')}
+                                                                                                {if $residencySupportEmail}
+                                                                                                        <a class="contact-link" href="mailto:{$residencySupportEmail|escape:'html':'UTF-8'}">
+                                                                                                                <i class="icon-envelope-o"></i>
+                                                                                                                {$residencySupportEmail|escape:'html':'UTF-8'}
+                                                                                                        </a>
+                                                                                                {/if}
+                                                                                                {if $residencySupportPhone}
+                                                                                                        <a class="contact-link" href="tel:{$residencySupportPhone|escape:'html':'UTF-8'}">
+                                                                                                                <i class="icon-phone"></i>
+                                                                                                                {$residencySupportPhone|escape:'html':'UTF-8'}
+                                                                                                        </a>
+                                                                                                {/if}
+                                                                                        </div>
+                                                                                        <div class="residency-quick-actions">
+                                                                                                <a class="our_properties_link" href="{$link->getPageLink('our-properties')}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
+                                                                                                <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-services" title="{l s='Resident services'}">{l s='Resident Services'}</a>
+                                                                                        </div>
+                                                                                </div>
+                                                                        </div>
+                                                                </div>
+                                                                {block name='displaySearchHotelPanel'}
+                                                                        {hook h='displaySearchHotelPanel'}
+                                                                {/block}
+                                                        </div>
+                                                </div>
+                                        {/block}
+                                        <div class="header-desc-container">
+                                                <div class="header-desc-wrapper">
+                                                        <div class="header-desc-primary">
+                                                                <div class="container">
+                                                                        <div class="row">
+                                                                                <div class="col-md-offset-1 col-md-10 col-lg-offset-2 col-lg-8">
+                                                                                        <p class="header-desc-welcome">{l s='Welcome to our residences'}</p>
+                                                                                        <hr class="heasder-desc-hr-first"/>
+                                                                                        <div class="header-desc-inner-wrapper">
+                                                                                                {assign var='residencyTagline' value=Configuration::get('WK_HTL_TAG_LINE', $cookie->id_lang)}
+                                                                                                {if $residencyChainName}
+                                                                                                        <h1 class="header-hotel-name">{$residencyChainName|escape:'html':'UTF-8'}</h1>
+                                                                                                {/if}
+                                                                                                {if $residencyTagline}
+                                                                                                        <p class="header-hotel-desc">{$residencyTagline|escape:'html':'UTF-8'}</p>
+                                                                                                {/if}
+                                                                                                <hr class="heasder-desc-hr-second"/>
+                                                                                        </div>
+                                                                                </div>
+                                                                        </div>
+                                                                        {block name='displayAfterHeaderHotelDesc'}
+                                                                                {hook h="displayAfterHeaderHotelDesc"}
+                                                                        {/block}
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </header>
+                        </div>
+                        <div class="columns-container">
+                                <div id="columns" class="container">
+                                        {if $show_breadcrump}
+                                                {block name='breadcrumb'}
+                                                        {include file="$tpl_dir./breadcrumb.tpl"}
+                                                {/block}
+                                        {/if}
+                                        <div class="row">
+                                                <div id="center_column" class="center_column col-xs-12">
+        {/if}
