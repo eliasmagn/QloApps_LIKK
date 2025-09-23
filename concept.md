@@ -14,6 +14,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - PrestaShop marketplace hooks have been disabled globally via `_QLOAPP_DISABLE_MARKETPLACE_`.
 - Admin module catalogue interactions are short-circuited to keep the back office free from external promotions.
 - `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`).
+- Legacy offline payment modules (bank wire, cheque) and the PayPal Commerce gateway have been removed to keep the stack focused on inquiry-driven fulfilment.
 - When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers and templates short-circuit to the inquiry landing page instead of exposing cart mechanics.
 - When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
 - The admin booking screen now opens with a tabbed occupancy timeline; the legacy month grid loads lazily only when the calendar tab is selected, and timeline data stays cached while the tab remains active for near-instant toggling.
