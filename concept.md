@@ -32,8 +32,12 @@ The detailed multi-phase plan lives in [`roadmap.md`](roadmap.md). Immediate pri
 
 1. **Timeline interaction upgrades** *(complete)* – drag-and-drop reallocation on the admin timeline now blocks conflicts against disabled rooms and occupancy limits, and powers the new REST endpoints.
 2. **Inquiry workflow foundations** *(complete)* – the dedicated Inquiry model, Kanban board, reminders and mail notes replace cart-driven scaffolding in the back office; notes can optionally email guests for a documented audit trail.
-3. **Resource taxonomy groundwork** – model `resource_kind`, capacity descriptors and amenities on rooms, ateliers and gastronomy spaces to unlock richer storytelling and reporting.
-4. **Frontend storytelling** – refactor offer pages to present curated narratives, availability cues and inquiry entry points instead of commodity pricing widgets.
+3. **Resource taxonomy groundwork** – model `resource_kind`, capacity descriptors and amenities on rooms, ateliers and gastronomy spaces to unlock richer storytelling and reporting. Detailed deliverables and data models now live in [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md).
+4. **Frontend storytelling** – refactor offer pages to present curated narratives, availability cues and inquiry entry points instead of commodity pricing widgets. Copy strategy, media pairing and availability cues will be coordinated with the taxonomy work so the front office can reuse the same metadata without bespoke duplication.
+5. **Rate plans & packages** – layer configurable plans (BAR, corporate, residency programmes) and bundled offers for ateliers/catering as described in [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md) to keep quoting grounded in a consistent rule set.
+6. **Operations automation** – bootstrap housekeeping, maintenance, notification and export scaffolding according to [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) so staff tooling evolves alongside the taxonomy changes.
+
+These additions extend the original near-term plan without changing the underlying principle: resource clarity first, then progressive automation that remains transparent to staff.
 
 ## Longer-Term Ideas
 - Replace leftover commerce terminology in the database schema and UI strings.
