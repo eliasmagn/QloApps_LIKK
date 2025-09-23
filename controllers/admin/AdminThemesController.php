@@ -2114,7 +2114,6 @@ class AdminThemesControllerCore extends AdminController
 
         return array(
             'addsharethis',
-            'bankwire',
             'blockcart',
             'blockcurrencies',
             'blocklanguages',
@@ -2124,7 +2123,6 @@ class AdminThemesControllerCore extends AdminController
             'blockuserinfo',
             'carriercompare',
             'cashondelivery',
-            'cheque',
             'dashactivity',
             'dashgoals',
             'dashproducts',
