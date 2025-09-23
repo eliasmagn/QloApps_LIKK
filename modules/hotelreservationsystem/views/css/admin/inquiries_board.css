@@ -1,0 +1,147 @@
+.inquiry-board-panel {
+    min-height: 480px;
+}
+
+#hotel-inquiry-board {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.inquiry-column {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.inquiry-column-header {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inquiry-column-body {
+    border: 1px solid #ddd;
+    border-top: none;
+    background: #fff;
+    min-height: 220px;
+    padding: 10px;
+}
+
+.inquiry-card {
+    border: 1px solid #c8d7e1;
+    border-left: 4px solid #3a87ad;
+    background: #fff;
+    margin-bottom: 12px;
+    padding: 10px;
+    cursor: move;
+}
+
+.inquiry-card.dragging {
+    opacity: 0.8;
+}
+
+.inquiry-card-placeholder {
+    border: 2px dashed #3a87ad;
+    height: 80px;
+    margin-bottom: 12px;
+}
+
+.inquiry-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.inquiry-card-status {
+    font-size: 12px;
+    color: #666;
+}
+
+.inquiry-card-body {
+    font-size: 13px;
+    color: #333;
+}
+
+.inquiry-card-body .inquiry-card-contact,
+.inquiry-card-body .inquiry-card-dates,
+.inquiry-card-body .inquiry-card-reminder,
+.inquiry-card-body .inquiry-card-noteinfo {
+    margin-top: 4px;
+}
+
+.inquiry-card-body i {
+    color: #7a8b9a;
+    margin-right: 4px;
+}
+
+.inquiry-card-resources {
+    margin-top: 6px;
+    font-style: italic;
+    color: #555;
+}
+
+.inquiry-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 8px;
+}
+
+.inquiry-card-footer label {
+    font-size: 11px;
+    display: block;
+    color: #888;
+}
+
+.inquiry-card-actions .btn {
+    padding: 0;
+}
+
+.inquiry-card-actions .btn i {
+    font-size: 14px;
+}
+
+.inquiry-column-body.highlight-drop {
+    background: #f0f8ff;
+}
+
+.inquiry-note-history {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.inquiry-note-history .note-item {
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.inquiry-note-history .note-meta {
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.inquiry-note-history .note-body {
+    white-space: pre-wrap;
+}
+
+@media (max-width: 991px) {
+    .inquiry-column {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 767px) {
+    .inquiry-column {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

@@ -12,6 +12,9 @@ Key characteristics of the fork:
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
 - 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
 - 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
+- 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
+- 🗂️ **Inquiry board** – a Kanban-style board replaces cart scaffolding so inquiries can be triaged, assigned, noted and scheduled with reminders.
+- 🌐 **Scoped REST endpoints** – new JSON endpoints cover timeline moves, inquiry status changes and availability lookups without reviving the legacy webservice.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
@@ -37,6 +40,29 @@ The back-office path **Hotel Reservation System → Booking** now presents a tab
 - **Search & Filters**: the booking form, occupancy selector and availability stats.
 
 Edits performed from the availability list or cart refresh both the timeline and (when initialised) the month grid so that staff always see the latest state.
+
+### Drag-and-Drop Reallocation
+
+Drag any booked cell from its start date to another room/day to trigger a reallocation preview. The timeline will validate the move against:
+
+- Existing bookings on the destination room.
+- Room disable ranges (maintenance/out-of-order blocks).
+- Room type capacity (adults, children and total guests).
+
+If the move is valid you can confirm the change directly from the drop action. Conflicts are listed inline so staff know why a move is blocked.
+
+### Availability API
+
+`index.php?controller=AdminHotelRoomsBooking&ajax=1&action=lookupAvailability` accepts `id_hotel`, `id_room_type`, `date_from` and `date_to` to return JSON payloads of available, booked and disabled rooms for the requested window. The timeline UI consumes the same endpoint.
+
+## Inquiry Board
+Navigate to **Hotel Reservation System → Inquiries** to triage, assign and progress residency requests. Each column represents a stage (Inbox, Qualifying, Awaiting reply, Scheduled, Archived) and cards expose:
+
+- Assignee dropdowns that fire async updates.
+- Reminder shortcuts (stored on the inquiry record) for follow-up scheduling.
+- Note capture with an optional “mail note” flag that doubles as an internal log of outbound responses.
+
+Dragging a card to another column automatically updates its stage (and default status), with conflict messaging if a move is not allowed.
 
 ## Resident-Focused Front Office
 
@@ -75,8 +101,7 @@ All Kunstort-specific flags live in `config/defines_custom.inc.php`:
 Use these constants in future contributions to gate legacy commerce flows.
 
 ## Development Priorities
-- Finish drag-and-drop management and resource annotations on the new tabbed booking timeline.
-- Introduce a unified resource taxonomy (rooms, ateliers, gastronomy) in the database and admin forms.
+- Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting.
 - Replace the front-office room list with storytelling-driven templates and an enquiry form.
 - Provide CSV/ICS exports to support residency and seminar scheduling outside the app.
 

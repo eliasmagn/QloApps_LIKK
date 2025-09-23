@@ -9,9 +9,9 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 - ✅ **Webservice disabled** – `/webservice` responds with HTTP 410 and admin tooling for API keys has been excised to reduce attack surface.
 
 ## Phase 1 – Inquiry Workflow Maturity (🚧 In progress)
-- 🚧 **Timeline interaction upgrades** – add drag-and-drop reallocation with conflict detection against room disables and capacity rules.
-- ⏳ **Inquiry entity & board** – replace cart-derived booking scaffolding with a dedicated Inquiry model, Kanban board UI and assignment workflow, including reminders and mail notes.
-- ⏳ **API endpoints** – expose REST endpoints for timeline updates, inquiry status changes and availability lookups to support the new UI components.
+- ✅ **Timeline interaction upgrades** – add drag-and-drop reallocation with conflict detection against room disables and capacity rules.
+- 🚧 **Inquiry entity & board** – replace cart-derived booking scaffolding with a dedicated Inquiry model, Kanban board UI and assignment workflow, including reminders and mail notes.
+- ✅ **API endpoints** – expose REST endpoints for timeline updates, inquiry status changes and availability lookups to support the new UI components.
 
 ## Phase 2 – Resource & Pricing Model (⏳ Planned)
 - ⏳ **Resource taxonomy** – add `resource_kind`, capacity descriptors and amenities metadata to rooms, ateliers, seminar spaces and gastronomy units.
