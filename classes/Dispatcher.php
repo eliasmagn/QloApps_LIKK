@@ -182,6 +182,29 @@ class DispatcherCore
         return self::$instance;
     }
 
+    protected function isInquiryMode()
+    {
+        return defined('_KUNSTORT_CORE_MODE_') && _KUNSTORT_CORE_MODE_ === 'inquiry';
+    }
+
+    protected function remapCheckoutControllers()
+    {
+        if (!$this->isInquiryMode() || $this->front_controller !== self::FC_FRONT) {
+            return;
+        }
+
+        $normalized = strtolower($this->controller);
+
+        if ($normalized === 'order') {
+            $this->controller = 'inquiry';
+            $_GET['controller'] = $this->controller;
+        } elseif ($normalized === 'orderopc') {
+            header('HTTP/1.1 410 Gone');
+            $this->controller = $this->controller_not_found;
+            $_GET['controller'] = $this->controller;
+        }
+    }
+
     /**
      * Need to be instancied from getInstance() method
      */
@@ -247,6 +270,8 @@ class DispatcherCore
         if (!$this->controller) {
             $this->controller = $this->useDefaultController();
         }
+        $this->remapCheckoutControllers();
+
         // Dispatch with right front controller
         switch ($this->front_controller) {
             // Dispatch front office controller

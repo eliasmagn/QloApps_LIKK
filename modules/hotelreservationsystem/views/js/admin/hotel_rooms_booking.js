@@ -46,6 +46,11 @@ $(document).ready(function() {
             available: 'Available',
         },
     };
+    var inquiryMode = ($('.panel-booking-timeline').data('kunstort-core-mode') || '').toLowerCase() === 'inquiry';
+
+    if (inquiryMode && timelineLabels.statusLabels) {
+        delete timelineLabels.statusLabels.cart;
+    }
 
     function initFullCalendar() {
         if (!$('#fullcalendar').length || calendarInitialized) {

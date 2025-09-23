@@ -7,10 +7,14 @@ Key characteristics of the fork:
 - 🚫 **Marketplace free** – outbound calls to the QloApps / Prestashop module stores are disabled by default.
 - 🧩 **Extensible from source** – custom modules can still be developed and dropped into `modules/` without depending on proprietary services.
 - 📆 **Calendar first** – the admin booking view now opens on a resource timeline covering rooms, ateliers, seminar rooms and programme spaces, with the legacy month grid available on demand.
-- 📨 **Inquiry workflow** – the shopping-cart driven booking journey will be replaced with curated requests that staff confirm manually.
+- 📨 **Inquiry workflow** – the legacy checkout paths now forward to an inquiry landing page so staff can confirm curated requests manually.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 
 The high-level concept and roadmap live in [`concept.md`](concept.md). Tactical progress is tracked in [`checklist.md`](checklist.md).
+
+### Inquiry Landing
+
+Visiting `/index.php?controller=inquiry` (or any deprecated checkout URL such as `/index.php?controller=order`) shows a lightweight landing page that explains the new manual workflow and links to the contact form until the dedicated inquiry UI ships.
 
 ## Admin Booking Timeline
 The back-office path **Hotel Reservation System → Booking** now presents a tabbed layout with a top-aligned tab bar instead of the previous side menu:
