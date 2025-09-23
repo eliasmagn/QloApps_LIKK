@@ -43,27 +43,6 @@ class HotelReservationSystem extends Module
         $this->confirmUninstall = $this->l('This module should not be uninstalled under any circumstances. Doing so may cause undesired results.');
     }
 
-    public function hookAddWebserviceResources()
-    {
-        $resources = array(
-            'hotels' => array('description' => 'Hotel Branch Information','class' => 'HotelBranchInformation'),
-            'hotel_room_types' => array('description' => 'Hotel room types','class' => 'HotelRoomType'),
-            'hotel_features' => array('description' => 'The hotel features','class' => 'HotelFeatures'),
-            'hotel_refund_rules' => array('description' => 'The hotel refund rules','class' => 'HotelOrderRefundRules'),
-            'hotel_rooms' => array('description' => 'The hotel rooms','class' => 'HotelRoomInformation'),
-            'feature_prices' => array('description' => 'Feature prices', 'class' => 'HotelRoomTypeFeaturePricing'),
-            'advance_payments' => array('description' => 'Room type advance payment', 'class' => 'HotelAdvancedPayment'),
-            'cart_bookings' => array('description' => 'Cart bookings', 'class' => 'HotelCartBookingData'),
-            'room_bookings' => array('description' => 'Room bookings', 'class' => 'HotelBookingDetail'),
-            'booking_extra_demands' => array('description' => 'Booking extra demands', 'class' => 'HotelBookingDemands'),
-            'extra_demands' => array('description' => 'Extra demands', 'class' => 'HotelRoomTypeGlobalDemand'),
-            'demand_advance_options' => array('description' => 'Extra demand advance options', 'class' => 'HotelRoomTypeGlobalDemandAdvanceOption'),
-            'hotel_ari' => array('description' => 'Search availability, rates and inventory', 'specific_management' => true),
-        );
-
-        return $resources;
-    }
-
     public function hookDisplayHeader()
     {
         if (!Configuration::get('PS_CATALOG_MODE')) {
@@ -636,7 +615,6 @@ class HotelReservationSystem extends Module
                 'displayFooter',
                 'displayAfterDefautlFooterHook',
                 'actionProductSave',
-                'addWebserviceResources',
                 'actionObjectLanguageAddAfter',
                 'actionObjectProfileAddAfter',
                 'actionObjectProfileDeleteBefore',

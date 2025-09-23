@@ -261,9 +261,6 @@
     <tab id="Logs" id_parent="Advanced_Parameters" active="1" hide_host_mode="0">
       <class_name>AdminLogs</class_name>
     </tab>
-    <tab id="Webservice" id_parent="Advanced_Parameters" active="1" hide_host_mode="0">
-      <class_name>AdminWebservice</class_name>
-    </tab>
     <tab id="Preferences_1" id_parent="Administration" active="1" hide_host_mode="0">
       <class_name>AdminAdminPreferences</class_name>
     </tab>
