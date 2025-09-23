@@ -665,8 +665,6 @@ class InstallModelInstall extends InstallAbstractModel
                 'wkhotelfeaturesblock',
                 'wkhotelroom',
                 'wktestimonialblock',
-                'bankwire',
-                'cheque',
                 'blockmyaccount',
                 'blockcurrencies',
                 'blocklanguages',
