@@ -2115,13 +2115,8 @@ class AdminThemesControllerCore extends AdminController
         return array(
             'addsharethis',
             'bankwire',
-            'blockcart',
             'blockcurrencies',
             'blocklanguages',
-            'blockmyaccount',
-            'blocknewsletter',
-            'blocksocial',
-            'blockuserinfo',
             'carriercompare',
             'cashondelivery',
             'cheque',

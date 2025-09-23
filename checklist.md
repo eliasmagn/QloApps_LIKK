@@ -7,6 +7,7 @@
 - [x] Replaced the admin booking calendar with a tabbed occupancy timeline and lazy-loaded month grid fallback.
 - [x] Cached admin booking timeline data to keep tab switches instantaneous.
 - [x] Short-circuited checkout routes and templates to the inquiry landing page.
+- [x] Replaced hook-driven header widgets with a static residency navigation and removed cart/account/newsletter/social modules from the codebase.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.

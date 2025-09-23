@@ -103,7 +103,14 @@ class AuthControllerCore extends FrontController
 
         $this->assignCountries();
 
-        $newsletter = Configuration::get('PS_CUSTOMER_NWSL') || (Module::isInstalled('blocknewsletter') && Module::getInstanceByName('blocknewsletter')->active);
+        $newsletterModulePath = _PS_MODULE_DIR_.'blocknewsletter/blocknewsletter.php';
+        $newsletterModuleActive = false;
+        if (Module::isInstalled('blocknewsletter') && file_exists($newsletterModulePath)) {
+            $newsletterModule = Module::getInstanceByName('blocknewsletter');
+            $newsletterModuleActive = ($newsletterModule && $newsletterModule->active);
+        }
+
+        $newsletter = Configuration::get('PS_CUSTOMER_NWSL') || $newsletterModuleActive;
 
         $this->context->smarty->assign('birthday', (bool) Configuration::get('PS_CUSTOMER_BIRTHDATE'));
         $this->context->smarty->assign('newsletter', $newsletter);
@@ -358,9 +365,15 @@ class AuthControllerCore extends FrontController
      */
     protected function processCustomerNewsletter(&$customer)
     {
-        $blocknewsletter = Module::isInstalled('blocknewsletter') && $module_newsletter = Module::getInstanceByName('blocknewsletter');
+        $newsletterModulePath = _PS_MODULE_DIR_.'blocknewsletter/blocknewsletter.php';
+        $module_newsletter = null;
+        $blocknewsletter = Module::isInstalled('blocknewsletter') && file_exists($newsletterModulePath);
+        if ($blocknewsletter) {
+            $module_newsletter = Module::getInstanceByName('blocknewsletter');
+            $blocknewsletter = (bool) $module_newsletter;
+        }
         if ($blocknewsletter && $module_newsletter->active && !Tools::getValue('newsletter')) {
-            require_once _PS_MODULE_DIR_.'blocknewsletter/blocknewsletter.php';
+            require_once $newsletterModulePath;
             if (is_callable(array($module_newsletter, 'isNewsletterRegistered')) && $module_newsletter->isNewsletterRegistered(Tools::getValue('email')) == Blocknewsletter::GUEST_REGISTERED) {
                 /* Force newsletter registration as customer as already registred as guest */
                 $_POST['newsletter'] = true;
