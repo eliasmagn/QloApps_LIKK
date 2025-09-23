@@ -43,7 +43,13 @@
 
 	{literal}
 
-	function getPrestaStore(){if(getE("prestastore").style.display!='block')return;$.post(dirNameCurrentIndex+"/ajax.php",{page:"prestastore"},function(a){getE("prestastore-content").innerHTML=a;})}
+        function getPrestaStore(){
+{if $marketplace_disabled}
+            return;
+{else}
+            if(getE("prestastore").style.display!='block')return;$.post(dirNameCurrentIndex+"/ajax.php",{page:"prestastore"},function(a){getE("prestastore-content").innerHTML=a;})
+{/if}
+        }
 	function truncate_author(author){return ((author.length > 20) ? author.substring(0, 20)+"..." : author);}
 	function modules_management(action)
 	{
@@ -155,28 +161,30 @@
 		});
 
 		// Method to get modules_list.xml from prestashop.com and default_country_modules_list.xml from addons.prestashop.com
-		try
-		{
-			resAjax = $.ajax({
-				type:"POST",
-				url: ajaxCurrentIndex,
-				headers: {"cache-control": "no-cache"},
-				async: true,
-				cache: false,
-				data: {
-					ajaxMode : "1",
-					ajax : "1",
-					token : token,
-					controller : "AdminModules",
-					action : "refreshModuleList"
-				},
-				success: function(data){
-					if (data == '{"status":"refresh"}')
-						window.location.href = window.location.href;
-				}
-			});
-		}
-		catch(e) { }
+{if !$marketplace_disabled}
+                try
+                {
+                        resAjax = $.ajax({
+                                type:"POST",
+                                url: ajaxCurrentIndex,
+                                headers: {"cache-control": "no-cache"},
+                                async: true,
+                                cache: false,
+                                data: {
+                                        ajaxMode : "1",
+                                        ajax : "1",
+                                        token : token,
+                                        controller : "AdminModules",
+                                        action : "refreshModuleList"
+                                },
+                                success: function(data){
+                                        if (data == '{"status":"refresh"}')
+                                                window.location.href = window.location.href;
+                                }
+                        });
+                }
+                catch(e) { }
+{/if}
 
 		// Method to set filter on modules
 		function setFilter()

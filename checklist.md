@@ -3,6 +3,7 @@
 ## Completed
 - [x] Introduced `config/defines_custom.inc.php` with distribution feature flags.
 - [x] Disabled QloApps marketplace lookups in Tools and admin controllers.
+- [x] Replaced marketplace catalog UIs with offline guidance when remote services are disabled.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.

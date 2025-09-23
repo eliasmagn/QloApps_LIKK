@@ -306,7 +306,9 @@ class AdminSearchControllerCore extends AdminController
                 }
             }
 
-            if (!is_numeric(trim($this->query)) && !Validate::isEmail($this->query)) {
+            if (!is_numeric(trim($this->query)) && !Validate::isEmail($this->query)
+                && !(defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_)
+            ) {
                 $iso_lang = Tools::strtolower(Context::getContext()->language->iso_code);
                 $iso_country = Tools::strtolower(Country::getIsoById(Configuration::get('PS_COUNTRY_DEFAULT')));
                 if (($json_content = Tools::file_get_contents('https://api-addons.prestashop.com/'._PS_VERSION_.'/search/'.urlencode($this->query).'/'.$iso_country.'/'.$iso_lang.'/')) != false) {

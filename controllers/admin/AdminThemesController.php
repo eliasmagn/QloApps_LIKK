@@ -1868,6 +1868,7 @@ class AdminThemesControllerCore extends AdminController
                 'iso_code' => $this->context->language->iso_code,
                 'add_new_theme_href' => self::$currentIndex.'&addtheme&token='.$this->token,
                 'add_new_theme_label' => $this->l('Create a new theme'),
+                'marketplace_disabled' => (int)(defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_),
             )
         );
 
@@ -1927,6 +1928,9 @@ class AdminThemesControllerCore extends AdminController
 
     public function ajaxProcessGetAddonsThemes()
     {
+        if (defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_) {
+            die('');
+        }
         $parent_domain = Tools::getHttpHost(true).substr($_SERVER['REQUEST_URI'], 0, -1 * strlen(basename($_SERVER['REQUEST_URI'])));
         $iso_lang = $this->context->language->iso_code;
         $iso_currency = $this->context->currency->iso_code;

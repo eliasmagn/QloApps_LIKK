@@ -2470,7 +2470,9 @@ class AdminControllerCore extends Controller
      */
     public function initModal()
     {
-        if ($this->logged_on_addons) {
+        $marketplace_disabled = defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_;
+
+        if ($this->logged_on_addons && !$marketplace_disabled) {
             $this->context->smarty->assign(array(
                 'logged_on_addons' => 1,
                 'username_addons' => $this->context->cookie->username_addons
@@ -2484,7 +2486,8 @@ class AdminControllerCore extends Controller
             'check_url_fopen' => (ini_get('allow_url_fopen') ? 'ok' : 'ko'),
             'check_openssl' => (extension_loaded('openssl') ? 'ok' : 'ko'),
             'add_permission' => 1,
-            'addons_register_link' => 'https://addons.prestashop.com/'.$this->context->language->iso_code.'/login'
+            'addons_register_link' => $marketplace_disabled ? '' : 'https://addons.prestashop.com/'.$this->context->language->iso_code.'/login',
+            'marketplace_disabled' => $marketplace_disabled,
         ));
 
         //Force override translation key

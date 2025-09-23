@@ -25,10 +25,15 @@
 
 <div class="modal-body">
 {if $add_permission eq '1'}
-	{if !isset($logged_on_addons) || !$logged_on_addons}
-		{if $check_url_fopen eq 'ko'  OR $check_openssl eq 'ko'}
-			<div class="alert alert-warning">
-				{l s='If you want to be able to fully use the AdminModules panel and have free modules available, you should enable the following configuration on your server:'}
+        {if isset($marketplace_disabled) && $marketplace_disabled}
+                <div class="alert alert-info">
+                        <h4>{l s='Marketplace disabled'}</h4>
+                        <p>{l s='This distribution operates without the PrestaShop Addons marketplace. Install modules by uploading ZIP archives directly in the Modules page.'}</p>
+                </div>
+        {elseif !isset($logged_on_addons) || !$logged_on_addons}
+                {if $check_url_fopen eq 'ko'  OR $check_openssl eq 'ko'}
+                        <div class="alert alert-warning">
+                                {l s='If you want to be able to fully use the AdminModules panel and have free modules available, you should enable the following configuration on your server:'}
 				<br />
 				{if $check_url_fopen eq 'ko'}- {l s='Enable PHP\'s allow_url_fopen setting'}<br />{/if}
 				{if $check_openssl eq 'ko'}- {l s='Enable PHP\'s OpenSSL extension'}<br />{/if}

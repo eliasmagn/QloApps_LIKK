@@ -8,6 +8,7 @@ Key characteristics of the fork:
 - 🧩 **Extensible from source** – custom modules can still be developed and dropped into `modules/` without depending on proprietary services.
 - 📆 **Calendar first** – upcoming development focuses on a resource timeline covering rooms, ateliers, seminar rooms and programme spaces.
 - 📨 **Inquiry workflow** – the shopping-cart driven booking journey will be replaced with curated requests that staff confirm manually.
+- 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 
 The high-level concept and roadmap live in [`concept.md`](concept.md). Tactical progress is tracked in [`checklist.md`](checklist.md).
 
