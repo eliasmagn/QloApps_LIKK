@@ -1024,6 +1024,20 @@ class AdminHotelRoomsBookingController extends ModuleAdminController
             'no_realloc_rm_type_avail_txt' => $this->l('No room type available for reallocation.', null, true),
             'no_swap_rm_avail_txt' => $this->l('No room available for swap.', null, true),
             'select_room_txt' => $this->l('Select room', null, true),
+            'timeline_labels' => array(
+                'noData' => $this->l('No occupancy data for the selected period.', null, true),
+                'error' => $this->l('Unable to load occupancy data.', null, true),
+                'headerRoom' => $this->l('Room', null, true),
+                'roomLabel' => $this->l('Room %id%', null, true),
+                'summaryTemplate' => $this->l('Booked: %booked% | Available: %available% | Partial: %partial% | Unavailable: %unavailable%', null, true),
+                'statusLabels' => array(
+                    'booked' => $this->l('Booked', null, true),
+                    'cart' => $this->l('In cart', null, true),
+                    'unavailable' => $this->l('Unavailable', null, true),
+                    'partial' => $this->l('Partially available', null, true),
+                    'available' => $this->l('Available', null, true),
+                ),
+            ),
         );
         if (Configuration::get('PS_BACKOFFICE_SEARCH_TYPE') == HotelBookingDetail::SEARCH_TYPE_OWS ) {
             $jsVars['is_occupancy_wise_search'] = true;

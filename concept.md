@@ -15,9 +15,10 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Admin module catalogue interactions are short-circuited to keep the back office free from external promotions.
 - `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`).
 - When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
+- The admin booking screen now opens with a tabbed occupancy timeline; the legacy month grid loads lazily only when the calendar tab is selected, and timeline data stays cached while the tab remains active for near-instant toggling.
 
 ## Near-Term Roadmap
-1. **Calendar refactor**: extend the existing admin FullCalendar view into a resource timeline; expose it read-only in front office.
+1. **Calendar refactor** *(ongoing)*: extend the admin booking view into a resource timeline (baseline timeline shipped; drag-and-drop management still pending); expose it read-only in front office.
 2. **Inquiry workflow**: new controller & UI to log stay requests, decoupled from the PrestaShop cart.
 3. **Resource taxonomy**: introduce `resource_kind` and related metadata to rooms to cover Außenzimmer, Ateliers, Café etc.
 4. **Frontend narrative**: replace price-driven templates with curated descriptions and availability cues.
