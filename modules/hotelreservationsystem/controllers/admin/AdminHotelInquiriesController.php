@@ -74,6 +74,8 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     'reminderCleared' => $this->l('Reminder cleared.'),
                     'reminderPrompt' => $this->l('Enter reminder timestamp (YYYY-MM-DD HH:MM) or leave blank to clear.'),
                     'noteSaved' => $this->l('Note saved.'),
+                    'mailNoteSent' => $this->l('Mail note sent to the requester.'),
+                    'mailNoteFailed' => $this->l('Note saved but the email could not be sent.'),
                     'assignmentSaved' => $this->l('Assignment updated.'),
                     'noNotes' => $this->l('No notes yet.'),
                 ),
@@ -205,10 +207,23 @@ class AdminHotelInquiriesController extends ModuleAdminController
             return $this->ajaxDie(json_encode($response));
         }
 
+        if (!$inquiry = HotelInquiry::findById($idInquiry)) {
+            $response['message'] = $this->l('Inquiry not found.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
         if ($noteObject = HotelInquiryNote::addNote($idInquiry, $note, $this->context->employee->id, $isMail)) {
             $response['success'] = true;
             $response['note'] = $noteObject;
             $response['notes'] = HotelInquiryNote::getInquiryNotes($idInquiry);
+
+            if ($isMail) {
+                $mailStatus = $this->dispatchInquiryMailNote($inquiry, $note);
+                $response['mail_sent'] = $mailStatus['sent'];
+                if (isset($mailStatus['message'])) {
+                    $response['mail_error'] = $mailStatus['message'];
+                }
+            }
         } else {
             $response['message'] = $this->l('Unable to save the note.');
         }
@@ -309,5 +324,60 @@ class AdminHotelInquiriesController extends ModuleAdminController
         ));
 
         return $this->context->smarty->fetch($this->module->getLocalPath().'views/templates/admin/inquiries/_partials/card.tpl');
+    }
+
+    protected function dispatchInquiryMailNote(array $inquiry, $note)
+    {
+        $result = array('sent' => false);
+        $email = isset($inquiry['requester_email']) ? trim($inquiry['requester_email']) : '';
+        if (!$email || !Validate::isEmail($email)) {
+            $result['message'] = $this->l('Note saved but no valid requester email was available.');
+            return $result;
+        }
+
+        $notePlain = trim(strip_tags($note));
+        if ($notePlain === '') {
+            $notePlain = trim($note);
+        }
+        $noteHtml = Tools::nl2br(Tools::safeOutput($notePlain));
+
+        $employeeName = '';
+        if ($this->context->employee) {
+            $employeeName = trim($this->context->employee->firstname.' '.$this->context->employee->lastname);
+        }
+        if ($employeeName === '') {
+            $employeeName = $this->l('Residency team');
+        }
+
+        $recipientName = isset($inquiry['requester_name']) ? trim($inquiry['requester_name']) : '';
+        $displayName = $recipientName !== '' ? $recipientName : $this->l('there');
+
+        $subject = sprintf($this->l('Update on your residency inquiry %s'), $inquiry['reference']);
+        $templateVars = array(
+            '{requester_display_name}' => $displayName,
+            '{inquiry_reference}' => $inquiry['reference'],
+            '{inquiry_subject}' => $inquiry['subject'],
+            '{note_plain}' => $notePlain,
+            '{note_html}' => $noteHtml,
+            '{employee_name}' => $employeeName,
+            '{contact_email}' => Configuration::get('PS_SHOP_EMAIL'),
+        );
+
+        $sent = Mail::Send(
+            (int) $this->context->language->id,
+            'inquiry_note',
+            $subject,
+            $templateVars,
+            $email,
+            $recipientName !== '' ? $recipientName : null
+        );
+
+        if ($sent) {
+            $result['sent'] = true;
+        } else {
+            $result['message'] = $this->l('Note saved but the email could not be sent.');
+        }
+
+        return $result;
     }
 }

@@ -313,6 +313,11 @@
                     }
                     refreshCard(id);
                     notifySuccess(config.messages && config.messages.noteSaved);
+                    if (response.mail_sent) {
+                        notifySuccess(config.messages && config.messages.mailNoteSent);
+                    } else if (response.mail_error) {
+                        notifyError(response.mail_error || (config.messages && config.messages.mailNoteFailed));
+                    }
                     $noteForm[0].reset();
                 } else {
                     notifyError(response && response.message ? response.message : (config.messages && config.messages.updateError));
