@@ -38,8 +38,14 @@ if (Tools::isSubmit('ajaxReferrers')) {
     require(_PS_CONTROLLER_DIR_.'admin/AdminReferrersController.php');
 }
 
-if (Tools::getValue('page') == 'prestastore' and @fsockopen('addons.prestashop.com', 80, $errno, $errst, 3)) {
-    readfile('http://addons.prestashop.com/adminmodules.php?lang='.$context->language->iso_code);
+if (Tools::getValue('page') == 'prestastore') {
+    if (defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_) {
+        header('HTTP/1.1 404 Not Found');
+        exit;
+    }
+    if (@fsockopen('addons.prestashop.com', 80, $errno, $errst, 3)) {
+        readfile('http://addons.prestashop.com/adminmodules.php?lang='.$context->language->iso_code);
+    }
 }
 
 if (Tools::isSubmit('getAvailableFields') and Tools::isSubmit('entity')) {

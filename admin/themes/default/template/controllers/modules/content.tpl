@@ -27,67 +27,94 @@
 	{$module_content}
 {else}
 
-	{if isset($smarty.get.addnewmodule) && ($context_mode == Context::MODE_HOST)}
+{if isset($smarty.get.addnewmodule) && ($context_mode == Context::MODE_HOST)}
 
-		<div class="defaultForm form-horizontal">
+                <div class="defaultForm form-horizontal">
 
-			{if $logged_on_addons}
+                        {if $marketplace_disabled}
 
-				<div class="panel">
-					<div class="row">
-						<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
-							<img class="img-responsive" alt="QloApps Addons" src="themes/default/img/prestashop-addons-logo.png">
-						</div>
-						<div class="col-lg-4 col-lg-offset-1 col-md-4 col-sm-7 col-xs-12 addons-style-search-bar">
-							<form id="addons-search-form" method="get" action="http://addons.prestashop.com/{$iso_code}/search" class="float">
-							<label>{l s='Search on PrestaShop Marketplace:'}</label>
-							<div class="input-group">
-								<input id="addons-search-box" class="form-control" type="text" autocomplete="off" name="query" value="" placeholder="Search on PrestaShop Marketplace">
-								<div id="addons-search-btn" class="btn btn-primary input-group-addon">
-									<i class="icon-search"></i>
-								</div>
-							</div>
-							</form>
-						</div>
-						<div class="col-lg-3 col-md-4 col-sm-5 col-xs-12 addons-see-all-themes">
-							{l s='Or'}<a href="http://addons.prestashop.com/{$iso_code}/2-modules-prestashop" class="btn btn-primary" onclick="return !window.open(this.href)">{l s='See all modules'}</a>
-						</div>
-					</div>
-				</div>
+                                <div class="panel" id="">
+                                        <div class="panel-heading">
+                                                <i class="icon-puzzle-piece"></i> {l s='Install modules from source'}
+                                        </div>
 
-			{else}
+                                        <div class="form-wrapper">
+                                                <div class="form-group">
+                                                        <p>{l s='Marketplace connectivity is disabled. Upload module ZIP archives directly or place them into the \"modules/\" directory to make them available.'}</p>
+                                                </div>
+                                                <div class="form-group">
+                                                        <p class="help-block">{l s='Use the manual upload form below to install new functionality.'}</p>
+                                                </div>
+                                        </div><!-- /.form-wrapper -->
 
-				<div class="panel" id="">
-					<div class="panel-heading">
-						<i class="icon-picture"></i> {l s='Add a new module'}
-					</div>
+                                        <div class="panel-footer">
+                                                <a href="{$link->getAdminLink('AdminModules', true)|escape:'html':'UTF-8'}" class="btn btn-default">
+                                                        <i class="process-icon-cancel"></i> {l s='Back to modules'}
+                                                </a>
+                                        </div>
+                                </div>
 
-					<div class="form-wrapper">
-						<div class="form-group">
-							<p>{l s='To add a new module, simply connect to your QloApps Addons account and all your purchases will be automatically imported.'}</p>
-						</div>
-					</div><!-- /.form-wrapper -->
+                        {else}
 
-					<div class="panel-footer">
-						<a href="{$link->getAdminLink('AdminModules', true)|escape:'html':'UTF-8'}" class="btn btn-default">
-							<i class="process-icon-cancel"></i> {l s='Cancel'}
-						</a>
-						<a href="#" data-toggle="modal" data-target="#modal_addons_connect" class="btn btn-default pull-right">
-							<i class="process-icon-next"></i> {l s='Next'}
-						</a>
-					</div>
-				</div>
+                                {if $logged_on_addons}
 
-			{/if}
+                                        <div class="panel">
+                                                <div class="row">
+                                                        <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12">
+                                                                <img class="img-responsive" alt="QloApps Addons" src="themes/default/img/prestashop-addons-logo.png">
+                                                        </div>
+                                                        <div class="col-lg-4 col-lg-offset-1 col-md-4 col-sm-7 col-xs-12 addons-style-search-bar">
+                                                                <form id="addons-search-form" method="get" action="http://addons.prestashop.com/{$iso_code}/search" class="float">
+                                                                <label>{l s='Search on PrestaShop Marketplace:'}</label>
+                                                                <div class="input-group">
+                                                                        <input id="addons-search-box" class="form-control" type="text" autocomplete="off" name="query" value="" placeholder="Search on PrestaShop Marketplace">
+                                                                        <div id="addons-search-btn" class="btn btn-primary input-group-addon">
+                                                                                <i class="icon-search"></i>
+                                                                        </div>
+                                                                </div>
+                                                                </form>
+                                                        </div>
+                                                        <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12 addons-see-all-themes">
+                                                                {l s='Or'}<a href="http://addons.prestashop.com/{$iso_code}/2-modules-prestashop" class="btn btn-primary" onclick="return !window.open(this.href)">{l s='See all modules'}</a>
+                                                        </div>
+                                                </div>
+                                        </div>
 
-				<div class="alert alert-info">
-					<h4>{l s='Can I add my own modules?'}</h4>
-					<p>{l s='Please note that for security reasons, you can only add modules that are being distributed on QloApps Addons, the official marketplace.'}</p>
-				</div>
+                                {else}
 
-		</div>
+                                        <div class="panel" id="">
+                                                <div class="panel-heading">
+                                                        <i class="icon-picture"></i> {l s='Add a new module'}
+                                                </div>
 
-	{elseif !isset($smarty.get.configure)}
+                                                <div class="form-wrapper">
+                                                        <div class="form-group">
+                                                                <p>{l s='To add a new module, simply connect to your QloApps Addons account and all your purchases will be automatically imported.'}</p>
+                                                        </div>
+                                                </div><!-- /.form-wrapper -->
+
+                                                <div class="panel-footer">
+                                                        <a href="{$link->getAdminLink('AdminModules', true)|escape:'html':'UTF-8'}" class="btn btn-default">
+                                                                <i class="process-icon-cancel"></i> {l s='Cancel'}
+                                                        </a>
+                                                        <a href="#" data-toggle="modal" data-target="#modal_addons_connect" class="btn btn-default pull-right">
+                                                                <i class="process-icon-next"></i> {l s='Next'}
+                                                        </a>
+                                                </div>
+                                        </div>
+
+                                {/if}
+
+                                <div class="alert alert-info">
+                                        <h4>{l s='Can I add my own modules?'}</h4>
+                                        <p>{l s='Please note that for security reasons, you can only add modules that are being distributed on QloApps Addons, the official marketplace.'}</p>
+                                </div>
+
+                        {/if}
+
+                </div>
+
+{elseif !isset($smarty.get.configure)}
 		{include file='controllers/modules/js.tpl'}
 		{include file='controllers/modules/page.tpl'}
 	{/if}

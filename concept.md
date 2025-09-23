@@ -14,6 +14,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - PrestaShop marketplace hooks have been disabled globally via `_QLOAPP_DISABLE_MARKETPLACE_`.
 - Admin module catalogue interactions are short-circuited to keep the back office free from external promotions.
 - `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`).
+- When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
 
 ## Near-Term Roadmap
 1. **Calendar refactor**: extend the existing admin FullCalendar view into a resource timeline; expose it read-only in front office.

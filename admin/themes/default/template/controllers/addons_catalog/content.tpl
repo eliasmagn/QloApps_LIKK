@@ -22,8 +22,16 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-{if $display_addons_content}
-	{$addons_content}
+{if $marketplace_disabled}
+        <div class="alert alert-info">
+                <h4>{l s='Marketplace disabled'}</h4>
+                <p>{l s='Remote marketplace content has been disabled for this distribution. Manage modules from source directly within your installation.'}</p>
+        </div>
+{elseif $display_addons_content}
+        {$addons_content}
 {else}
-	<iframe class="clearfix" style="margin:0px;padding:0px;width:100%;height:920px;overflow:hidden;border:none" src="//addons.prestashop.com/iframe/search.php?isoLang={$iso_lang}&amp;isoCurrency={$iso_currency}&amp;isoCountry={$iso_country}&amp;parentUrl={$parent_domain}"></iframe>
+        <div class="alert alert-warning">
+                <h4>{l s='Marketplace unavailable'}</h4>
+                <p>{l s='The PrestaShop Addons service could not be reached. Try again later or install modules manually from source.'}</p>
+        </div>
 {/if}
