@@ -2119,7 +2119,6 @@ class AdminThemesControllerCore extends AdminController
             'blocklanguages',
             'carriercompare',
             'cashondelivery',
-            'cheque',
             'dashactivity',
             'dashgoals',
             'dashproducts',

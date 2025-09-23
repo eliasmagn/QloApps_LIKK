@@ -40,10 +40,6 @@
         <meta meta_page="category" left="1" right="0"/>
         <meta meta_page="cms" left="0" right="0"/>
         <meta meta_page="product" left="0" right="0"/>
-        <meta meta_page="module-cheque-payment" left="0" right="0"/>
-        <meta meta_page="module-cheque-validation" left="0" right="0"/>
-        <meta meta_page="module-bankwire-validation" left="0" right="0"/>
-        <meta meta_page="module-bankwire-payment" left="0" right="0"/>
         <meta meta_page="module-cashondelivery-validation" left="0" right="0"/>
     </metas>
     <modules>
@@ -66,7 +62,6 @@
             <hook module="hotelreservationsystem" hook="actionOrderHistoryAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProductDeleteBefore" position="1"/>
             <hook module="hotelreservationsystem" hook="displayAfterDefautlFooterHook" position="1"/>
-            <hook module="hotelreservationsystem" hook="addWebserviceResources" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectLanguageAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProfileAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProfileDeleteBefore" position="1"/>

@@ -10,12 +10,24 @@ Key characteristics of the fork:
 - 📨 **Inquiry workflow** – the legacy checkout paths now forward to an inquiry landing page so staff can confirm curated requests manually.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
+- 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
+- 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
 
-The high-level concept and roadmap live in [`concept.md`](concept.md). Tactical progress is tracked in [`checklist.md`](checklist.md).
+The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
 ### Inquiry Landing
 
 Visiting `/index.php?controller=inquiry` (or any deprecated checkout URL such as `/index.php?controller=order`) shows a lightweight landing page that explains the new manual workflow and links to the contact form until the dedicated inquiry UI ships.
+
+### Legacy PrestaShop Webservice
+
+For security and maintainability the bundled PrestaShop webservice has been retired:
+
+- `webservice/dispatcher.php` immediately returns **410 Gone** without bootstrapping the application.
+- Core webservice classes are replaced by stubs so that stray module references fail fast instead of re-enabling the API.
+- The **Advanced Parameters → Webservice** tab and related configuration switches are removed from the installer and upgrade scripts.
+
+If you need API access, build explicit modules on top of modern authentication flows rather than reviving the legacy endpoint.
 
 ## Admin Booking Timeline
 The back-office path **Hotel Reservation System → Booking** now presents a tabbed layout with a top-aligned tab bar instead of the previous side menu:
