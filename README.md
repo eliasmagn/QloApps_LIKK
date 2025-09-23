@@ -101,9 +101,10 @@ All Kunstort-specific flags live in `config/defines_custom.inc.php`:
 Use these constants in future contributions to gate legacy commerce flows.
 
 ## Development Priorities
-- Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting.
-- Replace the front-office room list with storytelling-driven templates and an enquiry form.
-- Provide CSV/ICS exports to support residency and seminar scheduling outside the app.
+- Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting. See [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md) for the canonical data model.
+- Replace the front-office room list with storytelling-driven templates and an enquiry form tied to curated packages. Content strategy is outlined in the taxonomy blueprint and will drive copy blocks surfaced on offer pages.
+- Introduce configurable rate plans and bundled packages so inquiries can be priced consistently, following [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
+- Provide CSV/ICS exports plus internal notifications to support residency and seminar scheduling outside the app, grounded in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md).
 
 See [`checklist.md`](checklist.md) for the current implementation status.
 
