@@ -16,6 +16,11 @@
 - [ ] Layer drag-and-drop reallocation controls onto the new booking timeline.
 
 ## Planned
+- [ ] Model a dedicated Inquiry entity plus Kanban board with assignment workflow.
+- [ ] Expose REST endpoints for timeline edits, inquiry status changes and availability lookups.
 - [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point.
 - [ ] Rebuild front-office templates around availability storytelling.
+- [ ] Introduce configurable rate plans and bundled residency packages.
+- [ ] Implement housekeeping and maintenance task automation.
 - [ ] Implement export utilities (CSV/ICS) for residency scheduling.
+- [ ] Deliver utilisation dashboards and programme reporting.
