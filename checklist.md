@@ -14,6 +14,8 @@
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
+- [ ] Design configurable rate plan entities and package bundling rules.
+- [ ] Outline automation scope for housekeeping, notifications and exports.
 
 ## Planned
 - [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point.
