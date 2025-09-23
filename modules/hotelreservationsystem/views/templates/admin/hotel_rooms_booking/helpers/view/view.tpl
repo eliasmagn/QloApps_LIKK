@@ -1,10 +1,12 @@
 <div class="row">
         {if isset($hotel_list) && is_array($hotel_list) && count($hotel_list)}
                 <div class="col-sm-12">
-                        <div class="panel panel-booking-timeline">
+                        <div class="panel panel-booking-timeline" data-kunstort-core-mode="{$smarty.const._KUNSTORT_CORE_MODE_|default:''|escape:'htmlall':'UTF-8'}">
                                 <div class="panel-heading">
                                         <i class="icon-calendar"></i> {l s='Booking Overview' mod='hotelreservationsystem'}
-                                        <button type="button" class="btn btn-primary pull-right {if $total_products_in_cart|intval == 0}disabled{/if}" id="cart_btn" data-toggle="modal" data-target="#cartModal"><i class="icon-shopping-cart"></i> {l s='Cart' mod='hotelreservationsystem'} <span class="badge" id="cart_record">{$total_products_in_cart}</span></button>
+                                        {if $smarty.const._KUNSTORT_CORE_MODE_|default:'' ne 'inquiry'}
+                                                <button type="button" class="btn btn-primary pull-right {if $total_products_in_cart|intval == 0}disabled{/if}" id="cart_btn" data-toggle="modal" data-target="#cartModal"><i class="icon-shopping-cart"></i> {l s='Cart' mod='hotelreservationsystem'} <span class="badge" id="cart_record">{$total_products_in_cart}</span></button>
+                                        {/if}
                                 </div>
                                 <div class="panel-body">
                                         <ul class="nav nav-tabs occupancy-tabs" role="tablist">
@@ -22,7 +24,9 @@
                                                                         <div id="booking-timeline" class="booking-timeline hidden"></div>
                                                                         <div class="timeline-legend">
                                                                                 <span class="legend-item status-booked"><span class="legend-color"></span>{l s='Booked' mod='hotelreservationsystem'}</span>
-                                                                                <span class="legend-item status-cart"><span class="legend-color"></span>{l s='In cart' mod='hotelreservationsystem'}</span>
+                                                                                {if $smarty.const._KUNSTORT_CORE_MODE_|default:'' ne 'inquiry'}
+                                                                                        <span class="legend-item status-cart"><span class="legend-color"></span>{l s='In cart' mod='hotelreservationsystem'}</span>
+                                                                                {/if}
                                                                                 <span class="legend-item status-unavailable"><span class="legend-color"></span>{l s='Unavailable' mod='hotelreservationsystem'}</span>
                                                                                 <span class="legend-item status-partial"><span class="legend-color"></span>{l s='Partially available' mod='hotelreservationsystem'}</span>
                                                                                 <span class="legend-item status-available"><span class="legend-color"></span>{l s='Available' mod='hotelreservationsystem'}</span>

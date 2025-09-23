@@ -6,12 +6,13 @@
 - [x] Replaced marketplace catalog UIs with offline guidance when remote services are disabled.
 - [x] Replaced the admin booking calendar with a tabbed occupancy timeline and lazy-loaded month grid fallback.
 - [x] Cached admin booking timeline data to keep tab switches instantaneous.
+- [x] Short-circuited checkout routes and templates to the inquiry landing page.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
 - [ ] Layer drag-and-drop reallocation controls onto the new booking timeline.
 
 ## Planned
-- [ ] Replace cart-based booking flow with inquiry submission pipeline.
+- [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point.
 - [ ] Rebuild front-office templates around availability storytelling.
 - [ ] Implement export utilities (CSV/ICS) for residency scheduling.
