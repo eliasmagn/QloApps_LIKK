@@ -9177,3 +9177,116 @@ div a.our_properties_link{
   color: #fff;
   font-size: 17px;
   font-weight: 400;}
+
+.residency-nav {
+  background-color: rgba(0, 0, 0, 0.55);
+  padding: 10px 0;
+}
+
+.residency-primary-nav {
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.residency-primary-nav .nav > li > a {
+  color: #fff;
+  letter-spacing: 0.08em;
+  padding: 10px 12px;
+}
+
+.residency-primary-nav .nav > li > a:hover,
+.residency-primary-nav .nav > li > a:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.residency-nav-tagline {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #f2f2f2;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+}
+
+.residency-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.residency-contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.residency-contact-links .contact-link {
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.residency-contact-links .contact-link:hover,
+.residency-contact-links .contact-link:focus {
+  color: #d6f0ff;
+}
+
+.residency-quick-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.residency-quick-actions .our_properties_link {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 30px;
+  padding: 6px 18px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.residency-quick-actions .our_properties_link:hover,
+.residency-quick-actions .our_properties_link:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.residency-top-actions {
+  text-align: right;
+}
+
+.residency-top-links {
+  margin: 0;
+}
+
+.residency-top-link {
+  color: #fff;
+  display: inline-block;
+  padding: 6px 0;
+}
+
+.residency-top-link + .residency-top-link {
+  margin-left: 20px;
+}
+
+@media (max-width: 767px) {
+  .residency-header-actions {
+    justify-content: center;
+  }
+
+  .residency-contact-links,
+  .residency-quick-actions {
+    justify-content: center;
+  }
+
+  .residency-top-actions {
+    text-align: center;
+  }
+
+  .residency-top-link + .residency-top-link {
+    margin-left: 0;
+  }
+}

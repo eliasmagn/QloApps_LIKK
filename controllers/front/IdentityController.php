@@ -102,7 +102,8 @@ class IdentityControllerCore extends FrontController
                 if (!Tools::getIsset('newsletter')) {
                     $this->customer->newsletter = 0;
                 } elseif (!$origin_newsletter && Tools::getIsset('newsletter')) {
-                    if ($module_newsletter = Module::getInstanceByName('blocknewsletter')) {
+                    $newsletterModulePath = _PS_MODULE_DIR_.'blocknewsletter/blocknewsletter.php';
+                    if (Module::isInstalled('blocknewsletter') && file_exists($newsletterModulePath) && ($module_newsletter = Module::getInstanceByName('blocknewsletter'))) {
                         /** @var Blocknewsletter $module_newsletter */
                         if ($module_newsletter->active) {
                             $module_newsletter->confirmSubscription($this->customer->email);
@@ -165,7 +166,13 @@ class IdentityControllerCore extends FrontController
             'HOOK_CUSTOMER_IDENTITY_FORM' => Hook::exec('displayCustomerIdentityForm'),
         ));
 
-        $newsletter = Configuration::get('PS_CUSTOMER_NWSL') || (Module::isInstalled('blocknewsletter') && Module::getInstanceByName('blocknewsletter')->active);
+        $newsletterModulePath = _PS_MODULE_DIR_.'blocknewsletter/blocknewsletter.php';
+        $newsletterModuleActive = false;
+        if (Module::isInstalled('blocknewsletter') && file_exists($newsletterModulePath)) {
+            $newsletterModule = Module::getInstanceByName('blocknewsletter');
+            $newsletterModuleActive = ($newsletterModule && $newsletterModule->active);
+        }
+        $newsletter = Configuration::get('PS_CUSTOMER_NWSL') || $newsletterModuleActive;
         $this->context->smarty->assign('birthday', (bool) Configuration::get('PS_CUSTOMER_BIRTHDATE'));
         $this->context->smarty->assign('newsletter', $newsletter);
         $this->context->smarty->assign('optin', (bool)Configuration::get('PS_CUSTOMER_OPTIN'));

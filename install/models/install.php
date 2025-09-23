@@ -657,15 +657,14 @@ class InstallModelInstall extends InstallAbstractModel
             $modules = array(
                 'hotelreservationsystem',
                 'wkroomsearchblock',
-                'blocknewsletter',
-                'blocksocial',
                 'wkfooterblock',
                 'wkhotelfilterblock',
                 'wkabouthotelblock',
                 'wkhotelfeaturesblock',
                 'wkhotelroom',
                 'wktestimonialblock',
-                'blockmyaccount',
+                'bankwire',
+                'cheque',
                 'blockcurrencies',
                 'blocklanguages',
                 'qlohotelreview',
@@ -705,8 +704,6 @@ class InstallModelInstall extends InstallAbstractModel
                 'statsbestcustomers',
                 'statsequipment',
                 'qlostatsserviceproducts',
-                'blockcart',
-                'blockuserinfo',
                 'qlochannelmanagerconnector',
             );
         }

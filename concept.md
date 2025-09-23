@@ -18,6 +18,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers and templates short-circuit to the inquiry landing page instead of exposing cart mechanics.
 - When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
 - The admin booking screen now opens with a tabbed occupancy timeline; the legacy month grid loads lazily only when the calendar tab is selected, and timeline data stays cached while the tab remains active for near-instant toggling.
+- The front-office header ships as a static residency navigation strip with in-house quick links; cart/account/newsletter/social blocks have been removed from both the theme and core module set so no commerce widgets are expected.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.
 
 ## Near-Term Roadmap

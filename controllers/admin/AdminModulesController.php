@@ -27,7 +27,6 @@
 class AdminModulesControllerCore extends AdminController
 {
     private $_modules_ad = array(
-        'blockcart' => array('cartabandonmentpro'),
         /* 'bloctopmenu' => array('advancedtopmenu'), */
     );
     /*

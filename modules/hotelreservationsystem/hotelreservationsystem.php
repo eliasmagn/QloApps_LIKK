@@ -609,8 +609,6 @@ class HotelReservationSystem extends Module
         return $this->registerHook(
             array(
                 'displayHeader',
-                'displayTop',
-                'displayAfterHookTop',
                 'actionOrderHistoryAddAfter',
                 'displayBackOfficeHeader',
                 'actionObjectProductDeleteBefore',
@@ -625,7 +623,6 @@ class HotelReservationSystem extends Module
                 'displayLeftColumn',
                 'actionCartSummary',
                 'actionFrontControllerSetMedia',
-                'displayNav',
                 'displayExternalNavigationHook',
             )
         );
