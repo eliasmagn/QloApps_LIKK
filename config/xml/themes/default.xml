@@ -74,7 +74,6 @@
             <hook module="hotelreservationsystem" hook="actionOrderHistoryAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProductDeleteBefore" position="1"/>
             <hook module="hotelreservationsystem" hook="displayAfterDefautlFooterHook" position="1"/>
-            <hook module="hotelreservationsystem" hook="addWebserviceResources" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectLanguageAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProfileAddAfter" position="1"/>
             <hook module="hotelreservationsystem" hook="actionObjectProfileDeleteBefore" position="1"/>

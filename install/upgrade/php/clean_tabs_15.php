@@ -218,8 +218,6 @@ function clean_tabs_15()
             ),
             84 => array('class_name' => 'AdminLogs', 'position' => 7, 'active' => 1,
             ),
-            85 => array('class_name' => 'AdminWebservice', 'position' => 8, 'active' => 1,
-            ),
         ),
     ),
     18 => array(
