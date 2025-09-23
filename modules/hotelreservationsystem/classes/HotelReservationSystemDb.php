@@ -220,6 +220,41 @@ class HotelReservationSystemDb
                 PRIMARY KEY (`id_booking_demand`, `id_tax`)
             ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;",
 
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."htl_inquiry` (
+                `id_inquiry` INT(11) NOT NULL AUTO_INCREMENT,
+                `reference` VARCHAR(32) NOT NULL,
+                `subject` VARCHAR(255) NOT NULL,
+                `status` VARCHAR(32) NOT NULL,
+                `stage` VARCHAR(32) NOT NULL,
+                `assigned_to` INT(11) DEFAULT NULL,
+                `requester_name` VARCHAR(255) DEFAULT NULL,
+                `requester_email` VARCHAR(255) DEFAULT NULL,
+                `requester_phone` VARCHAR(64) DEFAULT NULL,
+                `check_in` DATE DEFAULT NULL,
+                `check_out` DATE DEFAULT NULL,
+                `resource_request` TEXT,
+                `internal_notes` LONGTEXT,
+                `reminder_at` DATETIME DEFAULT NULL,
+                `last_note_at` DATETIME DEFAULT NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_inquiry`),
+                INDEX (`stage`),
+                INDEX (`status`),
+                INDEX (`assigned_to`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."htl_inquiry_note` (
+                `id_inquiry_note` INT(11) NOT NULL AUTO_INCREMENT,
+                `id_inquiry` INT(11) NOT NULL,
+                `id_employee` INT(11) DEFAULT NULL,
+                `note` TEXT NOT NULL,
+                `is_mail` TINYINT(1) NOT NULL DEFAULT '0',
+                `date_add` DATETIME NOT NULL,
+                PRIMARY KEY (`id_inquiry_note`),
+                INDEX (`id_inquiry`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;",
+
             "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."htl_room_status` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `status` text NOT NULL,
@@ -615,7 +650,9 @@ class HotelReservationSystemDb
             `'._DB_PREFIX_.'htl_room_type_bed_type`,
             `'._DB_PREFIX_.'htl_access`,
             `'._DB_PREFIX_.'htl_settings_link`,
-            `'._DB_PREFIX_.'htl_settings_link_lang`'
+            `'._DB_PREFIX_.'htl_settings_link_lang`,
+            `'._DB_PREFIX_.'htl_inquiry`,
+            `'._DB_PREFIX_.'htl_inquiry_note`'
         );
     }
 }

@@ -46,6 +46,9 @@ $(document).ready(function() {
             available: 'Available',
         },
     };
+    var timelineApiUrl = window.timeline_api_url || rooms_booking_url;
+    var timelineInteractionConfig = window.timeline_interactions || {};
+    var activeTimelineDragRequest = null;
     var inquiryMode = ($('.panel-booking-timeline').data('kunstort-core-mode') || '').toLowerCase() === 'inquiry';
 
     if (inquiryMode && timelineLabels.statusLabels) {
@@ -318,6 +321,16 @@ $(document).ready(function() {
         }
     }
 
+    function formatDateIso(ts) {
+        var date = new Date(ts);
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        var month = ('0' + (date.getMonth() + 1)).slice(-2);
+        var day = ('0' + date.getDate()).slice(-2);
+        return date.getFullYear() + '-' + month + '-' + day;
+    }
+
     function formatDateFromString(value) {
         var ts = normalizeDateInput(value);
         if (ts === null) {
@@ -378,6 +391,7 @@ $(document).ready(function() {
         });
 
         timelineContainer.append(table);
+        activateTimelineDragAndDrop();
     }
 
     function buildTimelineHeader(days) {
@@ -431,7 +445,15 @@ $(document).ready(function() {
                     label: label,
                     sortValue: label.toString().toLowerCase(),
                     periods: [],
+                    roomTypeId: info.id_product || roomType.id_product || null,
+                    hotelId: info.id_hotel || roomType.id_hotel || null,
                 };
+            }
+            if (!roomsMap[id].roomTypeId && (info.id_product || roomType.id_product)) {
+                roomsMap[id].roomTypeId = info.id_product || roomType.id_product;
+            }
+            if (!roomsMap[id].hotelId && (info.id_hotel || roomType.id_hotel)) {
+                roomsMap[id].hotelId = info.id_hotel || roomType.id_hotel;
             }
             return roomsMap[id];
         }
@@ -528,6 +550,8 @@ $(document).ready(function() {
             status: 'available',
             meta: {},
             priority: 1,
+            start: null,
+            end: null,
         };
 
         $.each(room.periods, function(_, period) {
@@ -540,6 +564,8 @@ $(document).ready(function() {
                         status: period.status,
                         meta: period.meta || {},
                         priority: priority,
+                        start: start,
+                        end: end,
                     };
                 }
             }
@@ -574,10 +600,221 @@ $(document).ready(function() {
             var info = resolveStatusForDay(room, ts, range);
             var cell = $('<div class="timeline-cell"/>').addClass('status-' + info.status);
             cell.attr('title', buildTooltip(info, ts));
+            cell.data('dayTs', ts);
+            cell.data('dateIso', formatDateIso(ts));
+            cell.data('roomId', room.id);
+            cell.data('roomTypeId', room.roomTypeId || null);
+            cell.data('hotelId', room.hotelId || null);
+            cell.data('meta', info.meta || {});
+            cell.data('range', { start: info.start, end: info.end });
+            if (info.meta && info.meta.id_htl_booking) {
+                cell.attr('data-booking-id', info.meta.id_htl_booking);
+            }
+            if (info.start !== null && ts === info.start && info.meta && info.meta.id_htl_booking) {
+                cell.addClass('timeline-booking-start');
+            }
             grid.append(cell);
         });
         row.append(grid);
         return row;
+    }
+
+    function activateTimelineDragAndDrop() {
+        if (!timelineContainer.length || typeof $.fn.draggable === 'undefined' || typeof $.fn.droppable === 'undefined') {
+            return;
+        }
+
+        timelineContainer.find('.timeline-cell.timeline-draggable').each(function () {
+            if ($(this).data('uiDraggable')) {
+                $(this).draggable('destroy');
+            }
+        }).removeClass('timeline-draggable timeline-dragging');
+
+        timelineContainer.find('.timeline-cell').each(function () {
+            if ($(this).data('uiDroppable')) {
+                $(this).droppable('destroy');
+            }
+        }).removeClass('timeline-drop-hover timeline-drop-processing');
+
+        timelineContainer.find('.timeline-cell.timeline-booking-start').each(function () {
+            makeTimelineCellDraggable($(this));
+        });
+
+        timelineContainer.find('.timeline-cell').each(function () {
+            makeTimelineCellDroppable($(this));
+        });
+    }
+
+    function makeTimelineCellDraggable(cell) {
+        var meta = cell.data('meta') || {};
+        if (!meta.id_htl_booking) {
+            return;
+        }
+        cell.addClass('timeline-draggable');
+        cell.draggable({
+            helper: function () {
+                var label = meta.room_type_name || meta.alloted_cust_name || ('#' + meta.id_htl_booking);
+                return $('<div class="timeline-drag-helper"/>').text(label);
+            },
+            appendTo: 'body',
+            zIndex: 9999,
+            revert: 'invalid',
+            start: function () {
+                cell.addClass('timeline-dragging');
+            },
+            stop: function () {
+                cell.removeClass('timeline-dragging');
+            }
+        });
+    }
+
+    function makeTimelineCellDroppable(cell) {
+        if (!cell.data('roomId')) {
+            return;
+        }
+        cell.droppable({
+            accept: function (draggable) {
+                if (!draggable.hasClass('timeline-draggable')) {
+                    return false;
+                }
+                if (!cell.hasClass('status-available') && !cell.hasClass('status-partial')) {
+                    return false;
+                }
+                return true;
+            },
+            hoverClass: 'timeline-drop-hover',
+            tolerance: 'pointer',
+            drop: function (event, ui) {
+                var source = ui.draggable;
+                handleTimelineDrop(cell, source);
+            }
+        });
+    }
+
+    function handleTimelineDrop(targetCell, sourceCell) {
+        var sourceMeta = sourceCell.data('meta') || {};
+        var bookingId = sourceMeta.id_htl_booking;
+        if (!bookingId) {
+            queueTimelineRefresh();
+            return;
+        }
+        var targetRoomId = parseInt(targetCell.data('roomId'), 10);
+        var targetDate = targetCell.data('dateIso');
+        if (!targetRoomId || !targetDate) {
+            queueTimelineRefresh();
+            return;
+        }
+        var range = sourceCell.data('range') || {};
+        var originalRoomId = parseInt(sourceCell.data('roomId'), 10);
+        var originalStartIso = range.start ? formatDateIso(range.start) : null;
+        if (targetRoomId === originalRoomId && originalStartIso === targetDate) {
+            queueTimelineRefresh();
+            return;
+        }
+
+        var payload = {
+            ajax: true,
+            action: 'validateTimelineMove',
+            id_htl_booking: bookingId,
+            target_room_id: targetRoomId,
+            target_date_from: targetDate
+        };
+
+        if (activeTimelineDragRequest) {
+            activeTimelineDragRequest.abort();
+        }
+
+        targetCell.addClass('timeline-drop-processing');
+        activeTimelineDragRequest = $.ajax({
+            url: timelineApiUrl,
+            method: 'POST',
+            dataType: 'json',
+            data: payload
+        }).done(function (response) {
+            if (response && response.can_move) {
+                var confirmMessage = timelineInteractionConfig.moveConfirm || null;
+                if (confirmMessage) {
+                    var preview = response.preview || {};
+                    confirmMessage = confirmMessage.replace('%room%', preview.room_label || targetCell.closest('.room-row').find('.room-label').text());
+                    confirmMessage = confirmMessage.replace('%from%', preview.date_from || payload.target_date_from);
+                    confirmMessage = confirmMessage.replace('%to%', preview.date_to || '');
+                    if (!window.confirm(confirmMessage)) {
+                        queueTimelineRefresh();
+                        return;
+                    }
+                }
+                performTimelineMove(payload);
+            } else {
+                showTimelineConflicts(response && response.conflicts ? response.conflicts : []);
+                queueTimelineRefresh();
+            }
+        }).fail(function () {
+            notifyTimelineError(timelineInteractionConfig.moveError || timelineLabels.error || 'Unable to move booking.');
+            queueTimelineRefresh();
+        }).always(function () {
+            targetCell.removeClass('timeline-drop-processing');
+            activeTimelineDragRequest = null;
+        });
+    }
+
+    function performTimelineMove(basePayload) {
+        var payload = $.extend({}, basePayload, {
+            action: 'performTimelineMove'
+        });
+
+        if (activeTimelineDragRequest) {
+            activeTimelineDragRequest.abort();
+        }
+
+        activeTimelineDragRequest = $.ajax({
+            url: timelineApiUrl,
+            method: 'POST',
+            dataType: 'json',
+            data: payload
+        }).done(function (response) {
+            if (response && response.success) {
+                notifyTimelineSuccess(timelineInteractionConfig.moveSuccess || 'Booking updated.');
+                queueTimelineRefresh();
+            } else {
+                notifyTimelineError(response && response.message ? response.message : (timelineInteractionConfig.moveError || timelineLabels.error || 'Unable to move booking.'));
+                queueTimelineRefresh();
+            }
+        }).fail(function () {
+        notifyTimelineError(timelineInteractionConfig.moveError || timelineLabels.error || 'Unable to move booking.');
+            queueTimelineRefresh();
+        }).always(function () {
+            activeTimelineDragRequest = null;
+        });
+    }
+
+    function showTimelineConflicts(conflicts) {
+        if (!conflicts || !conflicts.length) {
+            notifyTimelineError(timelineInteractionConfig.moveError || timelineLabels.error || 'Unable to move booking.');
+            return;
+        }
+        notifyTimelineError(conflicts.join('\n'));
+    }
+
+    function notifyTimelineSuccess(message) {
+        if (!message) {
+            return;
+        }
+        if (typeof showSuccessMessage === 'function') {
+            showSuccessMessage(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function notifyTimelineError(message) {
+        if (!message) {
+            return;
+        }
+        if (typeof showErrorMessage === 'function') {
+            showErrorMessage(message);
+        } else {
+            alert(message);
+        }
     }
     function ensureTimeline(forceReload) {
         if (!timelineContainer.length) {

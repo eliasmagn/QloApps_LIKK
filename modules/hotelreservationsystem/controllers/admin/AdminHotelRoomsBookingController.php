@@ -955,9 +955,197 @@ class AdminHotelRoomsBookingController extends ModuleAdminController
         die(Tools::jsonEncode($response));
     }
 
+    public function ajaxProcessValidateTimelineMove()
+    {
+        $this->ajaxDie(json_encode($this->handleTimelineMove(false)));
+    }
+
+    public function ajaxProcessPerformTimelineMove()
+    {
+        $this->ajaxDie(json_encode($this->handleTimelineMove(true)));
+    }
+
+    public function ajaxProcessLookupAvailability()
+    {
+        $response = array('success' => false);
+        $idHotel = (int) Tools::getValue('id_hotel');
+        $idRoomType = (int) Tools::getValue('id_room_type');
+        $dateFrom = Tools::getValue('date_from');
+        $dateTo = Tools::getValue('date_to');
+
+        $fromDate = DateTime::createFromFormat('Y-m-d', $dateFrom ?: '');
+        $toDate = DateTime::createFromFormat('Y-m-d', $dateTo ?: '');
+
+        if (!$idHotel || !$idRoomType || !$fromDate || !$toDate) {
+            $response['message'] = $this->l('Invalid availability lookup request.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if ($fromDate >= $toDate) {
+            $toDate = clone $fromDate;
+            $toDate->modify('+1 day');
+        }
+
+        $roomInfoAdapter = new HotelRoomInformation();
+        $fromIso = $fromDate->format('Y-m-d');
+        $toIso = $toDate->format('Y-m-d');
+
+        $response['success'] = true;
+        $response['data'] = array(
+            'available' => $roomInfoAdapter->getRoomTypeAvailableRoomsForDateRange($idHotel, $idRoomType, $fromIso, $toIso),
+            'booked' => $roomInfoAdapter->getRoomTypeBookedRoomsForDateRange($idHotel, $idRoomType, $fromIso, $toIso),
+            'disabled' => $roomInfoAdapter->getRoomTypeDisabledRoomsForDateRange($idHotel, $idRoomType, $fromIso, $toIso),
+        );
+
+        $this->ajaxDie(json_encode($response));
+    }
+
+    protected function handleTimelineMove($perform = false)
+    {
+        $response = array(
+            'success' => false,
+            'can_move' => false,
+            'conflicts' => array(),
+        );
+
+        $idBooking = (int) Tools::getValue('id_htl_booking');
+        $targetRoomId = (int) Tools::getValue('target_room_id');
+        $targetDateFrom = Tools::getValue('target_date_from');
+
+        if (!$idBooking || !$targetRoomId || !$targetDateFrom) {
+            $response['message'] = $this->l('Incomplete move request.');
+            return $response;
+        }
+
+        if (!Validate::isLoadedObject($booking = new HotelBookingDetail($idBooking))) {
+            $response['message'] = $this->l('Booking not found.');
+            return $response;
+        }
+
+        if (!Validate::isLoadedObject($targetRoom = new HotelRoomInformation($targetRoomId))) {
+            $response['message'] = $this->l('Target room not found.');
+            return $response;
+        }
+
+        $evaluation = $this->evaluateTimelineMove($booking, $targetRoom, $targetDateFrom);
+
+        if ($perform && empty($evaluation['conflicts'])) {
+            if ($this->applyTimelineMove($booking, $targetRoom, $evaluation['preview']['date_from'], $evaluation['preview']['date_to'])) {
+                $evaluation['success'] = true;
+                $evaluation['can_move'] = true;
+            } else {
+                $evaluation['success'] = false;
+                $evaluation['message'] = $this->l('Unable to update the booking.');
+            }
+        }
+
+        return $evaluation;
+    }
+
+    protected function evaluateTimelineMove(HotelBookingDetail $booking, HotelRoomInformation $targetRoom, $targetDateFrom)
+    {
+        $result = array(
+            'success' => true,
+            'can_move' => false,
+            'conflicts' => array(),
+            'preview' => array(),
+        );
+
+        $startDate = DateTime::createFromFormat('Y-m-d', $targetDateFrom ?: '');
+        if (!$startDate) {
+            $result['success'] = false;
+            $result['conflicts'][] = $this->l('Invalid target start date.');
+            return $result;
+        }
+
+        $duration = (int) HotelHelper::getNumberOfDays($booking->date_from, $booking->date_to);
+        if ($duration < 1) {
+            $duration = 1;
+        }
+        $endDate = clone $startDate;
+        $endDate->modify('+' . (int) $duration . ' day');
+
+        $fromTime = date('H:i:s', strtotime($booking->date_from));
+        $toTime = date('H:i:s', strtotime($booking->date_to));
+        $newFrom = $startDate->format('Y-m-d') . ' ' . $fromTime;
+        $newTo = $endDate->format('Y-m-d') . ' ' . $toTime;
+
+        $result['preview'] = array(
+            'room_id' => (int) $targetRoom->id,
+            'room_label' => $targetRoom->room_num,
+            'date_from' => $newFrom,
+            'date_to' => $newTo,
+        );
+
+        if ((int) $targetRoom->id_hotel !== (int) $booking->id_hotel) {
+            $result['conflicts'][] = $this->l('Cannot move booking to a different hotel.');
+        }
+
+        if ((int) $targetRoom->id_product !== (int) $booking->id_product) {
+            $result['conflicts'][] = $this->l('Target room belongs to a different room type.');
+        }
+
+        $roomTypeAdapter = new HotelRoomType();
+        if ($roomTypeInfo = $roomTypeAdapter->getRoomTypeInfoByIdProduct($booking->id_product)) {
+            $adults = (int) $booking->adults;
+            $children = (int) $booking->children;
+            $totalGuests = $adults + $children;
+            if (!empty($roomTypeInfo['max_adults']) && $adults > (int) $roomTypeInfo['max_adults']) {
+                $result['conflicts'][] = $this->l('Adult occupancy exceeds the room capacity.');
+            }
+            if (!empty($roomTypeInfo['max_children']) && $children > (int) $roomTypeInfo['max_children']) {
+                $result['conflicts'][] = $this->l('Children occupancy exceeds the room capacity.');
+            }
+            if (!empty($roomTypeInfo['max_guests']) && $totalGuests > (int) $roomTypeInfo['max_guests']) {
+                $result['conflicts'][] = $this->l('Total guests exceed the room capacity.');
+            }
+        }
+
+        $disableSql = 'SELECT `id` FROM `'._DB_PREFIX_.'htl_room_disable_dates` '
+            . 'WHERE `id_room` = '.(int) $targetRoom->id
+            . ' AND `date_from` < \'' . pSQL($newTo) . '\''
+            . ' AND `date_to` > \'' . pSQL($newFrom) . '\'';
+        if (Db::getInstance()->getValue($disableSql)) {
+            $result['conflicts'][] = $this->l('Room is disabled for the selected dates.');
+        }
+
+        $overlapSql = 'SELECT `id` FROM `'._DB_PREFIX_.'htl_booking_detail` '
+            . 'WHERE `id_room` = '.(int) $targetRoom->id
+            . ' AND `id` != '.(int) $booking->id
+            . ' AND `is_cancelled` = 0 AND `is_refunded` = 0'
+            . ' AND `date_from` < \'' . pSQL($newTo) . '\''
+            . ' AND `date_to` > \'' . pSQL($newFrom) . '\'';
+        if (Db::getInstance()->getValue($overlapSql)) {
+            $result['conflicts'][] = $this->l('Room already has a conflicting booking.');
+        }
+
+        if (empty($result['conflicts'])) {
+            $result['can_move'] = true;
+        }
+
+        return $result;
+    }
+
+    protected function applyTimelineMove(HotelBookingDetail $booking, HotelRoomInformation $targetRoom, $newFrom, $newTo)
+    {
+        $booking->id_room = (int) $targetRoom->id;
+        $booking->id_hotel = (int) $targetRoom->id_hotel;
+        $booking->room_num = $targetRoom->room_num;
+        $booking->date_from = $newFrom;
+        $booking->check_in = $newFrom;
+        $booking->date_to = $newTo;
+        $booking->check_out = $newTo;
+        $booking->planned_check_out = $newTo;
+        $booking->date_upd = date('Y-m-d H:i:s');
+
+        return $booking->update();
+    }
+
     public function setMedia()
     {
         parent::setMedia();
+        $this->addJqueryUI('ui.draggable');
+        $this->addJqueryUI('ui.droppable');
         $currency = new Currency((int)Configuration::get('PS_CURRENCY_DEFAULT'));
         $occupancyRequiredForBooking = false;
         if (Configuration::get('PS_BACKOFFICE_ROOM_BOOKING_TYPE') == HotelBookingDetail::PS_ROOM_UNIT_SELECTION_TYPE_OCCUPANCY) {
@@ -1037,6 +1225,12 @@ class AdminHotelRoomsBookingController extends ModuleAdminController
                     'partial' => $this->l('Partially available', null, true),
                     'available' => $this->l('Available', null, true),
                 ),
+            ),
+            'timeline_api_url' => $this->context->link->getAdminLink('AdminHotelRoomsBooking'),
+            'timeline_interactions' => array(
+                'moveSuccess' => $this->l('Booking updated.', null, true),
+                'moveError' => $this->l('Unable to move the booking.', null, true),
+                'moveConfirm' => $this->l('Move booking to %room% starting %from%? (Ends %to%)', null, true),
             ),
         );
         if (Configuration::get('PS_BACKOFFICE_SEARCH_TYPE') == HotelBookingDetail::SEARCH_TYPE_OWS ) {

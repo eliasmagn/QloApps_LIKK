@@ -18,14 +18,20 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers and templates short-circuit to the inquiry landing page instead of exposing cart mechanics.
 - When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
 - The admin booking screen now opens with a tabbed occupancy timeline; the legacy month grid loads lazily only when the calendar tab is selected, and timeline data stays cached while the tab remains active for near-instant toggling.
+- Drag-and-drop reallocation is available directly on the occupancy timeline with server-side conflict checks against disabled rooms and capacity limits.
 - The front-office header ships as a static residency navigation strip with in-house quick links; cart/account/newsletter/social blocks have been removed from both the theme and core module set so no commerce widgets are expected.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.
+
+## Inquiry Workflow Additions
+- A dedicated Inquiry entity tracks residency requests independently from carts, including assignee, reminder, and note metadata.
+- The back office exposes an Inquiries Kanban board for triage, assignment, reminders and mail-style notes.
+- Timeline and inquiry APIs now expose JSON endpoints for UI interactions (reallocation, status changes, availability lookups) without reviving the legacy webservice.
 
 ## Near-Term Focus
 The detailed multi-phase plan lives in [`roadmap.md`](roadmap.md). Immediate priorities concentrate on the first roadmap phases:
 
-1. **Timeline interaction upgrades** *(in progress)* – finish the drag-and-drop reallocation tools and collision checks for the admin timeline, then surface read-only availability to the public site.
-2. **Inquiry workflow foundations** – carve out a dedicated Inquiry model, Kanban board and assignment flow so booking management no longer depends on carts.
+1. **Timeline interaction upgrades** *(complete)* – drag-and-drop reallocation on the admin timeline now blocks conflicts against disabled rooms and occupancy limits, and powers the new REST endpoints.
+2. **Inquiry workflow foundations** *(rolling out)* – the dedicated Inquiry model, Kanban board, reminders and mail notes replace cart-driven scaffolding in the back office.
 3. **Resource taxonomy groundwork** – model `resource_kind`, capacity descriptors and amenities on rooms, ateliers and gastronomy spaces to unlock richer storytelling and reporting.
 4. **Frontend storytelling** – refactor offer pages to present curated narratives, availability cues and inquiry entry points instead of commodity pricing widgets.
 

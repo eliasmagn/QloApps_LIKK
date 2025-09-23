@@ -60,3 +60,5 @@ require_once 'classes/ServiceProductOption.php';
 
 require_once 'classes/HotelSettingsLink.php';
 require_once 'classes/HotelBookingDocument.php';
+require_once 'classes/HotelInquiry.php';
+require_once 'classes/HotelInquiryNote.php';

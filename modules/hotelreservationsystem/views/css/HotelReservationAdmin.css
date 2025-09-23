@@ -831,6 +831,33 @@ body.adminhotelroomsbooking .ui-tooltip {
     opacity: 1;
 }
 
+.timeline-cell.timeline-draggable {
+    cursor: move;
+    border-top: 2px solid #3a87ad;
+}
+
+.timeline-cell.timeline-dragging {
+    opacity: 0.65;
+}
+
+.timeline-cell.timeline-drop-hover {
+    outline: 2px dashed #3a87ad;
+}
+
+.timeline-cell.timeline-drop-processing {
+    background-image: repeating-linear-gradient(45deg, rgba(58,135,173,0.18), rgba(58,135,173,0.18) 10px, rgba(58,135,173,0.05) 10px, rgba(58,135,173,0.05) 20px);
+}
+
+.timeline-drag-helper {
+    padding: 6px 10px;
+    background: #3a87ad;
+    color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    font-size: 12px;
+    pointer-events: none;
+}
+
 .timeline-legend {
     margin: 15px 0;
     display: flex;
