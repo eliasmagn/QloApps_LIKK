@@ -3047,7 +3047,10 @@ class AdminThemesControllerCore extends AdminController
         parent::setMedia();
         $this->addJS(_PS_JS_DIR_.'admin/themes.js');
 
-        if ($this->context->mode == Context::MODE_HOST && Tools::getValue('action') == 'importtheme') {
+        if (!(defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_)
+            && $this->context->mode == Context::MODE_HOST
+            && Tools::getValue('action') == 'importtheme'
+        ) {
             $this->addJS(_PS_JS_DIR_.'admin/addons.js');
         }
     }
