@@ -1,0 +1,11 @@
+Hello {requester_display_name},
+
+We have added a new note to your residency inquiry {inquiry_reference} about "{inquiry_subject}".
+
+From: {employee_name}
+
+{note_plain}
+
+Reply to this email or write to {contact_email} if you have any questions.
+
+{shop_name}

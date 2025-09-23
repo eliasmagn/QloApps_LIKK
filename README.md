@@ -13,7 +13,7 @@ Key characteristics of the fork:
 - 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
 - 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
 - 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
-- 🗂️ **Inquiry board** – a Kanban-style board replaces cart scaffolding so inquiries can be triaged, assigned, noted and scheduled with reminders.
+- 🗂️ **Inquiry board** – a Kanban-style board replaces cart scaffolding so inquiries can be triaged, assigned, noted and scheduled with reminders (mail notes email guests directly from the board).
 - 🌐 **Scoped REST endpoints** – new JSON endpoints cover timeline moves, inquiry status changes and availability lookups without reviving the legacy webservice.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
@@ -60,7 +60,7 @@ Navigate to **Hotel Reservation System → Inquiries** to triage, assign and pro
 
 - Assignee dropdowns that fire async updates.
 - Reminder shortcuts (stored on the inquiry record) for follow-up scheduling.
-- Note capture with an optional “mail note” flag that doubles as an internal log of outbound responses.
+- Note capture with an optional “mail note” flag that emails the requester and logs the correspondence for the team.
 
 Dragging a card to another column automatically updates its stage (and default status), with conflict messaging if a move is not allowed.
 

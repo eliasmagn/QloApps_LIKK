@@ -10,7 +10,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 
 ## Phase 1 – Inquiry Workflow Maturity (🚧 In progress)
 - ✅ **Timeline interaction upgrades** – add drag-and-drop reallocation with conflict detection against room disables and capacity rules.
-- 🚧 **Inquiry entity & board** – replace cart-derived booking scaffolding with a dedicated Inquiry model, Kanban board UI and assignment workflow, including reminders and mail notes.
+- ✅ **Inquiry entity & board** – replace cart-derived booking scaffolding with a dedicated Inquiry model, Kanban board UI and assignment workflow, including reminders and guest-facing mail notes from the board.
 - ✅ **API endpoints** – expose REST endpoints for timeline updates, inquiry status changes and availability lookups to support the new UI components.
 
 ## Phase 2 – Resource & Pricing Model (⏳ Planned)

@@ -10,6 +10,7 @@
 - [x] Replaced hook-driven header widgets with a static residency navigation and removed cart/account/newsletter/social modules from the codebase.
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
+- [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
@@ -24,11 +25,5 @@
 
 ## Recently Completed
 - [x] Layered drag-and-drop reallocation controls onto the booking timeline with conflict detection.
-- [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and notes.
 - [x] Exposed REST endpoints for timeline edits, inquiry updates and availability lookups.
-- [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point.
-- [ ] Rebuild front-office templates around availability storytelling.
-- [ ] Introduce configurable rate plans and bundled residency packages.
-- [ ] Implement housekeeping and maintenance task automation.
-- [ ] Implement export utilities (CSV/ICS) for residency scheduling.
-- [ ] Deliver utilisation dashboards and programme reporting.
+- [x] Enabled mail note delivery from the inquiry board so assignees can email guests while logging internal notes.
