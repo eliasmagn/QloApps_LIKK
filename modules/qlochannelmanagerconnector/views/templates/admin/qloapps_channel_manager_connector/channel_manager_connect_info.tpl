@@ -53,9 +53,9 @@
                         <div class="qcm_info_block_content">
                             {l s='You can connect with channel manager through few simple steps' mod='qlochannelmanagerconnector'} :
                             <ul>
-                                <li>{l s='Enable QloApps webservice from Webservice tab.' mod='qlochannelmanagerconnector'} <a target="blank" href="{$link->getAdminLink('AdminWebservice')}"><i class="icon-external-link"></i></a></li>
-                                <li>{l s='Create your webservice key and enable all the APIs from Webservice tab.' mod='qlochannelmanagerconnector'} <a target="blank" href="{$link->getAdminLink('AdminWebservice')}"><i class="icon-external-link"></i></a></li>
-                                <li>{l s='Create account on Channel Manager' mod='qlochannelmanagerconnector'} <a target="blank" class="qcm-link" href="https://channels.qloapps.com/"><i class="icon-external-link"></i></a>. {l s=' Then enter QloApps webservice credentials under PMS settings of channel manager .' mod='qlochannelmanagerconnector'}</li>
+                                <li>{l s='This QloApps build ships with the legacy PrestaShop webservice disabled for security reasons.' mod='qlochannelmanagerconnector'}</li>
+                                <li>{l s='Use the dedicated QloApps Channel Manager connector module credentials instead of API keys.' mod='qlochannelmanagerconnector'}</li>
+                                <li>{l s='Create account on Channel Manager' mod='qlochannelmanagerconnector'} <a target="blank" class="qcm-link" href="https://channels.qloapps.com/"><i class="icon-external-link"></i></a>. {l s=' Then configure PMS settings with the connector token provided by the channel manager.' mod='qlochannelmanagerconnector'}</li>
                                 <li>{l s='Synchronize and map QloApps hotels and room types in channel manager.' mod='qlochannelmanagerconnector'}</li>
                             </ul>
 

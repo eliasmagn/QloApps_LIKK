@@ -7,6 +7,7 @@
 - [x] Replaced the admin booking calendar with a tabbed occupancy timeline and lazy-loaded month grid fallback.
 - [x] Cached admin booking timeline data to keep tab switches instantaneous.
 - [x] Short-circuited checkout routes and templates to the inquiry landing page.
+- [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 
 ## In Progress

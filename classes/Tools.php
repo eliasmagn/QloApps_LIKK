@@ -2417,10 +2417,6 @@ class ToolsCore
             }
         }
 
-        if (Configuration::get('PS_WEBSERVICE_CGI_HOST')) {
-            fwrite($write_fd, "RewriteCond %{HTTP:Authorization} ^(.*)\nRewriteRule . - [E=HTTP_AUTHORIZATION:%1]\n\n");
-        }
-
         foreach ($domains as $domain => $list_uri) {
             $physicals = array();
             foreach ($list_uri as $uri) {
@@ -2429,10 +2425,6 @@ class ToolsCore
                     fwrite($write_fd, 'RewriteCond %{HTTP_HOST} ^'.$domain.'$'."\n");
                 }
                 fwrite($write_fd, 'RewriteRule . - [E=REWRITEBASE:'.$uri['physical'].']'."\n");
-
-                // Webservice
-                fwrite($write_fd, 'RewriteRule ^api$ api/ [L]'."\n\n");
-                fwrite($write_fd, 'RewriteRule ^api/(.*)$ %{ENV:REWRITEBASE}webservice/dispatcher.php?url=$1 [QSA,L]'."\n\n");
 
                 if (!$rewrite_settings) {
                     $rewrite_settings = (int)Configuration::get('PS_REWRITING_SETTINGS', null, null, (int)$uri['id_shop']);
