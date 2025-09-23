@@ -3376,6 +3376,10 @@ exit;
     protected static $is_addons_up = true;
     public static function addonsRequest($request, $params = array())
     {
+        if (defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_) {
+            self::$is_addons_up = false;
+            return false;
+        }
         if (!self::$is_addons_up) {
             return false;
         }
@@ -3484,6 +3488,11 @@ exit;
      */
     public static function refresh($file_to_refresh, $external_file)
     {
+        if (defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_) {
+            self::$is_addons_up = false;
+            return false;
+        }
+
         if (self::$is_addons_up && $content = Tools::file_get_contents($external_file)) {
             return (bool)file_put_contents(_PS_ROOT_DIR_.$file_to_refresh, $content);
         }

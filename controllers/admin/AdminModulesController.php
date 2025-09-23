@@ -59,6 +59,11 @@ class AdminModulesControllerCore extends AdminController
     protected $iso_default_country;
     protected $filter_configuration = array();
 
+    protected function isMarketplaceEnabled()
+    {
+        return !(defined('_QLOAPP_DISABLE_MARKETPLACE_') && _QLOAPP_DISABLE_MARKETPLACE_);
+    }
+
     /**
      * Admin Modules Controller Constructor
      * Init list modules categories
@@ -120,23 +125,25 @@ class AdminModulesControllerCore extends AdminController
         ));
 
         // Load cache file modules list (natives and partners modules)
-        $xml_modules = false;
-        if (file_exists(_PS_ROOT_DIR_.Module::CACHE_FILE_MODULES_LIST)) {
-            $xml_modules = @simplexml_load_file(_PS_ROOT_DIR_.Module::CACHE_FILE_MODULES_LIST);
-        }
-        if ($xml_modules) {
-            foreach ($xml_modules->children() as $xml_module) {
-                /** @var SimpleXMLElement $xml_module */
-                foreach ($xml_module->children() as $module) {
-                    /** @var SimpleXMLElement $module */
-                    foreach ($module->attributes() as $key => $value) {
-                        if (($xml_module->attributes() == 'native' || $xml_module->attributes() == 'disk')
-                            && $key == 'name'
-                        ) {
-                            $this->list_natives_modules[] = (string)$value;
-                        }
-                        if ($xml_module->attributes() == 'partner' && $key == 'name') {
-                            $this->list_partners_modules[] = (string)$value;
+        if ($this->isMarketplaceEnabled()) {
+            $xml_modules = false;
+            if (file_exists(_PS_ROOT_DIR_.Module::CACHE_FILE_MODULES_LIST)) {
+                $xml_modules = @simplexml_load_file(_PS_ROOT_DIR_.Module::CACHE_FILE_MODULES_LIST);
+            }
+            if ($xml_modules) {
+                foreach ($xml_modules->children() as $xml_module) {
+                    /** @var SimpleXMLElement $xml_module */
+                    foreach ($xml_module->children() as $module) {
+                        /** @var SimpleXMLElement $module */
+                        foreach ($module->attributes() as $key => $value) {
+                            if (($xml_module->attributes() == 'native' || $xml_module->attributes() == 'disk')
+                                && $key == 'name'
+                            ) {
+                                $this->list_natives_modules[] = (string)$value;
+                            }
+                            if ($xml_module->attributes() == 'partner' && $key == 'name') {
+                                $this->list_partners_modules[] = (string)$value;
+                            }
                         }
                     }
                 }
@@ -164,13 +171,19 @@ class AdminModulesControllerCore extends AdminController
         ));
         $this->addJS(_PS_JS_DIR_.'admin/modules.js');
 
-         if ($this->context->mode == Context::MODE_HOST && Tools::isSubmit('addnewmodule')) {
+        if ($this->isMarketplaceEnabled() && $this->context->mode == Context::MODE_HOST && Tools::isSubmit('addnewmodule')) {
             $this->addJS(_PS_JS_DIR_.'admin/addons.js');
         }
     }
 
     public function ajaxProcessRefreshModuleList($force_reload_cache = false)
     {
+        if (!$this->isMarketplaceEnabled()) {
+            $this->status = 'disabled';
+            echo json_encode(array('status' => $this->status));
+            return;
+        }
+
         // Refresh modules_list.xml every week
         if (!Tools::isFresh(Module::CACHE_FILE_MODULES_LIST, _TIME_1_DAY_) || $force_reload_cache) {
             $xml_modules_list = _QLO_API_DOMAIN_.'/xml/'.str_replace('.', '', _QLOAPPS_VERSION_).'.xml';
@@ -230,6 +243,10 @@ class AdminModulesControllerCore extends AdminController
 
     public function ajaxProcessLogOnAddonsWebservices()
     {
+        if (!$this->isMarketplaceEnabled()) {
+            die('DISABLED');
+        }
+
         $content = Tools::addonsRequest('check_customer', array('username_addons' => pSQL(trim(Tools::getValue('username_addons'))), 'password_addons' => pSQL(trim(Tools::getValue('password_addons')))));
         $xml = @simplexml_load_string($content, null, LIBXML_NOCDATA);
         if (!$xml) {
