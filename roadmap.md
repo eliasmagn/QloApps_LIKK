@@ -12,6 +12,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 - ✅ **Timeline interaction upgrades** – add drag-and-drop reallocation with conflict detection against room disables and capacity rules.
 - ✅ **Inquiry entity & board** – replace cart-derived booking scaffolding with a dedicated Inquiry model, Kanban board UI and assignment workflow, including reminders and guest-facing mail notes from the board.
 - ✅ **API endpoints** – expose REST endpoints for timeline updates, inquiry status changes and availability lookups to support the new UI components.
+- ✅ **Dev bootstrap helper** – ship `start_dev.sh` to keep Composer dependencies fresh, prep Python tooling via `.venv`, and launch the PHP dev server for quick smoke testing.
 
 ## Phase 2 – Resource & Pricing Model (🚧 In progress)
 - 🚧 **Resource taxonomy** – add `resource_kind`, capacity descriptors and amenities metadata to rooms, ateliers, seminar spaces and gastronomy units. The initial database tables plus matching `ObjectModel` classes now ship with the module install (see [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md)). A back-office **Resource Profiles** tab now lets staff edit profile metadata and capacity descriptors; amenity/catalogue management and data migrations remain next.
