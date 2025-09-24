@@ -24,6 +24,18 @@ campus asset can be described consistently across the back office, front office 
 All tables are prefixed with `_DB_PREFIX_kl_` to stay namespaced. Profiles reference `id_hotel_room` for rooms, and dedicated
 IDs for non-room spaces (ateliers, gastronomy) to keep future expansion possible.
 
+### Implementation progress
+
+The first slice of this schema now ships directly in the module install scripts:
+
+- `kl_resource_profile` with code, kind, publication flags, timezone metadata and optional `id_room_type` linkage.
+- `kl_resource_capacity` for structured occupancy, equipment and footprint descriptors (single row per resource).
+- `kl_resource_amenity` and `kl_resource_amenity_link` to catalogue reusable amenities and attach them to profiles with optional notes/requirements.
+- `kl_resource_story` to store translated copy blocks, imagery references and per-language authorship for the front office.
+- `kl_resource_history` to log JSON snapshots of each change alongside the triggering employee or automation source.
+
+Each table has a matching `ObjectModel` (`KLResourceProfile`, `KLResourceCapacity`, `KLAmenity`, `KLAmenityLink`, `KLResourceStory`, `KLResourceHistory`) so controller work can hydrate models without bespoke SQL. Helper methods cover common lookups such as amenity indexing, next display order per resource kind and language-aware story retrieval.
+
 ## Admin UX Notes
 - Extend the **Hotel Reservation System → Rooms** edit form with a new “Profile” tab that surfaces the taxonomy fields.
 - Mirror the profile UI in Atelier and Gastronomy controllers (or create a shared Vue component fed by AJAX endpoints).

@@ -548,6 +548,94 @@ class HotelReservationSystemDb
                 PRIMARY KEY (`id_room_type_bed_type`)
             ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;",
 
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_profile` (
+                `id_kl_resource_profile` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `resource_code` varchar(64) NOT NULL,
+                `id_room_type` int(10) unsigned DEFAULT NULL,
+                `external_reference` varchar(64) DEFAULT NULL,
+                `resource_kind` varchar(32) NOT NULL,
+                `display_order` int(10) unsigned NOT NULL DEFAULT 0,
+                `is_bookable` tinyint(1) unsigned NOT NULL DEFAULT 1,
+                `is_published` tinyint(1) unsigned NOT NULL DEFAULT 0,
+                `timezone` varchar(64) DEFAULT NULL,
+                `created_by` int(10) unsigned DEFAULT NULL,
+                `updated_by` int(10) unsigned DEFAULT NULL,
+                `date_add` datetime NOT NULL,
+                `date_upd` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_profile`),
+                UNIQUE KEY `resource_code` (`resource_code`),
+                UNIQUE KEY `id_room_type_unique` (`id_room_type`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_capacity` (
+                `id_kl_resource_capacity` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `id_kl_resource_profile` int(10) unsigned NOT NULL,
+                `capacity_adults` smallint(5) unsigned DEFAULT NULL,
+                `capacity_children` smallint(5) unsigned DEFAULT NULL,
+                `capacity_total` smallint(5) unsigned DEFAULT NULL,
+                `capacity_seated` smallint(5) unsigned DEFAULT NULL,
+                `capacity_standing` smallint(5) unsigned DEFAULT NULL,
+                `floor_area_sqm` decimal(7,2) DEFAULT NULL,
+                `ceiling_height_m` decimal(5,2) DEFAULT NULL,
+                `notes` text,
+                `date_add` datetime NOT NULL,
+                `date_upd` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_capacity`),
+                UNIQUE KEY `id_kl_resource_profile_unique` (`id_kl_resource_profile`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_amenity` (
+                `id_kl_resource_amenity` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `amenity_code` varchar(64) NOT NULL,
+                `category_code` varchar(64) NOT NULL,
+                `icon` varchar(255) DEFAULT NULL,
+                `translation_domain` varchar(128) DEFAULT NULL,
+                `is_active` tinyint(1) unsigned NOT NULL DEFAULT 1,
+                `date_add` datetime NOT NULL,
+                `date_upd` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_amenity`),
+                UNIQUE KEY `amenity_code_unique` (`amenity_code`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_amenity_link` (
+                `id_kl_resource_amenity_link` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `id_kl_resource_profile` int(10) unsigned NOT NULL,
+                `id_kl_resource_amenity` int(10) unsigned NOT NULL,
+                `note` varchar(255) DEFAULT NULL,
+                `is_required` tinyint(1) unsigned NOT NULL DEFAULT 0,
+                `date_add` datetime NOT NULL,
+                `date_upd` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_amenity_link`),
+                UNIQUE KEY `resource_amenity_unique` (`id_kl_resource_profile`, `id_kl_resource_amenity`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_story` (
+                `id_kl_resource_story` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `id_kl_resource_profile` int(10) unsigned NOT NULL,
+                `id_lang` int(10) unsigned NOT NULL,
+                `headline` varchar(255) DEFAULT NULL,
+                `excerpt` text,
+                `body` longtext,
+                `image_reference` varchar(255) DEFAULT NULL,
+                `alt_text` varchar(255) DEFAULT NULL,
+                `updated_by` int(10) unsigned DEFAULT NULL,
+                `date_add` datetime NOT NULL,
+                `date_upd` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_story`),
+                UNIQUE KEY `story_lang_unique` (`id_kl_resource_profile`, `id_lang`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
+            "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."kl_resource_history` (
+                `id_kl_resource_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `id_kl_resource_profile` int(10) unsigned NOT NULL,
+                `id_employee` int(10) unsigned DEFAULT NULL,
+                `change_source` varchar(32) NOT NULL,
+                `snapshot` longtext NOT NULL,
+                `date_add` datetime NOT NULL,
+                PRIMARY KEY (`id_kl_resource_history`),
+                KEY `id_kl_resource_profile` (`id_kl_resource_profile`)
+            ) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1;",
+
             "INSERT INTO `"._DB_PREFIX_."htl_settings_link` (`id_settings_link`, `icon`, `link`, `new_window`, `position`, `unremovable`, `active`, `date_add`, `date_upd`) VALUES
             (1, 'icon-cogs', 'index.php?controller=AdminHotelGeneralSettings', 0, 0, 1, 1, NOW(), NOW()),
             (2, 'icon-dollar', 'index.php?controller=AdminHotelFeaturePricesSettings', 0, 2, 1, 1, NOW(), NOW()),
@@ -648,6 +736,12 @@ class HotelReservationSystemDb
             `'._DB_PREFIX_.'htl_bed_type`,
             `'._DB_PREFIX_.'htl_bed_type_lang`,
             `'._DB_PREFIX_.'htl_room_type_bed_type`,
+            `'._DB_PREFIX_.'kl_resource_profile`,
+            `'._DB_PREFIX_.'kl_resource_capacity`,
+            `'._DB_PREFIX_.'kl_resource_amenity`,
+            `'._DB_PREFIX_.'kl_resource_amenity_link`,
+            `'._DB_PREFIX_.'kl_resource_story`,
+            `'._DB_PREFIX_.'kl_resource_history`,
             `'._DB_PREFIX_.'htl_access`,
             `'._DB_PREFIX_.'htl_settings_link`,
             `'._DB_PREFIX_.'htl_settings_link_lang`,
