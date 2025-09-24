@@ -14,6 +14,7 @@
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
+  - [x] Scaffolded database tables and `ObjectModel` classes for profiles, capacities, amenities, storytelling and history logs.
 - [ ] Design configurable rate plan entities and package bundling rules.
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 

@@ -15,6 +15,7 @@ Key characteristics of the fork:
 - 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
 - 🗂️ **Inquiry board** – a Kanban-style board replaces cart scaffolding so inquiries can be triaged, assigned, noted and scheduled with reminders (mail notes email guests directly from the board).
 - 🌐 **Scoped REST endpoints** – new JSON endpoints cover timeline moves, inquiry status changes and availability lookups without reviving the legacy webservice.
+- 🧱 **Resource taxonomy scaffolding** – installing the distribution now seeds dedicated tables and `ObjectModel` classes for resource profiles, capacities, amenities, storytelling copy and change history so upcoming admin UX can plug into structured metadata.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
