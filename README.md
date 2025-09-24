@@ -18,6 +18,8 @@ Key characteristics of the fork:
 - 🌐 **Scoped REST endpoints** – new JSON endpoints cover timeline moves, inquiry status changes and availability lookups without reviving the legacy webservice.
 - 🧱 **Resource taxonomy scaffolding** – installing the distribution now seeds dedicated tables and `ObjectModel` classes for resource profiles, capacities, amenities, storytelling copy and change history so upcoming admin UX can plug into structured metadata.
 - 🗃️ **Resource profile editor** – the back office ships with a Resource Profiles tab so staff can maintain taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces ahead of amenity management.
+- 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
+- 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
@@ -105,6 +107,16 @@ For day-to-day development run:
 The helper script creates (or reuses) a local Python virtual environment at `.venv`, installs Composer dependencies, warns if the application still needs to be installed, and finally starts the PHP built-in server on `http://127.0.0.1:8000`. Override the host or port by exporting `HOST`/`PORT` before executing the script.
 
 After installation you can log into the admin back office at `/admin` (rename the directory for security). The module catalogue will no longer attempt to connect to external stores; only locally available modules are listed.
+
+### Resource taxonomy seeding
+
+Existing databases upgraded to the Kunstort fork can populate taxonomy metadata by running:
+
+```bash
+php modules/hotelreservationsystem/tools/seed_resource_profiles.php [--employee-id=ID]
+```
+
+The helper inspects `htl_room_type` rows, creates any missing `kl_resource_profile` records, and mirrors the legacy adult/child/total capacity values into `kl_resource_capacity`. Pass an optional `--employee-id` to record who executed the migration. The script is idempotent and safe to re-run after adding new room types.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:

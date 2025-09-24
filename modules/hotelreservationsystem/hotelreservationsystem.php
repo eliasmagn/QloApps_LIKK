@@ -708,6 +708,7 @@ class HotelReservationSystem extends Module
 
         $this->installTab('AdminHotelConfigurationSetting', 'General Settings', 'AdminHotelReservationSystemManagement');
         $this->installTab('AdminHotelBedTypes', 'Bed Types', 'AdminCatalog');
+        $this->installTab('AdminHotelAmenities', 'Amenities', 'AdminCatalog');
         // Controllers without tabs
         $this->installTab('AdminHotelGeneralSettings', 'Hotel General Configuration', 'AdminHotelConfigurationSetting', false);
         $this->installTab('AdminHotelFeaturePricesSettings', 'Advanced Price Rules', 'AdminHotelConfigurationSetting', false);
@@ -762,6 +763,12 @@ class HotelReservationSystem extends Module
         ) {
             return false;
         }
+
+        $context = Context::getContext();
+        $employeeId = ($context && $context->employee && $context->employee->id)
+            ? (int) $context->employee->id
+            : null;
+        KLResourceProfileSeeder::seedFromRoomTypes($employeeId);
 
         // if module should be populated while installation
         if (isset($this->populateData) && $this->populateData) {

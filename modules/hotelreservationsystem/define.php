@@ -57,6 +57,8 @@ require_once 'classes/ServiceProductCartDetail.php';
 require_once 'classes/ServiceProductOrderDetail.php';
 require_once 'classes/ServiceProductOption.php';
 
+require_once 'classes/KLResourceProfileSeeder.php';
+
 
 require_once 'classes/HotelSettingsLink.php';
 require_once 'classes/HotelBookingDocument.php';
