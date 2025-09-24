@@ -94,6 +94,16 @@ Increase PHP limits for development (memory ≥ 256M, max_execution_time ≥ 300
 3. Make sure `config/defines_custom.inc.php` is loaded (it is included automatically) so that marketplace integrations remain disabled.
 4. Run the classic QloApps installer by visiting `/install` in your browser, or migrate an existing database.
 
+### Quickstart script
+
+For day-to-day development run:
+
+```bash
+./start_dev.sh
+```
+
+The helper script creates (or reuses) a local Python virtual environment at `.venv`, installs Composer dependencies, warns if the application still needs to be installed, and finally starts the PHP built-in server on `http://127.0.0.1:8000`. Override the host or port by exporting `HOST`/`PORT` before executing the script.
+
 After installation you can log into the admin back office at `/admin` (rename the directory for security). The module catalogue will no longer attempt to connect to external stores; only locally available modules are listed.
 
 ## Distribution Flags
