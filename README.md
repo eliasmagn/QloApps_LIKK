@@ -20,6 +20,7 @@ Key characteristics of the fork:
 - 🗃️ **Resource profile editor** – the back office ships with a Resource Profiles tab so staff can maintain taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces ahead of amenity management.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
+- 💼 **Rate plan scaffolding** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes to anchor the upcoming pricing engine.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
@@ -118,6 +119,16 @@ php modules/hotelreservationsystem/tools/seed_resource_profiles.php [--employee-
 
 The helper inspects `htl_room_type` rows, creates any missing `kl_resource_profile` records, and mirrors the legacy adult/child/total capacity values into `kl_resource_capacity`. Pass an optional `--employee-id` to record who executed the migration. The script is idempotent and safe to re-run after adding new room types.
 
+### Rate plan & package scaffolding
+
+The new pricing scaffolding lives inside the `hotelreservationsystem` module. After pulling an update that includes database changes run the module upgrade so the `kl_rate_plan*`, `kl_package*` and `kl_quote` tables are created:
+
+```bash
+php bin/console prestashop:module upgrade hotelreservationsystem
+```
+
+Alternatively trigger the upgrade from **Modules → Module Manager** in the back office. The installer is safe to re-run; it only creates missing tables.
+
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:
 
@@ -129,7 +140,7 @@ Use these constants in future contributions to gate legacy commerce flows.
 ## Development Priorities
 - Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting. See [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md) for the canonical data model.
 - Replace the front-office room list with storytelling-driven templates and an enquiry form tied to curated packages. Content strategy is outlined in the taxonomy blueprint and will drive copy blocks surfaced on offer pages.
-- Introduce configurable rate plans and bundled packages so inquiries can be priced consistently, following [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
+- Wire up configurable rate plans and bundled packages on top of the new scaffolding so inquiries can be priced consistently, following [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
 - Provide CSV/ICS exports plus internal notifications to support residency and seminar scheduling outside the app, grounded in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md).
 
 See [`checklist.md`](checklist.md) for the current implementation status.
