@@ -22,6 +22,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Resource taxonomy scaffolding now lives in core tables (`kl_resource_profile`, `kl_resource_capacity`, `kl_resource_amenity`, `kl_resource_story`, `kl_resource_history`) with matching `ObjectModel` classes to power upcoming admin forms and APIs.
 - Pricing scaffolding now introduces `KLRatePlan`, `KLRatePlanSeason`, `KLPackage`, `KLPackageComponent` and `KLQuote` ObjectModels so configurable plans, bundled offers and inquiry-linked quotes can be persisted alongside the taxonomy data.
 - The back office now exposes a **Rate Plans** console so staff can curate plan metadata, scope eligibility, flag approval needs and manage seasonal adjustments without touching the database.
+- The back office also includes a **Packages** builder so curated offers can be assembled from lodging, atelier, catering and experience components without editing tables manually.
 - The back office exposes a dedicated **Resource Profiles** tab so staff can edit taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces while amenity catalogues are prepared.
 - Catalog management now includes an **Amenities** screen so the taxonomy team can seed and curate reusable amenity codes, icons and translation domains before wiring them into resource profiles.
 - Install and upgrade flows now invoke a CLI-friendly seeder that backfills resource profiles and capacity rows for any legacy room types so taxonomy tables stay aligned with existing inventory.

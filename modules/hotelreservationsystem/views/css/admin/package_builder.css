@@ -1,0 +1,30 @@
+.kl-package-components {
+    margin-top: 10px;
+}
+
+.kl-package-components__toolbar {
+    margin-bottom: 10px;
+}
+
+.kl-package-components__table th,
+.kl-package-components__table td {
+    vertical-align: middle;
+}
+
+.kl-package-components__empty {
+    display: none;
+    margin-top: 10px;
+}
+
+.kl-package-components__editor {
+    display: none;
+    margin-top: 15px;
+}
+
+.kl-package-components__editor .panel-body .form-group:last-of-type {
+    margin-bottom: 10px;
+}
+
+.kl-package-components__editor .panel-footer .btn {
+    margin-left: 5px;
+}
