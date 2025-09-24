@@ -9290,3 +9290,114 @@ div a.our_properties_link{
     margin-left: 0;
   }
 }
+
+.residency-showcase {
+  padding: 60px 0;
+  background-color: #f7f4ef;
+}
+
+.residency-section + .residency-section {
+  margin-top: 60px;
+}
+
+.residency-section-header {
+  margin-bottom: 25px;
+}
+
+.residency-section-title {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #3c3426;
+  margin-bottom: 10px;
+}
+
+.residency-section-intro {
+  font-size: 16px;
+  color: #5e5549;
+  max-width: 760px;
+}
+
+.residency-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.residency-card {
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(60, 52, 38, 0.08);
+  box-shadow: 0 8px 24px rgba(12, 6, 0, 0.08);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.residency-card-header {
+  margin-bottom: 16px;
+}
+
+.residency-card-title {
+  font-size: 20px;
+  color: #312a1e;
+  margin: 0 0 4px;
+}
+
+.residency-card-subtitle {
+  color: #847a6c;
+  font-size: 14px;
+  margin: 0;
+}
+
+.residency-card-excerpt {
+  color: #4d4538;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.residency-card-meta {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  color: #5e5549;
+  font-size: 14px;
+}
+
+.residency-card-meta li + li {
+  margin-top: 6px;
+}
+
+.residency-card-footer {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: #756b5c;
+}
+
+.residency-card-code strong,
+.residency-card-timezone strong {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin-right: 6px;
+  color: #a1844c;
+}
+
+.residency-section-empty {
+  font-size: 15px;
+}
+
+@media (max-width: 767px) {
+  .residency-section-title {
+    font-size: 20px;
+  }
+
+  .residency-card {
+    padding: 20px;
+  }
+}

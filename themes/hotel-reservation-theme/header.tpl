@@ -105,10 +105,9 @@
                                                                                 <nav class="residency-primary-nav" role="navigation" aria-label="{l s='Residency primary navigation'}">
                                                                                         <ul class="nav nav-pills nav-justified">
                                                                                                 <li><a href="{$base_dir|escape:'html':'UTF-8'}#residences-overview">{l s='Residences'}</a></li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#extended-stays">{l s='Long stays'}</a></li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#amenities">{l s='Amenities'}</a></li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining'}</a></li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#experiences">{l s='Experiences'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers">{l s='Studios & ateliers'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a></li>
+                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a></li>
                                                                                                 <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
                                                                                         </ul>
                                                                                 </nav>
@@ -149,7 +148,7 @@
                                                                                         </div>
                                                                                         <div class="residency-quick-actions">
                                                                                                 <a class="our_properties_link" href="{$link->getPageLink('our-properties')}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
-                                                                                                <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-services" title="{l s='Resident services'}">{l s='Resident Services'}</a>
+                                                                                                <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
                                                                                         </div>
                                                                                 </div>
                                                                         </div>

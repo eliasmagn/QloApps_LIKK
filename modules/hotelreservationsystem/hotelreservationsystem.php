@@ -87,6 +87,173 @@ class HotelReservationSystem extends Module
         return $this->display(__FILE__, 'external-navigation-hook.tpl');
     }
 
+    public function hookDisplayHome($params)
+    {
+        $idLang = (int) $this->context->language->id;
+        $idShop = (int) $this->context->shop->id;
+        $profiles = KLResourceProfile::getPublishedProfilesWithDetails($idLang, $idShop);
+        if (!$profiles) {
+            return '';
+        }
+
+        $translator = $this->context->getTranslator();
+        $sections = array(
+            KLResourceProfile::RESOURCE_KIND_ROOM => array(
+                'anchor' => 'residences-overview',
+                'title' => $translator->trans('Residences', array(), 'Modules.Hotelreservationsystem.Front'),
+                'intro' => $translator->trans('Residency rooms prepared for curated stays and guest artists.', array(), 'Modules.Hotelreservationsystem.Front'),
+                'profiles' => array(),
+            ),
+            KLResourceProfile::RESOURCE_KIND_ATELIER => array(
+                'anchor' => 'resident-ateliers',
+                'title' => $translator->trans('Studios & ateliers', array(), 'Modules.Hotelreservationsystem.Front'),
+                'intro' => $translator->trans('Workspaces and ateliers equipped for long-form projects and collaborations.', array(), 'Modules.Hotelreservationsystem.Front'),
+                'profiles' => array(),
+            ),
+            KLResourceProfile::RESOURCE_KIND_GASTRONOMY => array(
+                'anchor' => 'dining',
+                'title' => $translator->trans('Dining & gastronomy', array(), 'Modules.Hotelreservationsystem.Front'),
+                'intro' => $translator->trans('Shared kitchens and dining rooms that support communal meals and catering.', array(), 'Modules.Hotelreservationsystem.Front'),
+                'profiles' => array(),
+            ),
+            KLResourceProfile::RESOURCE_KIND_SEMINAR => array(
+                'anchor' => 'programme-spaces',
+                'title' => $translator->trans('Programme & seminar spaces', array(), 'Modules.Hotelreservationsystem.Front'),
+                'intro' => $translator->trans('Gathering spaces for workshops, talks and performances across the campus.', array(), 'Modules.Hotelreservationsystem.Front'),
+                'profiles' => array(),
+            ),
+        );
+
+        $totalProfiles = 0;
+        foreach ($profiles as $profile) {
+            $kind = $profile['resource_kind'];
+            if (!isset($sections[$kind])) {
+                $sections[$kind] = array(
+                    'anchor' => 'residency-'.Tools::strtolower($kind),
+                    'title' => Tools::ucfirst($kind),
+                    'intro' => '',
+                    'profiles' => array(),
+                );
+            }
+
+            $displayName = $profile['resource_code'];
+            if (!empty($profile['story']['headline'])) {
+                $displayName = trim($profile['story']['headline']);
+            } elseif (!empty($profile['room_type_name'])) {
+                $displayName = $profile['room_type_name'];
+            }
+
+            $excerptSource = '';
+            if (!empty($profile['story']['excerpt'])) {
+                $excerptSource = $profile['story']['excerpt'];
+            } elseif (!empty($profile['story']['body'])) {
+                $excerptSource = $profile['story']['body'];
+            }
+            $excerptText = trim(strip_tags($excerptSource));
+            if ($excerptText !== '') {
+                $excerptText = Tools::truncate($excerptText, 220, '…');
+            }
+
+            $capacitySummary = array();
+            $capacity = $profile['capacity'];
+            if (!empty($capacity['total'])) {
+                if (!empty($capacity['adults']) && !empty($capacity['children'])) {
+                    $capacitySummary[] = $translator->trans(
+                        'Sleeps up to %total% guests (%adults% adults + %children% children).',
+                        array(
+                            '%total%' => $capacity['total'],
+                            '%adults%' => $capacity['adults'],
+                            '%children%' => $capacity['children'],
+                        ),
+                        'Modules.Hotelreservationsystem.Front'
+                    );
+                } else {
+                    $capacitySummary[] = $translator->trans(
+                        'Sleeps up to %total% guests.',
+                        array('%total%' => $capacity['total']),
+                        'Modules.Hotelreservationsystem.Front'
+                    );
+                }
+            } else {
+                if (!empty($capacity['adults'])) {
+                    $capacitySummary[] = $translator->trans(
+                        'Adults capacity: %count%',
+                        array('%count%' => $capacity['adults']),
+                        'Modules.Hotelreservationsystem.Front'
+                    );
+                }
+                if (!empty($capacity['children'])) {
+                    $capacitySummary[] = $translator->trans(
+                        'Children capacity: %count%',
+                        array('%count%' => $capacity['children']),
+                        'Modules.Hotelreservationsystem.Front'
+                    );
+                }
+            }
+
+            if (!empty($capacity['seated'])) {
+                $capacitySummary[] = $translator->trans(
+                    'Seated capacity: %count%',
+                    array('%count%' => $capacity['seated']),
+                    'Modules.Hotelreservationsystem.Front'
+                );
+            }
+            if (!empty($capacity['standing'])) {
+                $capacitySummary[] = $translator->trans(
+                    'Standing capacity: %count%',
+                    array('%count%' => $capacity['standing']),
+                    'Modules.Hotelreservationsystem.Front'
+                );
+            }
+            if (!empty($capacity['floor_area_sqm'])) {
+                $capacitySummary[] = $translator->trans(
+                    'Floor area: %sqm% m²',
+                    array('%sqm%' => Tools::ps_round($capacity['floor_area_sqm'], 2)),
+                    'Modules.Hotelreservationsystem.Front'
+                );
+            }
+            if (!empty($capacity['ceiling_height_m'])) {
+                $capacitySummary[] = $translator->trans(
+                    'Ceiling height: %height% m',
+                    array('%height%' => Tools::ps_round($capacity['ceiling_height_m'], 2)),
+                    'Modules.Hotelreservationsystem.Front'
+                );
+            }
+            if (!empty($profile['capacity_notes'])) {
+                $capacitySummary[] = Tools::truncate(trim(strip_tags($profile['capacity_notes'])), 180, '…');
+            }
+
+            if (!empty($profile['is_bookable'])) {
+                $capacitySummary[] = $translator->trans('Bookable directly on the occupancy timeline.', array(), 'Modules.Hotelreservationsystem.Front');
+            } else {
+                $capacitySummary[] = $translator->trans('Available on request via inquiry.', array(), 'Modules.Hotelreservationsystem.Front');
+            }
+
+            $sections[$kind]['profiles'][] = array(
+                'id' => $profile['id_kl_resource_profile'],
+                'resource_code' => $profile['resource_code'],
+                'display_name' => $displayName,
+                'room_type_name' => $profile['room_type_name'],
+                'excerpt' => $excerptText,
+                'capacity_summary' => $capacitySummary,
+                'timezone' => $profile['timezone'],
+            );
+            $totalProfiles++;
+        }
+
+        if ($totalProfiles === 0) {
+            return '';
+        }
+
+        $this->context->smarty->assign(array(
+            'residency_showcase' => array(
+                'sections' => $sections,
+            ),
+        ));
+
+        return $this->display(__FILE__, 'residency-home.tpl');
+    }
+
     public function cartBookingDataForMail($order)
     {
         $result = array();
@@ -626,6 +793,7 @@ class HotelReservationSystem extends Module
                 'actionCartSummary',
                 'actionFrontControllerSetMedia',
                 'displayExternalNavigationHook',
+                'displayHome',
             )
         );
     }
