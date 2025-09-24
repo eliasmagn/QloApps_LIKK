@@ -20,6 +20,9 @@
   - [x] Added a Catalog → Amenities manager so reusable amenity codes, icons and translation domains can be curated before linking to resources.
   - [x] Seeded room-type profiles and capacity rows via install/upgrade hooks and an idempotent CLI helper.
 - [ ] Design configurable rate plan entities and package bundling rules.
+  - [x] Scaffolded database tables and `ObjectModel` classes for rate plans, seasonal adjustments, bundled packages, components and inquiry quotes.
+  - [ ] Expose admin management UIs for rate plans, packages and seasonal rules.
+  - [ ] Implement a pricing engine that produces inquiry quotes from selected plans or packages.
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 
 ## Planned
