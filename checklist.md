@@ -11,6 +11,7 @@
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 - [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.
+- [x] Added `start_dev.sh` to bootstrap Composer, Python tooling and the PHP dev server for local testing.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
