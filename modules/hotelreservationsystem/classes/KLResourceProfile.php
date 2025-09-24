@@ -117,4 +117,86 @@ class KLResourceProfile extends ObjectModel
             self::RESOURCE_KIND_GASTRONOMY,
         );
     }
+
+    /**
+     * Returns published resource profiles enriched with capacity metrics and optional storytelling data.
+     *
+     * @param int $idLang
+     * @param int|null $idShop
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getPublishedProfilesWithDetails($idLang, $idShop = null)
+    {
+        $idLang = (int) $idLang;
+        if ($idShop === null) {
+            $context = Context::getContext();
+            $idShop = $context && $context->shop ? (int) $context->shop->id : 0;
+        }
+        $idShop = (int) $idShop;
+
+        $query = new DbQuery();
+        $query->select('p.`id_kl_resource_profile`');
+        $query->select('p.`resource_code`');
+        $query->select('p.`external_reference`');
+        $query->select('p.`resource_kind`');
+        $query->select('p.`display_order`');
+        $query->select('p.`is_bookable`');
+        $query->select('p.`is_published`');
+        $query->select('p.`timezone`');
+        $query->select('cap.`capacity_adults`, cap.`capacity_children`, cap.`capacity_total`, cap.`capacity_seated`, cap.`capacity_standing`, cap.`floor_area_sqm`, cap.`ceiling_height_m`, cap.`notes` AS capacity_notes');
+        $query->select('pl.`name` AS room_type_name');
+        $query->from('kl_resource_profile', 'p');
+        $query->leftJoin('kl_resource_capacity', 'cap', 'cap.`id_kl_resource_profile` = p.`id_kl_resource_profile`');
+        $query->leftJoin(
+            'htl_room_type',
+            'hrt',
+            'hrt.`id` = p.`id_room_type`'
+        );
+        $query->leftJoin(
+            'product_lang',
+            'pl',
+            'pl.`id_product` = hrt.`id_product`'
+            .' AND pl.`id_lang` = '.(int) $idLang
+            .' AND pl.`id_shop` = '.(int) $idShop
+        );
+        $query->where('p.`is_published` = 1');
+        $query->orderBy('p.`resource_kind` ASC, p.`display_order` ASC, p.`resource_code` ASC');
+
+        $rows = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+        if (!$rows) {
+            return array();
+        }
+
+        $profiles = array();
+        foreach ($rows as $row) {
+            $idProfile = (int) $row['id_kl_resource_profile'];
+            $story = KLResourceStory::getByProfileAndLang($idProfile, $idLang);
+
+            $profiles[] = array(
+                'id_kl_resource_profile' => $idProfile,
+                'resource_code' => $row['resource_code'],
+                'external_reference' => $row['external_reference'],
+                'resource_kind' => $row['resource_kind'],
+                'display_order' => (int) $row['display_order'],
+                'is_bookable' => (bool) $row['is_bookable'],
+                'is_published' => (bool) $row['is_published'],
+                'timezone' => $row['timezone'],
+                'room_type_name' => $row['room_type_name'],
+                'capacity' => array(
+                    'adults' => $row['capacity_adults'] !== null ? (int) $row['capacity_adults'] : null,
+                    'children' => $row['capacity_children'] !== null ? (int) $row['capacity_children'] : null,
+                    'total' => $row['capacity_total'] !== null ? (int) $row['capacity_total'] : null,
+                    'seated' => $row['capacity_seated'] !== null ? (int) $row['capacity_seated'] : null,
+                    'standing' => $row['capacity_standing'] !== null ? (int) $row['capacity_standing'] : null,
+                    'floor_area_sqm' => $row['floor_area_sqm'] !== null ? (float) $row['floor_area_sqm'] : null,
+                    'ceiling_height_m' => $row['ceiling_height_m'] !== null ? (float) $row['ceiling_height_m'] : null,
+                ),
+                'capacity_notes' => $row['capacity_notes'],
+                'story' => $story ?: null,
+            );
+        }
+
+        return $profiles;
+    }
 }

@@ -16,7 +16,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 ## Phase 2 – Resource & Pricing Model (🚧 In progress)
 - 🚧 **Resource taxonomy** – add `resource_kind`, capacity descriptors and amenities metadata to rooms, ateliers, seminar spaces and gastronomy units. The initial database tables plus matching `ObjectModel` classes now ship with the module install (see [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md)). A back-office **Resource Profiles** tab now lets staff edit profile metadata and capacity descriptors; amenity/catalogue management and data migrations remain next.
 - ⏳ **Rate plans & packages** – introduce configurable price plans (BAR, corporate, residency programmes) plus bundled packages for weekly ateliers, catering-inclusive stays, etc., as laid out in [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
-- ⏳ **Frontend storytelling** – rebuild offer pages to surface the new taxonomy with curated copy, imagery and availability cues informed by the taxonomy and packages.
+- 🚧 **Frontend storytelling** – the home page now surfaces published resource profiles with capacity cues; next steps extend storytelling and imagery to offer detail pages informed by taxonomy and packages.
 
 ## Phase 3 – Operations Automation (⏳ Planned)
 - ⏳ **Housekeeping & maintenance tasks** – auto-generate cleaning and technical checklists from arrival/departure data and allow staff to report statuses (clean, in progress, needs repair). Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md).

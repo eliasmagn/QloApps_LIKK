@@ -31,3 +31,4 @@
 - [x] Layered drag-and-drop reallocation controls onto the booking timeline with conflict detection.
 - [x] Exposed REST endpoints for timeline edits, inquiry updates and availability lookups.
 - [x] Enabled mail note delivery from the inquiry board so assignees can email guests while logging internal notes.
+- [x] Replaced the front-office residency showcase mockups with live resource profile data and capacity summaries.

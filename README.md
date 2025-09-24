@@ -10,6 +10,7 @@ Key characteristics of the fork:
 - 📨 **Inquiry workflow** – the legacy checkout paths now forward to an inquiry landing page so staff can confirm curated requests manually.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
+- 🗺️ **Resource showcase** – the home page now renders a residency showcase fed by published resource profiles so rooms, studios, gastronomy and programme spaces surface real capacity and availability cues.
 - 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
 - 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
 - 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
@@ -68,7 +69,8 @@ Dragging a card to another column automatically updates its stage (and default s
 
 ## Resident-Focused Front Office
 
-- The theme header no longer invokes `HOOK_TOP`, `displayTopColumn`, or left/right column placeholders. Instead it renders a static residency navigation bar with anchors for long stays, amenities, dining, experiences, and contact along with direct resident-service shortcuts and support contacts.
+- The theme header no longer invokes `HOOK_TOP`, `displayTopColumn`, or left/right column placeholders. Instead it renders a static residency navigation bar with anchors for residences, studios & ateliers, dining, programme spaces, and contact along with direct resident-service shortcuts and support contacts.
+- The home page now includes a residency showcase block sourced from the new resource taxonomy tables so rooms, ateliers, gastronomy and programme spaces present real metadata (capacity, availability posture, timezone) instead of mock content.
 - The hotel description ribbon is rendered inline from configuration values so the chain name and tagline stay visible without needing module hooks.
 - Legacy e-commerce widgets (`blockcart`, `blockuserinfo`, `blockmyaccount`, `blocknewsletter`, `blocksocial`) have been removed from both `themes/hotel-reservation-theme/modules/` and `modules/`, and their default hook assignments have been stripped from installation metadata so fresh installs or upgrades never attempt to load them.
 - Core controllers now guard newsletter integration points so missing modules do not trigger autoload errors on identity or authentication flows.
