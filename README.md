@@ -22,6 +22,7 @@ Key characteristics of the fork:
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 - 💼 **Rate plan scaffolding** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes to anchor the upcoming pricing engine.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
+- 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
@@ -140,6 +141,15 @@ Back-office staff can administer pricing rules from **Hotel Reservation System �
 - Jump into per-plan season management to configure fixed or percentage adjustments, date windows and stay/lead-time constraints.
 
 Seasonal rules live under the same navigation: choose a plan, then click **Seasons** to open an inline list filtered to that plan. Each season supports fixed amount or percentage adjustments expressed in minor units/basis points plus optional stay, occupancy and lead-time guards.
+
+### Package assembly UI
+
+Head to **Hotel Reservation System → Packages** to craft bundled offers:
+
+- Curate package metadata (code, translatable name, tagline, storytelling description, featured flag) and scope it to specific resource kinds or audience segments.
+- Link a default rate plan and annotate duration hints so inquiry responses stay consistent with residency programme expectations.
+- Use the inline **Package components** builder to add lodging, atelier, meal, experience or custom components, control quantities/units, capture optional extras, associate alternate rate plans and order the lines for downstream quoting.
+- Reorder components with quick move buttons, edit entries in place and persist the JSON payload without direct database edits.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:

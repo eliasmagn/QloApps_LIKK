@@ -22,7 +22,7 @@
 - [ ] Design configurable rate plan entities and package bundling rules.
   - [x] Scaffolded database tables and `ObjectModel` classes for rate plans, seasonal adjustments, bundled packages, components and inquiry quotes.
   - [x] Expose admin management UIs for rate plans and seasonal rules.
-  - [ ] Build package assembly UI for bundled offers.
+  - [x] Build package assembly UI for bundled offers.
   - [ ] Implement a pricing engine that produces inquiry quotes from selected plans or packages.
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 
