@@ -21,6 +21,7 @@ Key characteristics of the fork:
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 - 💼 **Rate plan scaffolding** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes to anchor the upcoming pricing engine.
+- 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
 
@@ -128,6 +129,17 @@ php bin/console prestashop:module upgrade hotelreservationsystem
 ```
 
 Alternatively trigger the upgrade from **Modules → Module Manager** in the back office. The installer is safe to re-run; it only creates missing tables.
+
+### Rate plan management UI
+
+Back-office staff can administer pricing rules from **Hotel Reservation System → Rate Plans**:
+
+- Create and edit rate plans with translated names, taglines and long-form descriptions.
+- Define pricing method, plan currency, eligible resource kinds and optional audience segment tags.
+- Capture cancellation policy notes, deposit requirements and approval flags.
+- Jump into per-plan season management to configure fixed or percentage adjustments, date windows and stay/lead-time constraints.
+
+Seasonal rules live under the same navigation: choose a plan, then click **Seasons** to open an inline list filtered to that plan. Each season supports fixed amount or percentage adjustments expressed in minor units/basis points plus optional stay, occupancy and lead-time guards.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:
