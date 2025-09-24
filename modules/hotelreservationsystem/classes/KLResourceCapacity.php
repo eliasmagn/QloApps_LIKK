@@ -73,4 +73,30 @@ class KLResourceCapacity extends ObjectModel
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
         ),
     );
+
+    /**
+     * @param int $idProfile
+     *
+     * @return KLResourceCapacity|null
+     */
+    public static function loadByProfileId($idProfile)
+    {
+        $idProfile = (int) $idProfile;
+        if (!$idProfile) {
+            return null;
+        }
+
+        $idCapacity = (int) Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
+            (new DbQuery())
+                ->select('`id_kl_resource_capacity`')
+                ->from('kl_resource_capacity')
+                ->where('`id_kl_resource_profile` = '.(int) $idProfile)
+        );
+
+        if (!$idCapacity) {
+            return null;
+        }
+
+        return new self($idCapacity);
+    }
 }
