@@ -37,5 +37,11 @@ function upgrade_module_1_8_0(HotelReservationSystem $module)
     // ensure the inquiries tab exists after upgrade
     $module->installTab('AdminHotelInquiries', 'Inquiries', 'AdminHotelReservationSystemManagement');
 
+    $context = Context::getContext();
+    $employeeId = ($context && $context->employee && $context->employee->id)
+        ? (int) $context->employee->id
+        : null;
+    KLResourceProfileSeeder::seedFromRoomTypes($employeeId);
+
     return true;
 }

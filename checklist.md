@@ -17,6 +17,8 @@
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
   - [x] Scaffolded database tables and `ObjectModel` classes for profiles, capacities, amenities, storytelling and history logs.
   - [x] Added an admin "Resource Profiles" tab to manage profile metadata and capacity descriptors.
+  - [x] Added a Catalog → Amenities manager so reusable amenity codes, icons and translation domains can be curated before linking to resources.
+  - [x] Seeded room-type profiles and capacity rows via install/upgrade hooks and an idempotent CLI helper.
 - [ ] Design configurable rate plan entities and package bundling rules.
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 

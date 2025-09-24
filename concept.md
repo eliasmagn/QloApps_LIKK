@@ -21,6 +21,8 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Drag-and-drop reallocation is available directly on the occupancy timeline with server-side conflict checks against disabled rooms and capacity limits.
 - Resource taxonomy scaffolding now lives in core tables (`kl_resource_profile`, `kl_resource_capacity`, `kl_resource_amenity`, `kl_resource_story`, `kl_resource_history`) with matching `ObjectModel` classes to power upcoming admin forms and APIs.
 - The back office exposes a dedicated **Resource Profiles** tab so staff can edit taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces while amenity catalogues are prepared.
+- Catalog management now includes an **Amenities** screen so the taxonomy team can seed and curate reusable amenity codes, icons and translation domains before wiring them into resource profiles.
+- Install and upgrade flows now invoke a CLI-friendly seeder that backfills resource profiles and capacity rows for any legacy room types so taxonomy tables stay aligned with existing inventory.
 - The front-office header ships as a static residency navigation strip with in-house quick links; cart/account/newsletter/social blocks have been removed from both the theme and core module set so no commerce widgets are expected.
 - The front-office home page now surfaces a residency showcase fed by published resource profiles so rooms, ateliers, gastronomy and programme spaces display live metadata instead of mockups.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.

@@ -33,6 +33,7 @@ The first slice of this schema now ships directly in the module install scripts:
 - `kl_resource_amenity` and `kl_resource_amenity_link` to catalogue reusable amenities and attach them to profiles with optional notes/requirements.
 - `kl_resource_story` to store translated copy blocks, imagery references and per-language authorship for the front office.
 - `kl_resource_history` to log JSON snapshots of each change alongside the triggering employee or automation source.
+- `modules/hotelreservationsystem/tools/seed_resource_profiles.php` (also called on install/upgrade) to seed profiles and capacity rows for any existing room types so the taxonomy starts populated.
 
 Each table has a matching `ObjectModel` (`KLResourceProfile`, `KLResourceCapacity`, `KLAmenity`, `KLAmenityLink`, `KLResourceStory`, `KLResourceHistory`) so controller work can hydrate models without bespoke SQL. Helper methods cover common lookups such as amenity indexing, next display order per resource kind and language-aware story retrieval.
 
