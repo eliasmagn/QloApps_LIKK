@@ -23,6 +23,11 @@
 
 class KLResourceProfile extends ObjectModel
 {
+    const RESOURCE_KIND_ROOM = 'room';
+    const RESOURCE_KIND_ATELIER = 'atelier';
+    const RESOURCE_KIND_SEMINAR = 'seminar';
+    const RESOURCE_KIND_GASTRONOMY = 'gastronomy';
+
     /** @var string */
     public $resource_code;
 
@@ -98,5 +103,18 @@ class KLResourceProfile extends ObjectModel
         }
 
         return (int) $max + 1;
+    }
+
+    /**
+     * @return array<string> supported resource kinds
+     */
+    public static function getSupportedResourceKinds()
+    {
+        return array(
+            self::RESOURCE_KIND_ROOM,
+            self::RESOURCE_KIND_ATELIER,
+            self::RESOURCE_KIND_SEMINAR,
+            self::RESOURCE_KIND_GASTRONOMY,
+        );
     }
 }
