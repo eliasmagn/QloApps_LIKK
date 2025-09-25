@@ -34,11 +34,13 @@
 
 ## In Progress
 - [ ] Extend operations automation with notifications, maintenance task types and export routines.
+  - [ ] Introduce maintenance task definitions and generation rules alongside the existing housekeeping cron.
+  - [ ] Add notification digests and reminder hooks for overdue or escalated tasks.
+  - [ ] Deliver CSV/ICS export tooling so schedules can be shared externally.
 
 ## Planned
 - [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).
-- [ ] Implement housekeeping and maintenance task automation (see [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md)).
-- [ ] Implement export utilities (CSV/ICS) for residency scheduling.
+- [ ] Layer internal notification channels on top of inquiry/timeline events once the operations hooks are in place.
 - [ ] Deliver utilisation dashboards and programme reporting.
 
 ## Recently Completed

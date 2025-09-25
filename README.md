@@ -24,7 +24,7 @@ Key characteristics of the fork:
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
-- 🧹 **Operations automation scaffolding** – the new `kloperations` module seeds housekeeping task tables, runs cron-driven arrival/checkout generation and exposes an **Operations → Tasks** console for daily follow-up.
+- 🧹 **Operations automation scaffolding** – the new `kloperations` module seeds housekeeping task tables, runs cron-driven arrival/checkout generation and exposes an **Operations → Tasks** console for daily follow-up. The next milestone expands it with maintenance task types, notifications and export tooling.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
 
@@ -181,6 +181,10 @@ php bin/console prestashop:module run-hook kloperations actionCronJob
 ```
 
 Or schedule it through the standard Prestashop `cronjobs` module/host-level cron hitting `index.php?module=cronjobs&...`. The generator is idempotent thanks to unique task hashes.
+
+### Upcoming milestone: maintenance & notifications
+
+The next milestone for `kloperations` broadens automation coverage. Focus areas include maintenance task definitions with generator hooks, digest/reminder notifications for overdue work and CSV/ICS exports so schedules can be shared with external teams. These deliverables build on the cron runner and admin console described above.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:

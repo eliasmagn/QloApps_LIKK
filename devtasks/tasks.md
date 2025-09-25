@@ -5,7 +5,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | Task | Status | Focus |
 | ---- | ------ | ----- |
 | [Front-office storytelling templates](front-office-storytelling.task.md) | ⏳ Planned | Replace legacy product grids with narrative-driven offer pages tied to inquiries. |
-| [Inquiry submission pipeline](inquiry-submission.task.md) | ⏳ Planned | Deliver the dedicated front-office inquiry flow and supporting APIs. |
+| [Inquiry submission pipeline](inquiry-submission.task.md) | ✅ Complete | Deliver the dedicated front-office inquiry flow and supporting APIs. |
 | [Housekeeping & maintenance automation](operations-automation.task.md) | 🚧 In progress | Bootstrap task generation, notifications and exports for daily operations. |
 
 Update this table whenever task briefs change status or new tasks are added.
