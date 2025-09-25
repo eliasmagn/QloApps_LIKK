@@ -22,3 +22,30 @@
 */
 
 require(dirname(__FILE__).'/vendor/autoload.php');
+
+if (!function_exists('each')) {
+    /**
+     * Polyfill for the deprecated PHP <7.2 each() helper used by PHPUnit 4.
+     *
+     * @param array<int|string, mixed> $array
+     *
+     * @return array<int|string, mixed>|false
+     */
+    function each(array &$array)
+    {
+        $key = key($array);
+        if ($key === null) {
+            return false;
+        }
+
+        $value = current($array);
+        next($array);
+
+        return array(
+            1 => $value,
+            'value' => $value,
+            0 => $key,
+            'key' => $key,
+        );
+    }
+}

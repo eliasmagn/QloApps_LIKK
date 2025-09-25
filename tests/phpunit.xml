@@ -1,4 +1,7 @@
 <phpunit bootstrap="bootstrap.php">
+    <php>
+        <ini name="auto_prepend_file" value="polyfills.php"/>
+    </php>
     <testsuites>
         <testsuite name="Unit">
             <directory>Unit</directory>

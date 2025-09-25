@@ -27,6 +27,8 @@ This blueprint outlines how flexible price plans and packages will integrate wit
    - Generates tax breakdown according to existing QloApps configuration.
 4. A `KLQuote` record is stored with the computed lines. Quotes can be revised with audit trail of manual edits.
 
+The `KLQuotePricingEngine` class inside `modules/hotelreservationsystem` now encapsulates this workflow, assembling per-night calculations, seasonal adjustments and optional package components into a single payload that can be rendered to staff and persisted against an inquiry.
+
 ## Admin Interfaces
 - **Rate Plans**: CRUD grid with plan metadata, eligibility conditions (resource kinds, residency tags), and seasonal modifiers.
 - **Packages**: Builder UI where staff assemble components (resource nights, catering, experiences) via drag-and-drop.

@@ -12,6 +12,11 @@
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 - [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.
 - [x] Added `start_dev.sh` to bootstrap Composer, Python tooling and the PHP dev server for local testing.
+- [x] Designed configurable rate plan entities and package bundling rules.
+  - [x] Scaffolded database tables and `ObjectModel` classes for rate plans, seasonal adjustments, bundled packages, components and inquiry quotes.
+  - [x] Exposed admin management UIs for rate plans and seasonal rules.
+  - [x] Built the package assembly UI for bundled offers.
+  - [x] Implemented a pricing engine that produces inquiry quotes with seasonal adjustments and optional components.
 
 ## In Progress
 - [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
@@ -19,11 +24,6 @@
   - [x] Added an admin "Resource Profiles" tab to manage profile metadata and capacity descriptors.
   - [x] Added a Catalog → Amenities manager so reusable amenity codes, icons and translation domains can be curated before linking to resources.
   - [x] Seeded room-type profiles and capacity rows via install/upgrade hooks and an idempotent CLI helper.
-- [ ] Design configurable rate plan entities and package bundling rules.
-  - [x] Scaffolded database tables and `ObjectModel` classes for rate plans, seasonal adjustments, bundled packages, components and inquiry quotes.
-  - [x] Expose admin management UIs for rate plans and seasonal rules.
-  - [x] Build package assembly UI for bundled offers.
-  - [ ] Implement a pricing engine that produces inquiry quotes from selected plans or packages.
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 
 ## Planned
