@@ -68,6 +68,19 @@ class CartControllerCore extends FrontController
 
     public function postProcess()
     {
+        if ($this->isInquiryMode()) {
+            if (Tools::getValue('ajax')) {
+                $this->ajaxDie(json_encode(array(
+                    'hasError' => true,
+                    'errors' => array(Tools::displayError('Cart actions are disabled while inquiry mode is active.')),
+                )));
+            }
+
+            Tools::redirect($this->context->link->getPageLink('inquiry', true));
+
+            return;
+        }
+
         // Update the cart ONLY if $this->cookies are available, in order to avoid ghost carts created by bots
         if ($this->context->cookie->exists() && !$this->errors && !($this->context->customer->isLogged() && !$this->isTokenValid())) {
             if (Tools::getIsset('add') || Tools::getIsset('update')) {
@@ -117,6 +130,11 @@ class CartControllerCore extends FrontController
                 Tools::redirect('index.php');
             }
         }
+    }
+
+    protected function isInquiryMode()
+    {
+        return defined('_KUNSTORT_CORE_MODE_') && _KUNSTORT_CORE_MODE_ === 'inquiry';
     }
 
     /**

@@ -1,10 +1,11 @@
 <?php
-$projectRoot = realpath(__DIR__ . '/..');
+$projectRoot = rtrim(realpath(__DIR__ . '/..'), DIRECTORY_SEPARATOR);
+$rootPrefix = $projectRoot . DIRECTORY_SEPARATOR;
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $parsedPath = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 $filePath = realpath($projectRoot . $parsedPath);
 
-if ($filePath !== false && str_starts_with($filePath, $projectRoot) && is_file($filePath)) {
+if ($filePath !== false && strncmp($filePath, $rootPrefix, strlen($rootPrefix)) === 0 && is_file($filePath)) {
     return false; // Serve the requested resource as-is.
 }
 

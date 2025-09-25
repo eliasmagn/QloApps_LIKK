@@ -15,7 +15,8 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Admin module catalogue interactions are short-circuited to keep the back office free from external promotions.
 - `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`).
 - Legacy offline payment modules (bank wire, cheque) and the PayPal Commerce gateway have been removed to keep the stack focused on inquiry-driven fulfilment.
-- When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers and templates short-circuit to the inquiry landing page instead of exposing cart mechanics.
+- When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers short-circuit to the inquiry landing page (and AJAX calls return friendly errors) instead of exposing cart mechanics, while the full cart-first flow immediately returns once the flag is cleared.
+- Inquiry mode now also blocks the cart controller from mutating cart contents so direct requests cannot create ghost carts behind the scenes, and the original checkout templates/controllers remain intact for instant fallback.
 - When marketplace access is disabled, admin catalogue and theme pages display offline guidance instead of loading remote iframes.
 - The admin booking screen now opens with a tabbed occupancy timeline; the legacy month grid loads lazily only when the calendar tab is selected, and timeline data stays cached while the tab remains active for near-instant toggling.
 - Drag-and-drop reallocation is available directly on the occupancy timeline with server-side conflict checks against disabled rooms and capacity limits.

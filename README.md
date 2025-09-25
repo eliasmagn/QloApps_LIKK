@@ -7,7 +7,7 @@ Key characteristics of the fork:
 - 🚫 **Marketplace free** – outbound calls to the QloApps / Prestashop module stores are disabled by default.
 - 🧩 **Extensible from source** – custom modules can still be developed and dropped into `modules/` without depending on proprietary services.
 - 📆 **Calendar first** – the admin booking view now opens on a resource timeline covering rooms, ateliers, seminar rooms and programme spaces, with the legacy month grid available on demand.
-- 📨 **Inquiry workflow** – the legacy checkout paths now forward to an inquiry landing page so staff can confirm curated requests manually.
+- 📨 **Inquiry workflow** – when inquiry mode is enabled, the legacy checkout paths forward to an inquiry landing page so staff can confirm curated requests manually, while cart-driven checkout remains available when the flag is disabled.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
 - 🗺️ **Resource showcase** – the home page now renders a residency showcase fed by published resource profiles so rooms, studios, gastronomy and programme spaces surface real capacity and availability cues.
@@ -29,7 +29,9 @@ The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan
 
 ### Inquiry Landing
 
-Visiting `/index.php?controller=inquiry` (or any deprecated checkout URL such as `/index.php?controller=order`) shows a lightweight landing page that explains the new manual workflow and links to the contact form until the dedicated inquiry UI ships.
+Visiting `/index.php?controller=inquiry` always shows a lightweight landing page that explains the new manual workflow and links to the contact form until the dedicated inquiry UI ships. When `_KUNSTORT_CORE_MODE_` equals `inquiry`, legacy checkout URLs such as `/index.php?controller=order` redirect here instead of exposing cart mechanics, but the original order and one-page-checkout controllers/templates remain in place so clearing the flag instantly restores the classic flow.
+
+While inquiry mode is active the cart controller refuses to mutate cart contents—direct requests receive an error (or redirect to the inquiry landing) so ghost carts cannot accumulate behind the scenes—and any AJAX checkout calls now short-circuit with a friendly JSON error explaining that checkout is disabled.
 
 ### Legacy PrestaShop Webservice
 
@@ -108,7 +110,7 @@ For day-to-day development run:
 ./start_dev.sh
 ```
 
-The helper script creates (or reuses) a local Python virtual environment at `.venv`, installs Composer dependencies, warns if the application still needs to be installed, and finally starts the PHP built-in server on `http://127.0.0.1:8000`. Override the host or port by exporting `HOST`/`PORT` before executing the script.
+The helper script creates (or reuses) a local Python virtual environment at `.venv`, installs Composer dependencies, warns if the application still needs to be installed, and finally starts the PHP built-in server on `http://127.0.0.1:8000`. Override the host or port by exporting `HOST`/`PORT` before executing the script. The bundled development router stays compatible with PHP 7.4+, so the server can run on environments that have not yet upgraded to PHP 8.
 
 After installation you can log into the admin back office at `/admin` (rename the directory for security). The module catalogue will no longer attempt to connect to external stores; only locally available modules are listed.
 

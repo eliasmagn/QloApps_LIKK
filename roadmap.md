@@ -3,7 +3,8 @@
 This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloApps baseline into a residency-first operations suite. Each phase groups together coherent deliverables so we can prioritise work and spot dependencies early. Status markers: ✅ complete, 🚧 in progress, ⏳ planned.
 
 ## Phase 0 – Commerce Debloating (✅ Complete)
-- ✅ **Checkout short-circuit** – `order`/`order-opc` controllers render the inquiry landing and the matching theme templates only display the manual booking guidance.
+- ✅ **Checkout short-circuit** – when inquiry mode is enabled, `order`/`order-opc` controllers redirect to the inquiry landing (AJAX calls receive friendly JSON errors) while the restored legacy controllers and templates ensure clearing the flag immediately revives the cart workflow without code edits.
+- ✅ **Cart hardening** – inquiry mode also blocks cart mutations so direct POSTs cannot create ghost carts while the distribution runs inquiry-first.
 - ✅ **Payment modules removed** – legacy `bankwire`, `cheque` and `qlopaypalcommerce` modules (and overrides) are no longer shipped so no unused PCI-facing code stays in the tree.
 - ✅ **Front-office widgets stripped** – header and column slots now render a static residency navigation without cart, account, newsletter or social hooks.
 - ✅ **Webservice disabled** – `/webservice` responds with HTTP 410 and admin tooling for API keys has been excised to reduce attack surface.
