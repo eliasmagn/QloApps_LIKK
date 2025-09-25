@@ -37,8 +37,15 @@ The first slice of this schema now ships directly in the module install scripts:
 
 Each table has a matching `ObjectModel` (`KLResourceProfile`, `KLResourceCapacity`, `KLAmenity`, `KLAmenityLink`, `KLResourceStory`, `KLResourceHistory`) so controller work can hydrate models without bespoke SQL. Helper methods cover common lookups such as amenity indexing, next display order per resource kind and language-aware story retrieval.
 
+### Admin experience
+
+- The **Resource Profiles** tab now ships with inline validation for capacity totals (preventing adult/child counts from exceeding the total field and warning when existing bookings already exceed a proposed cap).
+- Amenity assignment is available directly on the profile form via grouped checkboxes that reuse the Catalog → Amenities catalogue. Missing translations are highlighted so localisation gaps are obvious while editing.
+- A **Front-office preview** panel mirrors the residency showcase summary, combining capacity cues and the selected amenities so staff can anticipate how metadata renders on the public site.
+- A **Change history** block surfaces the latest snapshot logged in `kl_resource_history`, showing author, timestamp, capacity state and assigned amenities for quick auditing.
+
 ## Admin UX Notes
-- Extend the **Hotel Reservation System → Rooms** edit form with a new “Profile” tab that surfaces the taxonomy fields.
+- Extend the **Hotel Reservation System → Rooms** edit form with a new “Profile” tab that surfaces the taxonomy fields. (Complete: the tab now includes amenity assignment, inline capacity validation, change history and a residency showcase preview.)
 - Mirror the profile UI in Atelier and Gastronomy controllers (or create a shared Vue component fed by AJAX endpoints).
 - Provide amenity management in **Catalog → Amenities** with drag-and-drop categorisation and icon upload.
 - Add a change log sidebar showing recent edits with rollback links (soft rollback that clones a previous version).
