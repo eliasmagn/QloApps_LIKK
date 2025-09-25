@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>New residency inquiry</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+    <p>A new residency inquiry has been submitted through the front-office form.</p>
+    <table cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse;">
+      <tr>
+        <th align="left">Reference</th>
+        <td>{reference}</td>
+      </tr>
+      <tr>
+        <th align="left">Guest</th>
+        <td>{guest_name} &lt;{guest_email}&gt;</td>
+      </tr>
+      <tr>
+        <th align="left">Phone</th>
+        <td>{guest_phone}</td>
+      </tr>
+      <tr>
+        <th align="left">Dates</th>
+        <td>{check_in} → {check_out}</td>
+      </tr>
+      <tr>
+        <th align="left">Party</th>
+        <td>{party_adults} adults / {party_children} children</td>
+      </tr>
+      <tr>
+        <th align="left">Focus</th>
+        <td>{resource_summary}</td>
+      </tr>
+    </table>
+    {if $summary != ''}
+    <p><strong>Notes:</strong><br />
+      {nl2br($summary)}
+    </p>
+    {/if}
+    <p><a href="{inquiry_board_url}">Open the inquiry in the board</a></p>
+  </body>
+</html>

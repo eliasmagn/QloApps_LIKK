@@ -13,6 +13,7 @@
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 - [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.
+- [x] Built out the dedicated inquiry submission pipeline on top of the new entry point, including structured validation, JSON lookups and guest/staff notifications.
 - [x] Added `start_dev.sh` to bootstrap Composer, Python tooling and the PHP dev server for local testing.
 - [x] Designed configurable rate plan entities and package bundling rules.
   - [x] Scaffolded database tables and `ObjectModel` classes for rate plans, seasonal adjustments, bundled packages, components and inquiry quotes.
@@ -35,7 +36,6 @@
 - [ ] Extend operations automation with notifications, maintenance task types and export routines.
 
 ## Planned
-- [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point (see [`devtasks/inquiry-submission.task.md`](devtasks/inquiry-submission.task.md)).
 - [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).
 - [ ] Implement housekeeping and maintenance task automation (see [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md)).
 - [ ] Implement export utilities (CSV/ICS) for residency scheduling.

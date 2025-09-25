@@ -37,6 +37,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - A dedicated Inquiry entity tracks residency requests independently from carts, including assignee, reminder, and note metadata.
 - The back office exposes an Inquiries Kanban board for triage, assignment, reminders and mail notes that can be emailed to guests directly from the board.
 - Timeline and inquiry APIs now expose JSON endpoints for UI interactions (reallocation, status changes, availability lookups) without reviving the legacy webservice.
+- The front-office inquiry route now renders a structured three-step submission flow that persists directly into the Kanban board, sends guest/staff notifications and hydrates autosuggest inputs via dedicated JSON lookups.
 
 ## Near-Term Focus
 Detailed task briefs now live in [`devtasks/`](devtasks/) to coordinate execution notes, acceptance criteria and cross-team dependencies. The multi-phase plan remains in [`roadmap.md`](roadmap.md). Immediate priorities concentrate on the first roadmap phases:

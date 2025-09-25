@@ -1,0 +1,12 @@
+A new residency inquiry has been submitted through the front-office form.
+
+Reference: {reference}
+Guest: {guest_name} <{guest_email}>
+Phone: {guest_phone}
+Dates: {check_in} → {check_out}
+Party: {party_adults} adults / {party_children} children
+Focus: {resource_summary}
+
+{summary}
+
+Open the inquiry in the board: {inquiry_board_url}
