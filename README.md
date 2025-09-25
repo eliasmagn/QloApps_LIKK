@@ -18,6 +18,7 @@ Key characteristics of the fork:
 - 🌐 **Scoped REST endpoints** – new JSON endpoints cover timeline moves, inquiry status changes and availability lookups without reviving the legacy webservice.
 - 🧱 **Resource taxonomy scaffolding** – installing the distribution now seeds dedicated tables and `ObjectModel` classes for resource profiles, capacities, amenities, storytelling copy and change history so upcoming admin UX can plug into structured metadata.
 - 🗃️ **Resource profile editor** – the back office ships with a Resource Profiles tab so staff can maintain taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces ahead of amenity management.
+- 🧾 **Taxonomy editor enhancements** – amenity assignments, inline capacity validation, change history snapshots and residency showcase previews live directly inside the Resource Profiles form so staff can review impact before publishing.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
@@ -120,6 +121,10 @@ php modules/hotelreservationsystem/tools/seed_resource_profiles.php [--employee-
 ```
 
 The helper inspects `htl_room_type` rows, creates any missing `kl_resource_profile` records, and mirrors the legacy adult/child/total capacity values into `kl_resource_capacity`. Pass an optional `--employee-id` to record who executed the migration. The script is idempotent and safe to re-run after adding new room types.
+
+### Resource profile management
+
+Navigate to **Hotel Reservation System → Resource Profiles** to maintain taxonomy metadata. The form now bundles amenity assignment checkboxes (fed by Catalog → Amenities), inline capacity validation that guards against conflicting bookings, a change history summary pulled from `kl_resource_history` and a residency showcase preview that mirrors the front-office block. These cues help staff verify edits before publishing them to the showcase or downstream exports.
 
 ### Rate plan & package scaffolding
 

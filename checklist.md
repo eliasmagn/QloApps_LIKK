@@ -17,13 +17,15 @@
   - [x] Exposed admin management UIs for rate plans and seasonal rules.
   - [x] Built the package assembly UI for bundled offers.
   - [x] Implemented a pricing engine that produces inquiry quotes with seasonal adjustments and optional components.
-
-## In Progress
-- [ ] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
+- [x] Hardened resource taxonomy admin tools with amenity assignment, front-office previews, change history summaries and capacity guardrails.
+- [x] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
   - [x] Scaffolded database tables and `ObjectModel` classes for profiles, capacities, amenities, storytelling and history logs.
   - [x] Added an admin "Resource Profiles" tab to manage profile metadata and capacity descriptors.
   - [x] Added a Catalog → Amenities manager so reusable amenity codes, icons and translation domains can be curated before linking to resources.
   - [x] Seeded room-type profiles and capacity rows via install/upgrade hooks and an idempotent CLI helper.
+  - [x] Delivered amenity assignment UI, inline capacity validation and change history previews directly in the Resource Profiles tab.
+
+## In Progress
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 
 ## Planned

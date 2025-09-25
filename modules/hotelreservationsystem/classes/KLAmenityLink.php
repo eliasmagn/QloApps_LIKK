@@ -53,4 +53,36 @@ class KLAmenityLink extends ObjectModel
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
         ),
     );
+
+    /**
+     * Return the amenity identifiers assigned to a resource profile.
+     *
+     * @param int $idProfile
+     *
+     * @return array<int, int>
+     */
+    public static function getAmenityIdsByProfile($idProfile)
+    {
+        $idProfile = (int) $idProfile;
+        if ($idProfile <= 0) {
+            return array();
+        }
+
+        $rows = Db::getInstance()->executeS(
+            'SELECT `id_kl_resource_amenity`
+            FROM `'._DB_PREFIX_.'kl_resource_amenity_link`
+            WHERE `id_kl_resource_profile` = '.(int) $idProfile
+        );
+
+        if (!is_array($rows) || empty($rows)) {
+            return array();
+        }
+
+        $ids = array();
+        foreach ($rows as $row) {
+            $ids[] = (int) $row['id_kl_resource_amenity'];
+        }
+
+        return $ids;
+    }
 }

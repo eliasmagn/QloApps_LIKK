@@ -70,4 +70,42 @@ class KLResourceHistory extends ObjectModel
 
         return (bool) $history->add();
     }
+
+    /**
+     * Fetch the latest history snapshot for a profile.
+     *
+     * @param int $idProfile
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function getLatestForProfile($idProfile)
+    {
+        $idProfile = (int) $idProfile;
+        if ($idProfile <= 0) {
+            return null;
+        }
+
+        $row = Db::getInstance()->getRow(
+            'SELECT `id_employee`, `change_source`, `snapshot`, `date_add`
+            FROM `'._DB_PREFIX_.'kl_resource_history`
+            WHERE `id_kl_resource_profile` = '.(int) $idProfile.
+            ' ORDER BY `date_add` DESC, `id_kl_resource_history` DESC LIMIT 1'
+        );
+
+        if (!$row) {
+            return null;
+        }
+
+        $snapshot = json_decode($row['snapshot'], true);
+        if (!is_array($snapshot)) {
+            $snapshot = array();
+        }
+
+        return array(
+            'id_employee' => $row['id_employee'] !== null ? (int) $row['id_employee'] : null,
+            'change_source' => $row['change_source'],
+            'snapshot' => $snapshot,
+            'date_add' => $row['date_add'],
+        );
+    }
 }
