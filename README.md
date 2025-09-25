@@ -20,7 +20,7 @@ Key characteristics of the fork:
 - 🗃️ **Resource profile editor** – the back office ships with a Resource Profiles tab so staff can maintain taxonomy metadata and capacity descriptors for rooms, ateliers and gastronomy spaces ahead of amenity management.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
-- 💼 **Rate plan scaffolding** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes to anchor the upcoming pricing engine.
+- 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 
@@ -150,6 +150,10 @@ Head to **Hotel Reservation System → Packages** to craft bundled offers:
 - Link a default rate plan and annotate duration hints so inquiry responses stay consistent with residency programme expectations.
 - Use the inline **Package components** builder to add lodging, atelier, meal, experience or custom components, control quantities/units, capture optional extras, associate alternate rate plans and order the lines for downstream quoting.
 - Reorder components with quick move buttons, edit entries in place and persist the JSON payload without direct database edits.
+
+### Quote generation service
+
+With plans and packages configured, the `KLQuotePricingEngine` orchestrates stay pricing. Call `KLQuotePricingEngine::generateQuote()` with the rate plan, resource profile, stay window and optional package selections to receive a currency-safe payload of line items, seasonal adjustments and totals. Persist the result alongside an inquiry via `KLQuotePricingEngine::persistQuote()` to keep an auditable history of drafts, sent quotes and approvals inside the Kanban board.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:

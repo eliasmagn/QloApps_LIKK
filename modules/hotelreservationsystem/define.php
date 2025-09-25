@@ -63,6 +63,7 @@ require_once 'classes/KLRatePlanSeason.php';
 require_once 'classes/KLPackage.php';
 require_once 'classes/KLPackageComponent.php';
 require_once 'classes/KLQuote.php';
+require_once 'classes/KLQuotePricingEngine.php';
 
 require_once 'classes/HotelSettingsLink.php';
 require_once 'classes/HotelBookingDocument.php';
