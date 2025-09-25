@@ -37,7 +37,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Timeline and inquiry APIs now expose JSON endpoints for UI interactions (reallocation, status changes, availability lookups) without reviving the legacy webservice.
 
 ## Near-Term Focus
-The detailed multi-phase plan lives in [`roadmap.md`](roadmap.md). Immediate priorities concentrate on the first roadmap phases:
+Detailed task briefs now live in [`devtasks/`](devtasks/) to coordinate execution notes, acceptance criteria and cross-team dependencies. The multi-phase plan remains in [`roadmap.md`](roadmap.md). Immediate priorities concentrate on the first roadmap phases:
 
 1. **Timeline interaction upgrades** *(complete)* – drag-and-drop reallocation on the admin timeline now blocks conflicts against disabled rooms and occupancy limits, and powers the new REST endpoints.
 2. **Inquiry workflow foundations** *(complete)* – the dedicated Inquiry model, Kanban board, reminders and mail notes replace cart-driven scaffolding in the back office; notes can optionally email guests for a documented audit trail.

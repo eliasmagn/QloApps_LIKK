@@ -27,10 +27,9 @@
 - [ ] Outline automation scope for housekeeping, notifications and exports.
 
 ## Planned
-- [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point.
-- [ ] Rebuild front-office templates around availability storytelling.
-- [ ] Introduce configurable rate plans and bundled residency packages.
-- [ ] Implement housekeeping and maintenance task automation.
+- [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point (see [`devtasks/inquiry-submission.task.md`](devtasks/inquiry-submission.task.md)).
+- [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).
+- [ ] Implement housekeeping and maintenance task automation (see [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md)).
 - [ ] Implement export utilities (CSV/ICS) for residency scheduling.
 - [ ] Deliver utilisation dashboards and programme reporting.
 
