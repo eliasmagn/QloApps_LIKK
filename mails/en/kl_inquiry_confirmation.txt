@@ -1,0 +1,15 @@
+Hello {guest_name},
+
+Thank you for reaching out to {shop_name}. We registered your inquiry {reference} and will review availability across our residency spaces.
+
+Requested stay
+- Dates: {check_in} → {check_out}
+- Party: {party_adults} adults / {party_children} children
+- Focus: {resource_summary}
+
+{summary}
+
+Our residency team will reply from this address with curated options and next steps. Feel free to reply directly if you have more context to add.
+
+Warm regards,
+The Kunstort Lehnin residency team

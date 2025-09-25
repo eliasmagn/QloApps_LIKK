@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Residency inquiry received</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+    <p>Hello {guest_name},</p>
+    <p>Thank you for reaching out to {shop_name}. We registered your inquiry <strong>{reference}</strong> and will review availability across our residency spaces.</p>
+    <h3>Requested stay</h3>
+    <ul>
+      <li>Dates: {check_in} → {check_out}</li>
+      <li>Party: {party_adults} adults / {party_children} children</li>
+      <li>Focus: {resource_summary}</li>
+    </ul>
+    {if $summary != ''}
+    <p><strong>Notes:</strong><br />
+      {nl2br($summary)}
+    </p>
+    {/if}
+    <p>Our residency team will reply from this address with curated options and next steps. Feel free to reply directly if you have more context to add.</p>
+    <p>Warm regards,<br />
+    The Kunstort Lehnin residency team</p>
+  </body>
+</html>
