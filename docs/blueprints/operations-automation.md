@@ -1,6 +1,8 @@
 # Operations Automation Blueprint
 
-This blueprint describes the automation layer for housekeeping, maintenance, staff notifications and data exports.
+This blueprint describes the automation layer for housekeeping, maintenance, staff notifications and data exports. The first
+increment ships with the `kloperations` module, which seeds task/run tables, exposes a task generator driven by bookings and
+adds a lightweight back-office console for daily housekeeping.
 
 ## Housekeeping & Maintenance Tasks
 - Generate arrival/departure task lists per day based on confirmed bookings and residency timelines.
@@ -12,11 +14,16 @@ This blueprint describes the automation layer for housekeeping, maintenance, sta
 ### Data Model Additions
 | Table | Purpose |
 | --- | --- |
-| `ps_kl_task` | Master task table storing resource reference, type (`housekeeping`, `maintenance`), status, due window. |
-| `ps_kl_task_assignment` | Pivot linking tasks to employees or teams with priority and acknowledgement metadata. |
-| `ps_kl_task_note` | Logbook for status transitions, notes and attachments. |
+| `ps_kl_operation_run` | Captures generator executions (type, timestamps, timezone, metadata payloads).
+| `ps_kl_operation_task` | Master task table storing resource reference, type (`housekeeping`, `maintenance`), status, due window.
+| `ps_kl_operation_task_assignment` | Pivot linking tasks to employees or teams with priority and acknowledgement metadata.
+| `ps_kl_operation_task_note` | Logbook for status transitions, notes and attachments.
 
-Tasks are generated via a cron job and can also be created manually from the resource timeline or inquiry board.
+The `kloperations` module installs these tables and exposes matching `ObjectModel` classes so future increments can extend the
+schema without SQL duplication.
+
+Tasks are generated via a cron job (`hookActionCronJob`) and can also be created manually from the resource timeline or inquiry
+board in later phases.
 
 ## Internal Notifications
 - Subscribe employees or teams to events (new inquiry, timeline move, overdue task, quote approval).
@@ -45,10 +52,26 @@ Tasks are generated via a cron job and can also be created manually from the res
 - Embed housekeeping summary widgets in the timeline view (today/tomorrow tasks, overdue items).
 - Allow inquiry board to trigger maintenance tasks directly when issues are reported by guests.
 
+## Module Implementation (Increment 1)
+The initial delivery focuses on automated housekeeping scaffolding:
+
+1. **Database scaffolding** – the module installs `kl_operation_run`, `kl_operation_task`, `kl_operation_task_assignment` and
+   `kl_operation_task_note` tables with audit fields, status enums and unique keys for deduplication.
+2. **Task generator** – `KlOperationTaskGenerator` runs daily via `hookActionCronJob`, creating arrival/pre-arrival housekeeping
+   tasks based on `HotelBookingDetail` rows. It respects cancellation/refund flags, deduplicates via `unique_key` hashes and logs
+   generator metadata in `kl_operation_run` for auditing.
+3. **Lifecycle sync** – booking add/update hooks mark arrival tasks `in_progress` on check-in and complete checkout tasks when
+   stays close, keeping the task list aligned with booking statuses.
+4. **Admin console** – `AdminKlOperationTasks` lists generated tasks, allows bulk completion and renders payload/notes in a
+   detail view (`views/templates/admin/task_view.tpl`). Future iterations will add filters, calendar exports and assignment tools.
+
+Follow-up increments will extend the module with notification routing, maintenance task types, manual task creation and export
+services.
+
 ## Deliverables
-1. Database tables and corresponding `ObjectModel` classes for tasks, notes, notifications and deliveries.
-2. Cron command that generates daily housekeeping/maintenance tasks from arrival/departure data.
-3. Admin UI for managing tasks, including quick status updates and printable checklists.
-4. Notification dispatcher services (in-app, email, ICS feed generation) with preference management.
-5. Export controllers for ICS/CSV plus automated tests covering generation and permissions.
+1. ✅ Database tables and corresponding `ObjectModel` classes for runs, tasks, assignments and notes ship with `kloperations`.
+2. ✅ A cron-driven generator produces housekeeping arrival/checkout tasks and records execution metadata.
+3. ✅ The back office now exposes an **Operations → Tasks** console with bulk completion and detail views.
+4. ⏳ Notification dispatcher services (in-app, email, ICS feed generation) with preference management.
+5. ⏳ Export controllers for ICS/CSV plus automated tests covering generation and permissions.
 

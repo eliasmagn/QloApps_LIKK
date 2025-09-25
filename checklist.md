@@ -24,9 +24,13 @@
   - [x] Added a Catalog → Amenities manager so reusable amenity codes, icons and translation domains can be curated before linking to resources.
   - [x] Seeded room-type profiles and capacity rows via install/upgrade hooks and an idempotent CLI helper.
   - [x] Delivered amenity assignment UI, inline capacity validation and change history previews directly in the Resource Profiles tab.
+- [x] Bootstrapped operations automation scaffolding.
+  - [x] Delivered the `kloperations` module with run/task/assignment/note tables and ObjectModels.
+  - [x] Implemented a cron-driven housekeeping task generator with booking lifecycle synchronisation.
+  - [x] Added an **Operations → Tasks** admin console with bulk completion and payload/notes detail view.
 
 ## In Progress
-- [ ] Outline automation scope for housekeeping, notifications and exports.
+- [ ] Extend operations automation with notifications, maintenance task types and export routines.
 
 ## Planned
 - [ ] Build out the dedicated inquiry submission pipeline on top of the new entry point (see [`devtasks/inquiry-submission.task.md`](devtasks/inquiry-submission.task.md)).

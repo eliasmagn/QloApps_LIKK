@@ -24,6 +24,7 @@ Key characteristics of the fork:
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
+- 🧹 **Operations automation scaffolding** – the new `kloperations` module seeds housekeeping task tables, runs cron-driven arrival/checkout generation and exposes an **Operations → Tasks** console for daily follow-up.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
 
@@ -159,6 +160,23 @@ Head to **Hotel Reservation System → Packages** to craft bundled offers:
 ### Quote generation service
 
 With plans and packages configured, the `KLQuotePricingEngine` orchestrates stay pricing. Call `KLQuotePricingEngine::generateQuote()` with the rate plan, resource profile, stay window and optional package selections to receive a currency-safe payload of line items, seasonal adjustments and totals. Persist the result alongside an inquiry via `KLQuotePricingEngine::persistQuote()` to keep an auditable history of drafts, sent quotes and approvals inside the Kanban board.
+
+### Operations automation module
+
+Housekeeping automation now ships inside `modules/kloperations`:
+
+- Installing/upgrading the module creates `kl_operation_run`, `kl_operation_task`, `kl_operation_task_assignment` and `kl_operation_task_note` tables plus matching `ObjectModel` classes.
+- `KlOperationTaskGenerator` hooks into `actionCronJob` to create arrival and checkout housekeeping tasks each day based on `HotelBookingDetail` rows while skipping cancelled/refunded stays.
+- Booking lifecycle hooks keep generated tasks in sync—arrivals flip to `in_progress` when guests check in, checkouts mark completed when stays close.
+- The back office exposes **Operations → Tasks** for listings, bulk completion and payload/notes inspection.
+
+To run the generator on demand you can trigger the cron hook:
+
+```bash
+php bin/console prestashop:module run-hook kloperations actionCronJob
+```
+
+Or schedule it through the standard Prestashop `cronjobs` module/host-level cron hitting `index.php?module=cronjobs&...`. The generator is idempotent thanks to unique task hashes.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:

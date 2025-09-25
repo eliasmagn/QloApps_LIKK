@@ -9,6 +9,12 @@ Bootstrap operational tooling that generates housekeeping, maintenance and expor
 - Implement notification channels (email, optional push later) triggered by overdue tasks or critical maintenance flags.
 - Produce CSV/ICS export routines for sharing schedules with external partners.
 
+## Progress Update *(April 2025)*
+- ✅ Bootstrapped the `kloperations` module with task/run tables, ObjectModels and a cron-driven generator that creates arrival & checkout housekeeping tasks from `HotelBookingDetail` data while avoiding duplicates.
+- ✅ Added lifecycle hooks to keep tasks aligned with booking status changes (arrival tasks flip to `in_progress` on check-in, checkout tasks mark as completed when stays close).
+- ✅ Delivered an **Operations → Tasks** admin console with listings, bulk completion and a detail view exposing payload/notes.
+- 🚧 Notification routing, maintenance task types and export routines remain outstanding.
+
 ## Technical Considerations
 - Extend existing inquiry and booking observers to emit domain events that task generators consume.
 - Model operations entities in new tables (`kl_operation_task`, `kl_operation_run`, etc.) with audit fields and status enums.
