@@ -22,9 +22,9 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 - 🚧 **Frontend storytelling** – the home page now surfaces published resource profiles with capacity cues; next steps extend storytelling and imagery to offer detail pages informed by taxonomy and packages. Requirements are captured in [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md).
 
 ## Phase 3 – Operations Automation (🚧 In progress)
-- 🚧 **Housekeeping & maintenance tasks** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Maintenance task types follow later. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).
-- ⏳ **Internal notifications** – hook inquiry and timeline events into task reminders, digest emails and calendar feeds for staff following the same blueprint.
-- ⏳ **ICS/CSV exports** – deliver calendar and reporting exports for residency, seminar and event planning.
+- ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).
+- 🚧 **Maintenance & notifications milestone** – extend the same module with maintenance task types plus digest/reminder notifications so daily operations flow beyond housekeeping alone.
+- ⏳ **ICS/CSV exports** – deliver calendar and reporting exports for residency, seminar and event planning once the notification plumbing is in place.
 
 ## Phase 4 – Reporting & Integrations (⏳ Planned)
 - ⏳ **Utilisation dashboards** – surface occupancy, length-of-stay, residency programme metrics with filters by resource type.
