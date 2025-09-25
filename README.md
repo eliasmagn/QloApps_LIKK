@@ -24,7 +24,7 @@ Key characteristics of the fork:
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 
-The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), and tactical progress in [`checklist.md`](checklist.md).
+The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
 
 ### Inquiry Landing
 
