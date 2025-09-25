@@ -6,7 +6,9 @@
 - [x] Replaced marketplace catalog UIs with offline guidance when remote services are disabled.
 - [x] Replaced the admin booking calendar with a tabbed occupancy timeline and lazy-loaded month grid fallback.
 - [x] Cached admin booking timeline data to keep tab switches instantaneous.
-- [x] Short-circuited checkout routes and templates to the inquiry landing page.
+- [x] Short-circuited checkout routes and templates to the inquiry landing page whenever inquiry mode is enabled, while keeping the cart workflow available when the flag is cleared.
+- [x] Restored the full legacy order and one-page-checkout controllers/templates so disabling inquiry mode instantly re-enables checkout, with inquiry-mode requests returning friendly redirects or JSON errors.
+- [x] Blocked cart controller mutations while inquiry mode is active to prevent ghost carts.
 - [x] Replaced hook-driven header widgets with a static residency navigation and removed cart/account/newsletter/social modules from the codebase.
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
