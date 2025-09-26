@@ -22,8 +22,8 @@ adds a lightweight back-office console for daily housekeeping.
 The `kloperations` module installs these tables and exposes matching `ObjectModel` classes so future increments can extend the
 schema without SQL duplication.
 
-Tasks are generated via a cron job (`hookActionCronJob`) and can also be created manually from the resource timeline or inquiry
-board in later phases.
+Tasks are generated via a cron job (`hookActionCronJob`) and operations staff can now author manual entries directly from the
+**Operations → Tasks** console; future increments may surface shortcuts from the timeline or inquiry board.
 
 ## Internal Notifications
 - Daily cron runs compile a digest of housekeeping and maintenance workload (HTML + plain text) and email it to the comma/space separated recipients configured in `KLOPERATIONS_DIGEST_RECIPIENTS`.
@@ -64,7 +64,7 @@ The initial delivery focuses on automated housekeeping scaffolding:
    stays close, keeping the task list aligned with booking statuses.
 4. **Admin console** – `AdminKlOperationTasks` lists generated tasks, allows bulk completion, renders payload/notes in a detail view (`views/templates/admin/task_view.tpl`) and exposes CSV/ICS export buttons for downstream scheduling.
 
-Follow-up increments will extend the module with manual task creation, richer filters and assignment tooling now that maintenance tasks, notifications and exports are in place.
+Follow-up increments extend the module with richer filters, assignment tooling and lightweight mobile checklists now that maintenance tasks, notifications, exports and manual task creation are in place.
 
 ## Deliverables
 1. ✅ Database tables and corresponding `ObjectModel` classes for runs, tasks, assignments and notes ship with `kloperations`.
@@ -72,5 +72,5 @@ Follow-up increments will extend the module with manual task creation, richer fi
 3. ✅ The back office now exposes an **Operations → Tasks** console with bulk completion and detail views.
 4. ✅ Notification dispatcher services send daily digests and overdue reminders (HTML/text) to configurable recipients, throttled by `last_reminded_at`.
 5. ✅ Export controllers for CSV/ICS cover pending tasks for configurable ranges via the Operations console toolbar.
-6. ⏳ Manual task authoring, assignment workflows and lightweight mobile/taskboard surfaces.
+6. 🚧 Manual task authoring now lives inside the Operations console; assignment workflows and lightweight mobile/taskboard surfaces remain.
 
