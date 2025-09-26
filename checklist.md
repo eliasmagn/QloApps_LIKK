@@ -39,6 +39,11 @@
 ## In Progress
 - [ ] Add manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
 
+## Issues
+- [x] Align Composer's PHP requirement with the documented PHP 8 support window so installs work on current runtimes.
+- [x] Fix the inquiry quote preview endpoint payload so it talks to `KLQuotePricingEngine::generateQuote()` and respects submitted occupancy.
+- [x] Ignore the `.venv` directory created by `start_dev.sh` to keep repositories clean after running the dev helper.
+
 ## Planned
 - [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).
 - [ ] Layer internal notification channels on top of inquiry/timeline events once the operations hooks are in place.

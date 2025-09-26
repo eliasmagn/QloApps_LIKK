@@ -153,22 +153,23 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
             throw new PrestaShopException('Missing parameters for quote preview.');
         }
 
+        $idLang = (int) $this->context->language->id;
+
         $options = array(
-            'id_resource_profile' => $idResource,
-            'id_rate_plan' => $idRatePlan,
-            'id_package' => $idPackage ?: null,
-            'date_in' => $checkIn,
-            'date_out' => $checkOut,
+            'id_kl_resource_profile' => $idResource,
+            'id_kl_rate_plan' => $idRatePlan,
+            'id_kl_package' => $idPackage ?: 0,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'id_lang' => $idLang,
         );
 
         $partyAdults = (int) Tools::getValue('party_adults');
         $partyChildren = (int) Tools::getValue('party_children');
         if ($partyAdults > 0 || $partyChildren > 0) {
             $options['occupancy'] = array(
-                array(
-                    'adults' => max(0, $partyAdults),
-                    'children' => max(0, $partyChildren),
-                ),
+                'adults' => max(0, $partyAdults),
+                'children' => max(0, $partyChildren),
             );
         }
 

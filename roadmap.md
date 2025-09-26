@@ -32,4 +32,9 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 - ⏳ **Programme publishing bridge** – sync curated events and residencies to the public Kunstort Lehnin website or other storytelling channels.
 - ⏳ **External API strategy** – design modern, scoped APIs (authenticated modules, webhook patterns) to replace the retired PrestaShop webservice when needed.
 
+## Maintenance backlog (✅ Recently resolved)
+- ✅ Composer now advertises the PHP 8.1–8.4 window documented in our requirements.
+- ✅ The inquiry quote preview AJAX payload matches `KLQuotePricingEngine::generateQuote()` and keeps the submitted occupancy counts intact.
+- ✅ `.venv/` is ignored so `start_dev.sh` no longer leaves the repository in a dirty state.
+
 We iterate through the roadmap top-to-bottom: hardening the base, completing inquiry workflows, enriching resource data, automating internal operations, and finally exposing analytics and integrations once the core experience is stable.

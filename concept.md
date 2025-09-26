@@ -51,6 +51,8 @@ Detailed task briefs now live in [`devtasks/`](devtasks/) to coordinate executio
 
 These additions extend the original near-term plan without changing the underlying principle: resource clarity first, then progressive automation that remains transparent to staff.
 
+Maintenance notes and any new regressions live in [`docs/issues.md`](docs/issues.md); the latest sweep aligned Composer's PHP constraint with our PHP 8 guidance, repaired the inquiry quote preview payload and ignored the `.venv/` helper environment.
+
 ## Longer-Term Ideas
 - Replace leftover commerce terminology in the database schema and UI strings.
 - Introduce CSV/ICS export for residency and seminar planning.

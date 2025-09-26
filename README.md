@@ -118,6 +118,14 @@ The helper script creates (or reuses) a local Python virtual environment at `.ve
 
 After installation you can log into the admin back office at `/admin` (rename the directory for security). The module catalogue will no longer attempt to connect to external stores; only locally available modules are listed.
 
+## Known issues
+
+We are tracking the current bug backlog in [`docs/issues.md`](docs/issues.md). Highlights from the latest maintenance round:
+
+- Composer now targets PHP 8.1–8.4, matching the runtime guidance above.
+- The inquiry quote preview AJAX endpoint relays payloads that align with `KLQuotePricingEngine::generateQuote()` and preserve submitted occupancy details.
+- `./start_dev.sh` bootstraps tooling without leaving a `.venv/` directory tracked by Git.
+
 ### Resource taxonomy seeding
 
 Existing databases upgraded to the Kunstort fork can populate taxonomy metadata by running:
