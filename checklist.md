@@ -38,6 +38,9 @@
 
 ## In Progress
 - [ ] Add manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
+  - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
+  - [ ] Layer assignment workflows so tasks can be handed to employees or teams.
+  - [ ] Provide lightweight mobile checklists tuned for housekeeping devices.
 
 ## Issues
 - [x] Align Composer's PHP requirement with the documented PHP 8 support window so installs work on current runtimes.

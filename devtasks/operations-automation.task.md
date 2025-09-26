@@ -15,7 +15,8 @@ Bootstrap operational tooling that generates housekeeping, maintenance and expor
 - ✅ Delivered an **Operations → Tasks** admin console with listings, bulk completion and a detail view exposing payload/notes.
 - ✅ Layered maintenance start/release tasks derived from room disable ranges plus digest/reminder emails (HTML/text) routed to `KLOPERATIONS_DIGEST_RECIPIENTS`, throttled by `last_reminded_at`.
 - ✅ Added CSV and ICS export buttons (default 7-day window) to the operations console with timezone-aware events.
-- 🚧 Next focus: manual task authoring, assignment workflows and lightweight mobile views once staff validate the new automations.
+- ✅ Added manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes so teams can log ad-hoc work alongside automated checklists.
+- 🚧 Next focus: assignment workflows and lightweight mobile views once staff validate the new automations.
 
 ## Technical Considerations
 - Extend existing inquiry and booking observers to emit domain events that task generators consume.
