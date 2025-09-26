@@ -26,9 +26,9 @@ Tasks are generated via a cron job (`hookActionCronJob`) and can also be created
 board in later phases.
 
 ## Internal Notifications
-- Subscribe employees or teams to events (new inquiry, timeline move, overdue task, quote approval).
-- Deliver notifications via in-app inbox, daily digest email and optional ICS feed subscription.
-- Provide quiet hours and channel preferences per employee.
+- Daily cron runs compile a digest of housekeeping and maintenance workload (HTML + plain text) and email it to the comma/space separated recipients configured in `KLOPERATIONS_DIGEST_RECIPIENTS`.
+- Overdue tasks trigger reminder emails when `due_end` has passed and `last_reminded_at` is older than 12 hours so teams are nudged without being spammed.
+- Future increments can layer in-app inboxes, push delivery and per-employee quiet hours once subscription tables are introduced.
 
 ### Data Model
 | Table | Purpose |
@@ -38,9 +38,9 @@ board in later phases.
 | `ps_kl_notification_delivery` | Tracks channel-specific deliveries (email, digest, calendar) and acknowledgement status. |
 
 ## ICS/CSV Exports
-- Provide filtered exports for residency calendars, atelier schedules and event planning.
-- Support weekly digest ICS feed for Google/Outlook and ad-hoc CSV downloads with timezone-corrected timestamps.
-- Ensure exports respect permissions (e.g. residency team vs gastronomy team data scopes).
+- Pending tasks for the next N days (default 7) can be exported from **Operations → Tasks** via toolbar buttons that produce CSV spreadsheets and ICS feeds.
+- ICS events include per-task timezone data and fall back to the shop timezone when the task does not specify one.
+- Future iterations may widen filters (per team/resource kind) and expose authenticated feeds once notification preference tables arrive.
 
 ### Implementation Notes
 - Build export services that accept filters (resource kinds, programme tags, status) and return standardised DTOs.
@@ -62,16 +62,15 @@ The initial delivery focuses on automated housekeeping scaffolding:
    generator metadata in `kl_operation_run` for auditing.
 3. **Lifecycle sync** – booking add/update hooks mark arrival tasks `in_progress` on check-in and complete checkout tasks when
    stays close, keeping the task list aligned with booking statuses.
-4. **Admin console** – `AdminKlOperationTasks` lists generated tasks, allows bulk completion and renders payload/notes in a
-   detail view (`views/templates/admin/task_view.tpl`). Future iterations will add filters, calendar exports and assignment tools.
+4. **Admin console** – `AdminKlOperationTasks` lists generated tasks, allows bulk completion, renders payload/notes in a detail view (`views/templates/admin/task_view.tpl`) and exposes CSV/ICS export buttons for downstream scheduling.
 
-Follow-up increments will extend the module with notification routing, maintenance task types, manual task creation and export
-services.
+Follow-up increments will extend the module with manual task creation, richer filters and assignment tooling now that maintenance tasks, notifications and exports are in place.
 
 ## Deliverables
 1. ✅ Database tables and corresponding `ObjectModel` classes for runs, tasks, assignments and notes ship with `kloperations`.
 2. ✅ A cron-driven generator produces housekeeping arrival/checkout tasks and records execution metadata.
 3. ✅ The back office now exposes an **Operations → Tasks** console with bulk completion and detail views.
-4. ⏳ Notification dispatcher services (in-app, email, ICS feed generation) with preference management.
-5. ⏳ Export controllers for ICS/CSV plus automated tests covering generation and permissions.
+4. ✅ Notification dispatcher services send daily digests and overdue reminders (HTML/text) to configurable recipients, throttled by `last_reminded_at`.
+5. ✅ Export controllers for CSV/ICS cover pending tasks for configurable ranges via the Operations console toolbar.
+6. ⏳ Manual task authoring, assignment workflows and lightweight mobile/taskboard surfaces.
 

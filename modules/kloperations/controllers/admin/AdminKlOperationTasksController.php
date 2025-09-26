@@ -67,6 +67,10 @@ class AdminKlOperationTasksController extends ModuleAdminController
                 'title' => $this->l('Due end'),
                 'type' => 'datetime',
             ),
+            'last_reminded_at' => array(
+                'title' => $this->l('Last reminder'),
+                'type' => 'datetime',
+            ),
             'priority' => array(
                 'title' => $this->l('Priority'),
                 'align' => 'text-center',
@@ -85,6 +89,14 @@ class AdminKlOperationTasksController extends ModuleAdminController
     {
         if (Tools::isSubmit('submitBulkcompleteTasks' . $this->table)) {
             $this->action = 'completeTasks';
+        }
+
+        if (Tools::getIsset('export_tasks_csv')) {
+            $this->action = 'exportCsv';
+        }
+
+        if (Tools::getIsset('export_tasks_ics')) {
+            $this->action = 'exportIcs';
         }
 
         parent::initProcess();
@@ -133,10 +145,64 @@ class AdminKlOperationTasksController extends ModuleAdminController
         $this->tpl_view_vars = array(
             'task' => $task,
             'payload' => $payload,
+            'payload_pretty' => empty($payload) ? '' : json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             'notes' => $this->getTaskNotes($task->id),
         );
 
         return parent::renderView();
+    }
+
+    public function initPageHeaderToolbar()
+    {
+        parent::initPageHeaderToolbar();
+
+        $link = self::$currentIndex . '&token=' . $this->token;
+        $this->page_header_toolbar_btn['export_tasks_csv'] = array(
+            'href' => $link . '&export_tasks_csv=1',
+            'desc' => $this->l('Export CSV'),
+            'icon' => 'process-icon-export',
+        );
+        $this->page_header_toolbar_btn['export_tasks_ics'] = array(
+            'href' => $link . '&export_tasks_ics=1',
+            'desc' => $this->l('Export ICS'),
+            'icon' => 'process-icon-calendar',
+        );
+    }
+
+    public function processExportCsv()
+    {
+        $rangeDays = max(1, (int) Tools::getValue('range_days', 7));
+        $timezone = $this->resolveTimezone();
+        $from = new DateTimeImmutable('today', $timezone);
+        $to = $from->add(new DateInterval('P' . $rangeDays . 'D'));
+
+        $tasks = $this->module->getExportService()->fetchTasks($from, $to, array('pending', 'in_progress'));
+        $csv = $this->module->getExportService()->generateCsv($tasks);
+
+        $filename = sprintf('kloperations-tasks-%s-%s.csv', $from->format('Ymd'), $to->format('Ymd'));
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . Tools::strlen($csv));
+        echo $csv;
+        exit;
+    }
+
+    public function processExportIcs()
+    {
+        $rangeDays = max(1, (int) Tools::getValue('range_days', 7));
+        $timezone = $this->resolveTimezone();
+        $from = new DateTimeImmutable('today', $timezone);
+        $to = $from->add(new DateInterval('P' . $rangeDays . 'D'));
+
+        $tasks = $this->module->getExportService()->fetchTasks($from, $to, array('pending', 'in_progress'));
+        $ics = $this->module->getExportService()->generateIcs($tasks, $timezone);
+
+        $filename = sprintf('kloperations-tasks-%s-%s.ics', $from->format('Ymd'), $to->format('Ymd'));
+        header('Content-Type: text/calendar; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . Tools::strlen($ics));
+        echo $ics;
+        exit;
     }
 
     private function getTaskNotes($taskId)
@@ -148,5 +214,19 @@ class AdminKlOperationTasksController extends ModuleAdminController
         $query->orderBy('`date_add` ASC');
 
         return Db::getInstance()->executeS($query) ?: array();
+    }
+
+    private function resolveTimezone()
+    {
+        $timezoneName = (string) Configuration::get('PS_TIMEZONE');
+        if (!$timezoneName) {
+            $timezoneName = @date_default_timezone_get();
+        }
+
+        try {
+            return new DateTimeZone($timezoneName);
+        } catch (Exception $exception) {
+            return new DateTimeZone(date_default_timezone_get());
+        }
     }
 }

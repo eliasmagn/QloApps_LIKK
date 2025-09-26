@@ -23,8 +23,9 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 
 ## Phase 3 – Operations Automation (🚧 In progress)
 - ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).
-- 🚧 **Maintenance & notifications milestone** – extend the same module with maintenance task types plus digest/reminder notifications so daily operations flow beyond housekeeping alone.
-- ⏳ **ICS/CSV exports** – deliver calendar and reporting exports for residency, seminar and event planning once the notification plumbing is in place.
+- ✅ **Maintenance & notifications milestone** – room disable ranges now raise maintenance start/release tasks, daily digests summarise workloads, overdue reminders throttle via `last_reminded_at` and recipients are configurable through `KLOPERATIONS_DIGEST_RECIPIENTS`.
+- ✅ **ICS/CSV exports** – the Operations console can now export pending tasks for the upcoming week in CSV and ICS formats for downstream scheduling.
+- 🚧 **Manual task authoring** – upcoming increments focus on manual task creation, assignments and lightweight mobile views building on the new automation plumbing.
 
 ## Phase 4 – Reporting & Integrations (⏳ Planned)
 - ⏳ **Utilisation dashboards** – surface occupancy, length-of-stay, residency programme metrics with filters by resource type.

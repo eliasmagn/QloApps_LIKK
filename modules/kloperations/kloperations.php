@@ -26,6 +26,8 @@ require_once __DIR__ . '/classes/KlOperationTask.php';
 require_once __DIR__ . '/classes/KlOperationTaskAssignment.php';
 require_once __DIR__ . '/classes/KlOperationTaskNote.php';
 require_once __DIR__ . '/services/KlOperationTaskGenerator.php';
+require_once __DIR__ . '/services/KlOperationNotificationService.php';
+require_once __DIR__ . '/services/KlOperationExportService.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelBookingDetail.php';
 
 class Kloperations extends Module
@@ -36,7 +38,7 @@ class Kloperations extends Module
     {
         $this->name = 'kloperations';
         $this->tab = 'administration';
-        $this->version = '1.0.0';
+        $this->version = '1.1.0';
         $this->author = 'Kunstort Lehnin';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -65,6 +67,8 @@ class Kloperations extends Module
             return false;
         }
 
+        Configuration::updateValue('KLOPERATIONS_DIGEST_RECIPIENTS', '');
+
         return true;
     }
 
@@ -73,6 +77,8 @@ class Kloperations extends Module
         if (!$this->uninstallTab(self::ADMIN_TAB_CLASS)) {
             return false;
         }
+
+        Configuration::deleteByName('KLOPERATIONS_DIGEST_RECIPIENTS');
 
         return parent::uninstall();
     }
@@ -94,7 +100,7 @@ class Kloperations extends Module
         return true;
     }
 
-    private function installDatabase()
+    public function installDatabase()
     {
         $sql = array(
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'kl_operation_run` (
@@ -166,12 +172,15 @@ class Kloperations extends Module
             }
         }
 
+        $this->addColumnIfMissing('kl_operation_task', 'last_reminded_at', '`last_reminded_at` DATETIME DEFAULT NULL AFTER `completed_at`');
+
         return true;
     }
 
     public function hookActionCronJob($params)
     {
         $generator = $this->getTaskGenerator();
+        $notificationService = $this->getNotificationService();
         $timezoneName = (string) Configuration::get('PS_TIMEZONE');
         if (empty($timezoneName)) {
             $timezoneName = @date_default_timezone_get();
@@ -182,8 +191,11 @@ class Kloperations extends Module
             $timezone = new DateTimeZone(date_default_timezone_get());
         }
 
-        $today = new DateTimeImmutable('today', $timezone);
-        $generator->runDaily($today);
+        $now = new DateTimeImmutable('now', $timezone);
+        $today = $now->setTime(0, 0, 0);
+        $runMetadata = $generator->runDaily($today);
+        $notificationService->sendDailyDigest($today, $runMetadata);
+        $notificationService->sendOverdueReminders($now);
     }
 
     public function hookActionObjectHotelBookingDetailAddAfter($params)
@@ -223,6 +235,16 @@ class Kloperations extends Module
         return new KlOperationTaskGenerator($this);
     }
 
+    private function getNotificationService()
+    {
+        return new KlOperationNotificationService($this);
+    }
+
+    public function getExportService()
+    {
+        return new KlOperationExportService($this);
+    }
+
     private function installTab($className, $name, $parentClassName = 'AdminParentModules')
     {
         $idParent = 0;
@@ -246,6 +268,16 @@ class Kloperations extends Module
         }
 
         return true;
+    }
+
+    private function addColumnIfMissing($table, $column, $definition)
+    {
+        $tableName = _DB_PREFIX_ . pSQL($table);
+        $columnName = pSQL($column);
+        $exists = Db::getInstance()->executeS('SHOW COLUMNS FROM `' . $tableName . '` LIKE "' . $columnName . '"');
+        if (!$exists) {
+            Db::getInstance()->execute('ALTER TABLE `' . $tableName . '` ADD ' . $definition);
+        }
     }
 
     private function uninstallTab($className)

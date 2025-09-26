@@ -24,7 +24,8 @@ Key characteristics of the fork:
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
-- 🧹 **Operations automation scaffolding** – the new `kloperations` module seeds housekeeping task tables, runs cron-driven arrival/checkout generation and exposes an **Operations → Tasks** console for daily follow-up. The next milestone expands it with maintenance task types, notifications and export tooling.
+- 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for daily follow-up.
+- 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
 
@@ -167,12 +168,15 @@ With plans and packages configured, the `KLQuotePricingEngine` orchestrates stay
 
 ### Operations automation module
 
-Housekeeping automation now ships inside `modules/kloperations`:
+Operations automation now ships inside `modules/kloperations`:
 
 - Installing/upgrading the module creates `kl_operation_run`, `kl_operation_task`, `kl_operation_task_assignment` and `kl_operation_task_note` tables plus matching `ObjectModel` classes.
 - `KlOperationTaskGenerator` hooks into `actionCronJob` to create arrival and checkout housekeeping tasks each day based on `HotelBookingDetail` rows while skipping cancelled/refunded stays.
+- Room disable ranges spawn paired maintenance tasks: a morning "maintenance_start" checklist when the block begins and an afternoon "maintenance_release" follow-up on the day the block ends so spaces are reopened deliberately.
 - Booking lifecycle hooks keep generated tasks in sync—arrivals flip to `in_progress` when guests check in, checkouts mark completed when stays close.
 - The back office exposes **Operations → Tasks** for listings, bulk completion and payload/notes inspection.
+- Toolbar buttons export pending tasks for the next seven days to CSV or iCalendar so schedules can be shared with external partners.
+- Daily cron runs also deliver an HTML/text digest and overdue reminders to the addresses listed in `KLOPERATIONS_DIGEST_RECIPIENTS` (comma/space separated emails via the `Configuration` table or module upgrade script).
 
 To run the generator on demand you can trigger the cron hook:
 
@@ -180,11 +184,7 @@ To run the generator on demand you can trigger the cron hook:
 php bin/console prestashop:module run-hook kloperations actionCronJob
 ```
 
-Or schedule it through the standard Prestashop `cronjobs` module/host-level cron hitting `index.php?module=cronjobs&...`. The generator is idempotent thanks to unique task hashes.
-
-### Upcoming milestone: maintenance & notifications
-
-The next milestone for `kloperations` broadens automation coverage. Focus areas include maintenance task definitions with generator hooks, digest/reminder notifications for overdue work and CSV/ICS exports so schedules can be shared with external teams. These deliverables build on the cron runner and admin console described above.
+Or schedule it through the standard Prestashop `cronjobs` module/host-level cron hitting `index.php?module=cronjobs&...`. The generator is idempotent thanks to unique task hashes and updates `last_reminded_at` so overdue emails are throttled.
 
 ## Distribution Flags
 All Kunstort-specific flags live in `config/defines_custom.inc.php`:
@@ -198,7 +198,7 @@ Use these constants in future contributions to gate legacy commerce flows.
 - Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting. See [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md) for the canonical data model.
 - Replace the front-office room list with storytelling-driven templates and an enquiry form tied to curated packages. Content strategy is outlined in the taxonomy blueprint and will drive copy blocks surfaced on offer pages.
 - Wire up configurable rate plans and bundled packages on top of the new scaffolding so inquiries can be priced consistently, following [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
-- Provide CSV/ICS exports plus internal notifications to support residency and seminar scheduling outside the app, grounded in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md).
+- Extend operations automation with manual task creation, assignment workflows and lightweight mobile views once staff test the new digests/exports (see [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md)).
 
 See [`checklist.md`](checklist.md) for the current implementation status.
 

@@ -1,0 +1,16 @@
+{shop_name} operations digest – {digest_date}
+
+Summary
+=======
+{counts_summary_text}
+
+Upcoming tasks
+===============
+{upcoming_text}
+
+Overdue tasks
+=============
+{overdue_text}
+
+-- 
+Kunstort Lehnin Operations Automation

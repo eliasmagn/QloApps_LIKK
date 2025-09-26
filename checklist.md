@@ -31,12 +31,13 @@
   - [x] Delivered the `kloperations` module with run/task/assignment/note tables and ObjectModels.
   - [x] Implemented a cron-driven housekeeping task generator with booking lifecycle synchronisation.
   - [x] Added an **Operations → Tasks** admin console with bulk completion and payload/notes detail view.
+- [x] Extended operations automation with maintenance jobs, notifications and exports.
+  - [x] Generate maintenance start/release tasks from room disable ranges.
+  - [x] Deliver daily digest emails and overdue reminders to configurable recipients.
+  - [x] Provide CSV/ICS exports from the operations console and throttle reminder delivery with `last_reminded_at` tracking.
 
 ## In Progress
-- [ ] Extend operations automation with notifications, maintenance task types and export routines.
-  - [ ] Introduce maintenance task definitions and generation rules alongside the existing housekeeping cron.
-  - [ ] Add notification digests and reminder hooks for overdue or escalated tasks.
-  - [ ] Deliver CSV/ICS export tooling so schedules can be shared externally.
+- [ ] Add manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
 
 ## Planned
 - [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).

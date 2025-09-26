@@ -31,6 +31,7 @@ class KlOperationTask extends ObjectModel
     public $created_by;
     public $completed_by;
     public $completed_at;
+    public $last_reminded_at;
     public $date_add;
     public $date_upd;
 
@@ -55,6 +56,7 @@ class KlOperationTask extends ObjectModel
             'created_by' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
             'completed_by' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
             'completed_at' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
+            'last_reminded_at' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
             'date_add' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
         ),
