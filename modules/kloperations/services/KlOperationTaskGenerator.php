@@ -22,9 +22,15 @@ class KlOperationTaskGenerator
      */
     private $module;
 
+    /**
+     * @var int
+     */
+    private $langId;
+
     public function __construct(Module $module)
     {
         $this->module = $module;
+        $this->langId = (int) Configuration::get('PS_LANG_DEFAULT');
     }
 
     /**
@@ -32,12 +38,12 @@ class KlOperationTaskGenerator
      *
      * @param DateTimeImmutable $targetDate
      *
-     * @return int Number of tasks generated during this run
+     * @return array
      */
     public function runDaily(DateTimeImmutable $targetDate)
     {
         $run = new KlOperationRun();
-        $run->run_type = 'daily_housekeeping';
+        $run->run_type = 'daily_operations';
         $run->status = 'running';
         $run->timezone = $targetDate->getTimezone()->getName();
         $run->started_at = $targetDate->format('Y-m-d 00:00:00');
@@ -48,20 +54,33 @@ class KlOperationTaskGenerator
         ));
         $run->add();
 
-        $total = 0;
-        $total += $this->generateCheckoutTasks($targetDate, $run);
-        $total += $this->generateArrivalTasks($targetDate, $run);
+        $counts = array(
+            'housekeeping_checkout' => $this->generateCheckoutTasks($targetDate, $run),
+            'housekeeping_arrival' => $this->generateArrivalTasks($targetDate, $run),
+        );
+        $maintenanceCounts = $this->generateMaintenanceTasks($targetDate, $run);
+        foreach ($maintenanceCounts as $type => $count) {
+            if (!isset($counts[$type])) {
+                $counts[$type] = 0;
+            }
+            $counts[$type] += $count;
+        }
+        $total = array_sum($counts);
 
         $run->status = 'completed';
         $run->completed_at = date('Y-m-d H:i:s');
         $run->metadata = $this->encodeMetadata(array(
             'target_date' => $targetDate->format('Y-m-d'),
-            'tasks_created' => $total,
+            'task_counts' => $counts,
         ));
         $run->date_upd = date('Y-m-d H:i:s');
         $run->update();
 
-        return $total;
+        return array(
+            'target_date' => $targetDate->format('Y-m-d'),
+            'task_counts' => $counts,
+            'total' => $total,
+        );
     }
 
     /**
@@ -78,6 +97,78 @@ class KlOperationTaskGenerator
         if ((int) $booking->id_status === (int) HotelBookingDetail::STATUS_CHECKED_IN) {
             $this->markTasksInProgress($booking->id, 'housekeeping_arrival');
         }
+    }
+
+    private function generateMaintenanceTasks(DateTimeImmutable $targetDate, KlOperationRun $run)
+    {
+        $counts = array(
+            'maintenance_start' => 0,
+            'maintenance_release' => 0,
+        );
+
+        $timezone = $targetDate->getTimezone();
+        $startTime = $this->createDateTime($targetDate, 8, 0);
+        $startDue = $this->createDateTime($targetDate, 12, 0);
+        $releaseTime = $this->createDateTime($targetDate, 12, 0);
+        $releaseDue = $this->createDateTime($targetDate, 16, 0);
+
+        foreach ($this->getDisableBlocksForDate($targetDate, 'date_from') as $block) {
+            $uniqueKey = sprintf('maintenance:%d:start:%s', $block['id'], $targetDate->format('Ymd'));
+            if (KlOperationTask::getIdByUniqueKey($uniqueKey)) {
+                continue;
+            }
+
+            $task = new KlOperationTask();
+            $task->id_kl_operation_run = (int) $run->id;
+            $task->reference = sprintf('MT-%s-%d', $targetDate->format('ymd'), $block['id']);
+            $task->task_type = 'maintenance_start';
+            $task->status = 'pending';
+            $task->resource_type = 'room';
+            $task->id_resource = (int) $block['id_room'];
+            $task->context_type = 'room_disable';
+            $task->context_id = (int) $block['id'];
+            $task->scheduled_for = $startTime->format('Y-m-d H:i:s');
+            $task->due_end = $startDue->format('Y-m-d H:i:s');
+            $task->timezone = $timezone->getName();
+            $task->payload = $this->encodeMetadata($this->buildMaintenancePayload($block));
+            $task->unique_key = $uniqueKey;
+            $task->priority = 1;
+            $task->date_add = date('Y-m-d H:i:s');
+            $task->date_upd = $task->date_add;
+            $task->add();
+            $counts['maintenance_start']++;
+        }
+
+        foreach ($this->getDisableBlocksForDate($targetDate, 'date_to') as $block) {
+            $uniqueKey = sprintf('maintenance:%d:release:%s', $block['id'], $targetDate->format('Ymd'));
+            if (KlOperationTask::getIdByUniqueKey($uniqueKey)) {
+                continue;
+            }
+
+            $task = new KlOperationTask();
+            $task->id_kl_operation_run = (int) $run->id;
+            $task->reference = sprintf('MR-%s-%d', $targetDate->format('ymd'), $block['id']);
+            $task->task_type = 'maintenance_release';
+            $task->status = 'pending';
+            $task->resource_type = 'room';
+            $task->id_resource = (int) $block['id_room'];
+            $task->context_type = 'room_disable';
+            $task->context_id = (int) $block['id'];
+            $task->scheduled_for = $releaseTime->format('Y-m-d H:i:s');
+            $task->due_end = $releaseDue->format('Y-m-d H:i:s');
+            $task->timezone = $timezone->getName();
+            $payload = $this->buildMaintenancePayload($block);
+            $payload['task_hint'] = $this->module->l('Inspect space and reopen if maintenance resolved.', 'KlOperationTaskGenerator');
+            $task->payload = $this->encodeMetadata($payload);
+            $task->unique_key = $uniqueKey;
+            $task->priority = 2;
+            $task->date_add = date('Y-m-d H:i:s');
+            $task->date_upd = $task->date_add;
+            $task->add();
+            $counts['maintenance_release']++;
+        }
+
+        return $counts;
     }
 
     private function generateCheckoutTasks(DateTimeImmutable $targetDate, KlOperationRun $run)
@@ -209,6 +300,39 @@ class KlOperationTaskGenerator
         $query->where('IFNULL(hbd.`is_refunded`, 0) = 0');
 
         return Db::getInstance()->executeS($query) ?: array();
+    }
+
+    private function getDisableBlocksForDate(DateTimeImmutable $targetDate, $dateField)
+    {
+        $query = new DbQuery();
+        $query->select('dr.`id`, dr.`id_room`, dr.`id_room_type`, dr.`date_from`, dr.`date_to`, dr.`reason`, r.`room_num`, pl.`name` AS room_type_name');
+        $query->from('htl_room_disable_dates', 'dr');
+        $query->leftJoin('htl_room_information', 'r', 'r.`id` = dr.`id_room`');
+        $query->leftJoin('product_lang', 'pl', 'pl.`id_product` = dr.`id_room_type` AND pl.`id_lang` = ' . (int) $this->langId);
+        $query->where('DATE(dr.`' . pSQL($dateField) . '`) = "' . pSQL($targetDate->format('Y-m-d')) . '"');
+
+        return Db::getInstance()->executeS($query) ?: array();
+    }
+
+    private function buildMaintenancePayload(array $block)
+    {
+        $reason = trim((string) $block['reason']);
+        if ($reason === '') {
+            $reason = $this->module->l('General maintenance', 'KlOperationTaskGenerator');
+        }
+
+        return array(
+            'room' => array(
+                'id' => (int) $block['id_room'],
+                'number' => isset($block['room_num']) ? (string) $block['room_num'] : '',
+            ),
+            'room_type' => isset($block['room_type_name']) ? (string) $block['room_type_name'] : '',
+            'reason' => $reason,
+            'disable_window' => array(
+                'from' => $block['date_from'],
+                'to' => $block['date_to'],
+            ),
+        );
     }
 
     private function createDateTime(DateTimeImmutable $date, $hour, $minute)

@@ -1,0 +1,252 @@
+<?php
+/**
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/license/osl-3-0-php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to support@qloapps.com so we can send you a copy immediately.
+ */
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
+class KlOperationExportService
+{
+    /**
+     * @var Module
+     */
+    private $module;
+
+    public function __construct(Module $module)
+    {
+        $this->module = $module;
+    }
+
+    /**
+     * Fetch tasks scheduled between the provided boundaries.
+     *
+     * @param DateTimeImmutable $from
+     * @param DateTimeImmutable $to
+     * @param array $statuses
+     *
+     * @return array
+     */
+    public function fetchTasks(DateTimeImmutable $from, DateTimeImmutable $to, array $statuses = array())
+    {
+        $query = new DbQuery();
+        $query->select('*');
+        $query->from(KlOperationTask::$definition['table']);
+        $query->where('`scheduled_for` >= "' . pSQL($from->format('Y-m-d H:i:s')) . '"');
+        $query->where('`scheduled_for` <= "' . pSQL($to->format('Y-m-d H:i:s')) . '"');
+        if (!empty($statuses)) {
+            $escaped = array();
+            foreach ($statuses as $status) {
+                $escaped[] = '"' . pSQL($status) . '"';
+            }
+            $query->where('`status` IN (' . implode(',', $escaped) . ')');
+        }
+        $query->orderBy('`scheduled_for` ASC, `priority` ASC');
+
+        $rows = Db::getInstance()->executeS($query) ?: array();
+
+        return $this->hydrateTasks($rows);
+    }
+
+    /**
+     * Normalise raw task rows.
+     *
+     * @param array $rows
+     *
+     * @return array
+     */
+    public function hydrateTasks(array $rows)
+    {
+        $hydrated = array();
+        foreach ($rows as $row) {
+            if (!isset($row['payload_data'])) {
+                $row['payload_data'] = array();
+            }
+            if (!empty($row['payload'])) {
+                $decoded = json_decode($row['payload'], true);
+                if (is_array($decoded)) {
+                    $row['payload_data'] = $decoded;
+                }
+            }
+            $hydrated[] = $row;
+        }
+
+        return $hydrated;
+    }
+
+    /**
+     * Render a CSV export for the provided tasks.
+     *
+     * @param array $tasks
+     *
+     * @return string
+     */
+    public function generateCsv(array $tasks)
+    {
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, array(
+            'Reference',
+            'Type',
+            'Status',
+            'Resource',
+            'Resource ID',
+            'Scheduled For',
+            'Due End',
+            'Priority',
+            'Context',
+            'Context ID',
+            'Summary',
+        ));
+
+        foreach ($tasks as $task) {
+            fputcsv($handle, array(
+                $task['reference'],
+                $task['task_type'],
+                $task['status'],
+                $task['resource_type'],
+                $task['id_resource'],
+                $task['scheduled_for'],
+                $task['due_end'],
+                $task['priority'],
+                $task['context_type'],
+                $task['context_id'],
+                $this->summariseTask($task),
+            ));
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return $csv;
+    }
+
+    /**
+     * Render an ICS export for the provided tasks.
+     *
+     * @param array $tasks
+     * @param DateTimeZone $defaultTimezone
+     *
+     * @return string
+     */
+    public function generateIcs(array $tasks, DateTimeZone $defaultTimezone)
+    {
+        $lines = array(
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Kunstort Lehnin//Operations//EN',
+            'CALSCALE:GREGORIAN',
+            'X-WR-TIMEZONE:' . $defaultTimezone->getName(),
+        );
+
+        foreach ($tasks as $task) {
+            $lines = array_merge($lines, $this->buildIcsEvent($task, $defaultTimezone));
+        }
+
+        $lines[] = 'END:VCALENDAR';
+
+        return implode("\r\n", $lines) . "\r\n";
+    }
+
+    /**
+     * Produce a readable summary for a task payload.
+     *
+     * @param array $task
+     *
+     * @return string
+     */
+    public function summariseTask(array $task)
+    {
+        $parts = array();
+        $payload = array();
+        if (isset($task['payload_data']) && is_array($task['payload_data'])) {
+            $payload = $task['payload_data'];
+        }
+
+        if (isset($payload['guest_name']) && $payload['guest_name']) {
+            $parts[] = $this->module->l('Guest', 'KlOperationExportService') . ': ' . $payload['guest_name'];
+        }
+
+        if (isset($payload['reason']) && $payload['reason']) {
+            $parts[] = $this->module->l('Reason', 'KlOperationExportService') . ': ' . $payload['reason'];
+        }
+
+        if (isset($payload['stay']) && is_array($payload['stay'])) {
+            $from = isset($payload['stay']['from']) ? $payload['stay']['from'] : '';
+            $to = isset($payload['stay']['to']) ? $payload['stay']['to'] : '';
+            if ($from || $to) {
+                $parts[] = $this->module->l('Stay', 'KlOperationExportService') . ': ' . trim($from . ' → ' . $to);
+            }
+        }
+
+        if (isset($payload['room']) && is_array($payload['room'])) {
+            $roomParts = array();
+            if (!empty($payload['room']['number'])) {
+                $roomParts[] = '#' . $payload['room']['number'];
+            }
+            if (!empty($payload['room_type'])) {
+                $roomParts[] = $payload['room_type'];
+            }
+            if ($roomParts) {
+                $parts[] = $this->module->l('Space', 'KlOperationExportService') . ': ' . implode(' ', $roomParts);
+            }
+        }
+
+        if (isset($payload['task_hint']) && $payload['task_hint']) {
+            $parts[] = $payload['task_hint'];
+        }
+
+        if (!$parts) {
+            $parts[] = $this->module->l('No additional context provided.', 'KlOperationExportService');
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    private function buildIcsEvent(array $task, DateTimeZone $defaultTimezone)
+    {
+        $timezoneName = !empty($task['timezone']) ? $task['timezone'] : $defaultTimezone->getName();
+        try {
+            $eventTimezone = new DateTimeZone($timezoneName);
+        } catch (Exception $exception) {
+            $eventTimezone = $defaultTimezone;
+            $timezoneName = $defaultTimezone->getName();
+        }
+
+        $start = new DateTimeImmutable($task['scheduled_for'], $eventTimezone);
+        if (!empty($task['due_end'])) {
+            $end = new DateTimeImmutable($task['due_end'], $eventTimezone);
+        } else {
+            $end = $start->add(new DateInterval('PT1H'));
+        }
+
+        $lines = array(
+            'BEGIN:VEVENT',
+            'UID:' . $this->escapeIcs('kloperations-' . (int) $task['id_kl_operation_task'] . '@kunstortlehnin.local'),
+            'SUMMARY:' . $this->escapeIcs($task['reference'] . ' - ' . $task['task_type']),
+            'DESCRIPTION:' . $this->escapeIcs($this->summariseTask($task)),
+            'DTSTAMP:' . $start->setTimezone(new DateTimeZone('UTC'))->format('Ymd\THis\Z'),
+            'DTSTART;TZID=' . $this->escapeIcs($timezoneName) . ':' . $start->format('Ymd\THis'),
+            'DTEND;TZID=' . $this->escapeIcs($timezoneName) . ':' . $end->format('Ymd\THis'),
+            'END:VEVENT',
+        );
+
+        return $lines;
+    }
+
+    private function escapeIcs($value)
+    {
+        $value = str_replace(array("\\", ";", ",", "\r", "\n"), array('\\\\', '\\;', '\\,', '', '\\n'), $value);
+
+        return $value;
+    }
+}

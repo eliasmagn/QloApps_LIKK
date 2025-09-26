@@ -13,6 +13,8 @@
       <dd>{$task->scheduled_for|escape:'htmlall':'UTF-8'}</dd>
       <dt>{l s='Due end' mod='kloperations'}</dt>
       <dd>{$task->due_end|escape:'htmlall':'UTF-8'}</dd>
+      <dt>{l s='Last reminder' mod='kloperations'}</dt>
+      <dd>{$task->last_reminded_at|escape:'htmlall':'UTF-8'}</dd>
       <dt>{l s='Resource' mod='kloperations'}</dt>
       <dd>{$task->resource_type|escape:'htmlall':'UTF-8'} #{$task->id_resource|escape:'htmlall':'UTF-8'}</dd>
       <dt>{l s='Context' mod='kloperations'}</dt>
@@ -23,8 +25,8 @@
   </div>
 
   <h4>{l s='Payload' mod='kloperations'}</h4>
-  {if $payload}
-  <pre>{$task->payload|escape:'htmlall':'UTF-8'}</pre>
+  {if $payload_pretty}
+  <pre>{$payload_pretty|escape:'htmlall':'UTF-8'}</pre>
   {else}
   <p class="text-muted">{l s='No additional payload stored.' mod='kloperations'}</p>
   {/if}

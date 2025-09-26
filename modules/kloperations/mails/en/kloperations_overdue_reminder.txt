@@ -1,0 +1,7 @@
+{shop_name} overdue tasks reminder – {generated_at}
+
+The following tasks require attention:
+{overdue_text}
+
+-- 
+Kunstort Lehnin Operations Automation
