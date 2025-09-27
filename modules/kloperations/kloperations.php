@@ -38,7 +38,7 @@ class Kloperations extends Module
     {
         $this->name = 'kloperations';
         $this->tab = 'administration';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Kunstort Lehnin';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -68,6 +68,7 @@ class Kloperations extends Module
         }
 
         Configuration::updateValue('KLOPERATIONS_DIGEST_RECIPIENTS', '');
+        Configuration::updateValue('KLOPERATIONS_TEAMS', '');
 
         return true;
     }
@@ -79,6 +80,7 @@ class Kloperations extends Module
         }
 
         Configuration::deleteByName('KLOPERATIONS_DIGEST_RECIPIENTS');
+        Configuration::deleteByName('KLOPERATIONS_TEAMS');
 
         return parent::uninstall();
     }
@@ -146,11 +148,16 @@ class Kloperations extends Module
                 `id_kl_operation_task` INT UNSIGNED NOT NULL,
                 `id_employee` INT UNSIGNED DEFAULT NULL,
                 `assignee_type` VARCHAR(32) NOT NULL DEFAULT "employee",
+                `assignee_reference` VARCHAR(64) DEFAULT NULL,
+                `assignee_label` VARCHAR(128) DEFAULT NULL,
                 `status` VARCHAR(32) NOT NULL DEFAULT "pending",
+                `acknowledged_at` DATETIME DEFAULT NULL,
+                `completed_at` DATETIME DEFAULT NULL,
                 `date_add` DATETIME NOT NULL,
                 `date_upd` DATETIME NOT NULL,
                 PRIMARY KEY (`id_kl_operation_task_assignment`),
-                KEY `idx_operation_assignment_task` (`id_kl_operation_task`)
+                KEY `idx_operation_assignment_task` (`id_kl_operation_task`),
+                KEY `idx_operation_assignment_employee` (`id_employee`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'kl_operation_task_note` (
                 `id_kl_operation_task_note` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -173,6 +180,11 @@ class Kloperations extends Module
         }
 
         $this->addColumnIfMissing('kl_operation_task', 'last_reminded_at', '`last_reminded_at` DATETIME DEFAULT NULL AFTER `completed_at`');
+        $this->addColumnIfMissing('kl_operation_task_assignment', 'assignee_reference', '`assignee_reference` VARCHAR(64) DEFAULT NULL AFTER `assignee_type`');
+        $this->addColumnIfMissing('kl_operation_task_assignment', 'assignee_label', '`assignee_label` VARCHAR(128) DEFAULT NULL AFTER `assignee_reference`');
+        $this->addColumnIfMissing('kl_operation_task_assignment', 'acknowledged_at', '`acknowledged_at` DATETIME DEFAULT NULL AFTER `status`');
+        $this->addColumnIfMissing('kl_operation_task_assignment', 'completed_at', '`completed_at` DATETIME DEFAULT NULL AFTER `acknowledged_at`');
+        $this->addIndexIfMissing('kl_operation_task_assignment', 'idx_operation_assignment_employee', '`id_employee`');
 
         return true;
     }
@@ -277,6 +289,16 @@ class Kloperations extends Module
         $exists = Db::getInstance()->executeS('SHOW COLUMNS FROM `' . $tableName . '` LIKE "' . $columnName . '"');
         if (!$exists) {
             Db::getInstance()->execute('ALTER TABLE `' . $tableName . '` ADD ' . $definition);
+        }
+    }
+
+    private function addIndexIfMissing($table, $indexName, $definition)
+    {
+        $tableName = _DB_PREFIX_ . pSQL($table);
+        $indexName = pSQL($indexName);
+        $exists = Db::getInstance()->executeS('SHOW INDEX FROM `' . $tableName . '` WHERE Key_name = "' . $indexName . '"');
+        if (!$exists) {
+            Db::getInstance()->execute('ALTER TABLE `' . $tableName . '` ADD INDEX `' . $indexName . '` (' . $definition . ')');
         }
     }
 

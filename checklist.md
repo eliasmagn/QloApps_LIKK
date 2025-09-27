@@ -35,12 +35,13 @@
   - [x] Generate maintenance start/release tasks from room disable ranges.
   - [x] Deliver daily digest emails and overdue reminders to configurable recipients.
   - [x] Provide CSV/ICS exports from the operations console and throttle reminder delivery with `last_reminded_at` tracking.
+- [x] Added manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
+  - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
+  - [x] Layer assignment workflows so tasks can be handed to employees or teams.
+  - [x] Provide lightweight mobile checklists tuned for housekeeping devices.
 
 ## In Progress
-- [ ] Add manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
-  - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
-  - [ ] Layer assignment workflows so tasks can be handed to employees or teams.
-  - [ ] Provide lightweight mobile checklists tuned for housekeeping devices.
+- _None at present._
 
 ## Issues
 - [x] Align Composer's PHP requirement with the documented PHP 8 support window so installs work on current runtimes.

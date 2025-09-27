@@ -22,6 +22,9 @@ require_once dirname(__DIR__, 2) . '/classes/KlOperationTaskAssignment.php';
 
 class AdminKlOperationTasksController extends ModuleAdminController
 {
+    /** @var bool */
+    private $mobileView = false;
+
     public function __construct()
     {
         $this->table = KlOperationTask::$definition['table'];
@@ -76,6 +79,11 @@ class AdminKlOperationTasksController extends ModuleAdminController
                 'title' => $this->l('Priority'),
                 'align' => 'text-center',
             ),
+            'assignment_summary' => array(
+                'title' => $this->l('Assignments'),
+                'orderby' => false,
+                'search' => false,
+            ),
         );
 
         $this->bulk_actions = array(
@@ -88,8 +96,34 @@ class AdminKlOperationTasksController extends ModuleAdminController
 
     public function initProcess()
     {
+        if (Tools::getIsset('mobile_view')) {
+            $this->mobileView = true;
+            $this->display = 'view';
+            $this->lite_display = true;
+        }
+
         if (Tools::isSubmit('submitBulkcompleteTasks' . $this->table)) {
             $this->action = 'completeTasks';
+        }
+
+        if (Tools::isSubmit('submitAssignEmployee')) {
+            $this->action = 'assignEmployee';
+        }
+
+        if (Tools::isSubmit('submitAssignTeam')) {
+            $this->action = 'assignTeam';
+        }
+
+        if (Tools::isSubmit('submitUpdateAssignmentStatus')) {
+            $this->action = 'updateAssignmentStatus';
+        }
+
+        if (Tools::isSubmit('submitDeleteAssignment')) {
+            $this->action = 'deleteAssignment';
+        }
+
+        if (Tools::isSubmit('submitClaimTask')) {
+            $this->action = 'claimTask';
         }
 
         if (Tools::getIsset('export_tasks_csv')) {
@@ -101,6 +135,29 @@ class AdminKlOperationTasksController extends ModuleAdminController
         }
 
         parent::initProcess();
+    }
+
+    public function getList($idLang, $orderBy = null, $orderWay = null, $start = 0, $limit = null, $idLangShop = false)
+    {
+        parent::getList($idLang, $orderBy, $orderWay, $start, $limit, $idLangShop);
+
+        if (empty($this->_list)) {
+            return;
+        }
+
+        $taskIds = array();
+        foreach ($this->_list as $row) {
+            if (isset($row['id_kl_operation_task'])) {
+                $taskIds[] = (int) $row['id_kl_operation_task'];
+            }
+        }
+
+        $assignments = $this->fetchAssignmentsIndexed($taskIds);
+
+        foreach ($this->_list as &$row) {
+            $taskId = isset($row['id_kl_operation_task']) ? (int) $row['id_kl_operation_task'] : 0;
+            $row['assignment_summary'] = $this->formatAssignmentSummaryForList($assignments, $taskId);
+        }
     }
 
     public function processCompleteTasks()
@@ -128,8 +185,255 @@ class AdminKlOperationTasksController extends ModuleAdminController
         Tools::redirectAdmin(self::$currentIndex . '&conf=4&token=' . $this->token);
     }
 
+    public function processAssignEmployee()
+    {
+        $taskId = (int) Tools::getValue('id_kl_operation_task');
+        $employeeId = (int) Tools::getValue('assignment_id_employee');
+
+        if (!$taskId) {
+            $this->errors[] = $this->l('Missing task identifier.');
+
+            return false;
+        }
+
+        if (!$employeeId) {
+            $this->errors[] = $this->l('Select an employee to assign.');
+
+            return false;
+        }
+
+        $employee = new Employee($employeeId);
+        if (!Validate::isLoadedObject($employee)) {
+            $this->errors[] = $this->l('The selected employee could not be loaded.');
+
+            return false;
+        }
+
+        if ($this->assignmentExists($taskId, 'employee', $employeeId)) {
+            $this->confirmations[] = $this->l('The employee is already assigned to this task.');
+            $this->redirectAfterAction($taskId);
+
+            return true;
+        }
+
+        $assignment = new KlOperationTaskAssignment();
+        $assignment->id_kl_operation_task = $taskId;
+        $assignment->id_employee = $employeeId;
+        $assignment->assignee_type = 'employee';
+        $assignment->assignee_reference = null;
+        $assignment->assignee_label = trim($employee->firstname . ' ' . $employee->lastname);
+        $assignment->status = 'pending';
+        $assignment->acknowledged_at = null;
+        $assignment->completed_at = null;
+        $assignment->date_add = date('Y-m-d H:i:s');
+        $assignment->date_upd = $assignment->date_add;
+
+        if (!$assignment->add()) {
+            $this->errors[] = $this->l('Failed to assign the employee. Please try again.');
+
+            return false;
+        }
+
+        $this->syncTaskStatus($taskId);
+        $this->confirmations[] = $this->l('Assignment saved.');
+        $this->redirectAfterAction($taskId);
+
+        return true;
+    }
+
+    public function processAssignTeam()
+    {
+        $taskId = (int) Tools::getValue('id_kl_operation_task');
+        $reference = trim((string) Tools::getValue('assignment_team_reference'));
+        $label = trim((string) Tools::getValue('assignment_team_label'));
+
+        if (!$taskId) {
+            $this->errors[] = $this->l('Missing task identifier.');
+
+            return false;
+        }
+
+        if ($reference === '' || $label === '') {
+            $this->errors[] = $this->l('Provide both a team reference and label.');
+
+            return false;
+        }
+
+        if ($this->assignmentExists($taskId, 'team', null, $reference)) {
+            $this->confirmations[] = $this->l('This team is already assigned to the task.');
+            $this->redirectAfterAction($taskId);
+
+            return true;
+        }
+
+        $assignment = new KlOperationTaskAssignment();
+        $assignment->id_kl_operation_task = $taskId;
+        $assignment->id_employee = null;
+        $assignment->assignee_type = 'team';
+        $assignment->assignee_reference = $reference;
+        $assignment->assignee_label = $label;
+        $assignment->status = 'pending';
+        $assignment->acknowledged_at = null;
+        $assignment->completed_at = null;
+        $assignment->date_add = date('Y-m-d H:i:s');
+        $assignment->date_upd = $assignment->date_add;
+
+        if (!$assignment->add()) {
+            $this->errors[] = $this->l('Failed to assign the team. Please try again.');
+
+            return false;
+        }
+
+        $this->syncTaskStatus($taskId);
+        $this->confirmations[] = $this->l('Team assignment saved.');
+        $this->redirectAfterAction($taskId);
+
+        return true;
+    }
+
+    public function processUpdateAssignmentStatus()
+    {
+        $taskId = (int) Tools::getValue('id_kl_operation_task');
+        $assignmentId = (int) Tools::getValue('id_assignment');
+        $status = (string) Tools::getValue('assignment_status');
+
+        if (!$taskId || !$assignmentId) {
+            $this->errors[] = $this->l('Missing assignment context.');
+
+            return false;
+        }
+
+        if (!$this->isValidAssignmentStatus($status)) {
+            $this->errors[] = $this->l('Select a valid assignment status.');
+
+            return false;
+        }
+
+        $assignment = new KlOperationTaskAssignment($assignmentId);
+        if (!Validate::isLoadedObject($assignment) || (int) $assignment->id_kl_operation_task !== $taskId) {
+            $this->errors[] = $this->l('Assignment record not found.');
+
+            return false;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $assignment->status = $status;
+        $assignment->date_upd = $now;
+
+        if (in_array($status, array('acknowledged', 'in_progress', 'completed'))) {
+            if (empty($assignment->acknowledged_at)) {
+                $assignment->acknowledged_at = $now;
+            }
+        } else {
+            $assignment->acknowledged_at = null;
+        }
+
+        if ($status === 'completed') {
+            $assignment->completed_at = $now;
+        } else {
+            $assignment->completed_at = null;
+        }
+
+        if (!$assignment->update()) {
+            $this->errors[] = $this->l('Failed to update the assignment status.');
+
+            return false;
+        }
+
+        $this->syncTaskStatus($taskId);
+        $this->redirectAfterAction($taskId);
+
+        return true;
+    }
+
+    public function processDeleteAssignment()
+    {
+        $taskId = (int) Tools::getValue('id_kl_operation_task');
+        $assignmentId = (int) Tools::getValue('id_assignment');
+
+        if (!$taskId || !$assignmentId) {
+            $this->errors[] = $this->l('Missing assignment context.');
+
+            return false;
+        }
+
+        $assignment = new KlOperationTaskAssignment($assignmentId);
+        if (!Validate::isLoadedObject($assignment) || (int) $assignment->id_kl_operation_task !== $taskId) {
+            $this->errors[] = $this->l('Assignment record not found.');
+
+            return false;
+        }
+
+        if (!$assignment->delete()) {
+            $this->errors[] = $this->l('Failed to remove the assignment.');
+
+            return false;
+        }
+
+        $this->syncTaskStatus($taskId);
+        $this->confirmations[] = $this->l('Assignment removed.');
+        $this->redirectAfterAction($taskId);
+
+        return true;
+    }
+
+    public function processClaimTask()
+    {
+        $taskId = (int) Tools::getValue('id_kl_operation_task');
+        if (!$taskId) {
+            $this->errors[] = $this->l('Missing task identifier.');
+
+            return false;
+        }
+
+        $employee = $this->context->employee;
+        if (!Validate::isLoadedObject($employee)) {
+            $this->errors[] = $this->l('Only logged-in employees can claim tasks.');
+
+            return false;
+        }
+
+        if ($this->assignmentExists($taskId, 'employee', (int) $employee->id)) {
+            $this->confirmations[] = $this->l('You are already assigned to this task.');
+            $this->redirectAfterAction($taskId, array('mobile_range_days' => (int) Tools::getValue('mobile_range_days')));
+
+            return true;
+        }
+
+        $assignment = new KlOperationTaskAssignment();
+        $assignment->id_kl_operation_task = $taskId;
+        $assignment->id_employee = (int) $employee->id;
+        $assignment->assignee_type = 'employee';
+        $assignment->assignee_reference = null;
+        $assignment->assignee_label = trim($employee->firstname . ' ' . $employee->lastname);
+        $assignment->status = 'in_progress';
+        $assignment->acknowledged_at = date('Y-m-d H:i:s');
+        $assignment->completed_at = null;
+        $assignment->date_add = $assignment->acknowledged_at;
+        $assignment->date_upd = $assignment->acknowledged_at;
+
+        if (!$assignment->add()) {
+            $this->errors[] = $this->l('Failed to claim the task.');
+
+            return false;
+        }
+
+        $this->syncTaskStatus($taskId);
+        $this->confirmations[] = $this->l('Task claimed.');
+        $this->redirectAfterAction($taskId, array('mobile_range_days' => (int) Tools::getValue('mobile_range_days')));
+
+        return true;
+    }
+
     public function renderView()
     {
+        if ($this->mobileView) {
+            $this->show_toolbar = false;
+            $this->show_page_header_toolbar = false;
+
+            return $this->renderMobileView();
+        }
+
         $task = $this->loadObject(true);
         if (!Validate::isLoadedObject($task)) {
             return parent::renderView();
@@ -143,11 +447,21 @@ class AdminKlOperationTasksController extends ModuleAdminController
             }
         }
 
+        $assignments = $this->getTaskAssignments((int) $task->id);
+
         $this->tpl_view_vars = array(
             'task' => $task,
             'payload' => $payload,
             'payload_pretty' => empty($payload) ? '' : json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             'notes' => $this->getTaskNotes($task->id),
+            'assignments' => $assignments,
+            'assignment_status_options' => $this->getAssignmentStatusOptions(),
+            'assignment_status_labels' => $this->getAssignmentStatusLabels(),
+            'employees' => $this->getEmployeeOptions(),
+            'team_options' => $this->getTeamOptions(),
+            'form_action' => $this->buildLink(array('token' => $this->token)),
+            'mobile_view_link' => $this->buildLink(array('token' => $this->token, 'mobile_view' => 1)),
+            'current_employee_id' => (int) $this->context->employee->id,
         );
 
         return parent::renderView();
@@ -397,6 +711,410 @@ class AdminKlOperationTasksController extends ModuleAdminController
         $query->orderBy('`date_add` ASC');
 
         return Db::getInstance()->executeS($query) ?: array();
+    }
+
+    public function loadObject($opt = false)
+    {
+        if ($this->mobileView) {
+            return true;
+        }
+
+        return parent::loadObject($opt);
+    }
+
+    private function redirectAfterAction($taskId = null, array $extra = array())
+    {
+        $params = array_merge(array('token' => $this->token), $extra);
+        if ($this->isMobileReturn()) {
+            $params['mobile_view'] = 1;
+            $range = (int) Tools::getValue('mobile_range_days');
+            if ($range > 0) {
+                $params['mobile_range_days'] = $range;
+            }
+        } elseif ($taskId) {
+            $params['id_kl_operation_task'] = (int) $taskId;
+            $params['view' . $this->table] = 1;
+        }
+
+        Tools::redirectAdmin($this->buildLink($params));
+    }
+
+    private function isMobileReturn()
+    {
+        return $this->mobileView || Tools::getValue('return') === 'mobile';
+    }
+
+    private function buildLink(array $params = array())
+    {
+        $base = self::$currentIndex;
+        $separator = strpos($base, '?') === false ? '?' : '&';
+        if (empty($params)) {
+            return $base;
+        }
+
+        return $base . $separator . http_build_query($params);
+    }
+
+    private function assignmentExists($taskId, $type, $employeeId = null, $reference = null)
+    {
+        $query = new DbQuery();
+        $query->select('COUNT(*)');
+        $query->from(KlOperationTaskAssignment::$definition['table']);
+        $query->where('`id_kl_operation_task` = ' . (int) $taskId);
+        $query->where('`assignee_type` = "' . pSQL($type) . '"');
+
+        if ($type === 'employee') {
+            $query->where('`id_employee` = ' . (int) $employeeId);
+        } else {
+            $query->where('`assignee_reference` = "' . pSQL((string) $reference) . '"');
+        }
+
+        return (bool) Db::getInstance()->getValue($query);
+    }
+
+    private function isValidAssignmentStatus($status)
+    {
+        $valid = array();
+        foreach ($this->getAssignmentStatusOptions() as $option) {
+            $valid[$option['id']] = true;
+        }
+
+        return isset($valid[$status]);
+    }
+
+    private function getAssignmentStatusOptions()
+    {
+        return array(
+            array('id' => 'pending', 'name' => $this->l('Pending')),
+            array('id' => 'acknowledged', 'name' => $this->l('Acknowledged')),
+            array('id' => 'in_progress', 'name' => $this->l('In progress')),
+            array('id' => 'completed', 'name' => $this->l('Completed')),
+            array('id' => 'declined', 'name' => $this->l('Declined')),
+        );
+    }
+
+    private function getAssignmentStatusLabels()
+    {
+        $labels = array();
+        foreach ($this->getAssignmentStatusOptions() as $option) {
+            $labels[$option['id']] = $option['name'];
+        }
+
+        return $labels;
+    }
+
+    private function fetchAssignmentsIndexed(array $taskIds)
+    {
+        $rows = KlOperationTaskAssignment::getAssignmentsForTasks($taskIds);
+        if (!$rows) {
+            return array();
+        }
+
+        $indexed = array();
+        foreach ($rows as $row) {
+            $taskId = (int) $row['id_kl_operation_task'];
+            if (!isset($indexed[$taskId])) {
+                $indexed[$taskId] = array();
+            }
+            $indexed[$taskId][] = $this->normaliseAssignmentRow($row);
+        }
+
+        return $indexed;
+    }
+
+    private function normaliseAssignmentRow(array $row)
+    {
+        $displayName = '';
+        if ($row['assignee_type'] === 'employee') {
+            $displayName = trim((string) $row['firstname'] . ' ' . (string) $row['lastname']);
+            if ($displayName === '') {
+                $displayName = (string) $row['assignee_label'];
+            }
+            if ($displayName === '' && !empty($row['email'])) {
+                $displayName = (string) $row['email'];
+            }
+            if ($displayName === '') {
+                $displayName = $this->l('Employee');
+            }
+        } else {
+            $displayName = (string) $row['assignee_label'];
+            if ($displayName === '') {
+                $displayName = (string) $row['assignee_reference'];
+            }
+            if ($displayName === '') {
+                $displayName = $this->l('Team');
+            }
+        }
+
+        return array(
+            'id_assignment' => (int) $row['id_kl_operation_task_assignment'],
+            'id_kl_operation_task' => (int) $row['id_kl_operation_task'],
+            'id_employee' => isset($row['id_employee']) ? (int) $row['id_employee'] : null,
+            'assignee_type' => (string) $row['assignee_type'],
+            'assignee_reference' => (string) $row['assignee_reference'],
+            'assignee_label' => (string) $row['assignee_label'],
+            'display_name' => $displayName,
+            'status' => (string) $row['status'],
+            'acknowledged_at' => $row['acknowledged_at'],
+            'completed_at' => $row['completed_at'],
+            'date_add' => $row['date_add'],
+            'date_upd' => $row['date_upd'],
+        );
+    }
+
+    private function formatAssignmentSummaryForList(array $assignments, $taskId)
+    {
+        if (!isset($assignments[$taskId]) || empty($assignments[$taskId])) {
+            return $this->l('Unassigned');
+        }
+
+        $parts = array();
+        foreach ($assignments[$taskId] as $assignment) {
+            $parts[] = sprintf(
+                '%s (%s)',
+                $assignment['display_name'],
+                $this->translateAssignmentStatus($assignment['status'])
+            );
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function translateAssignmentStatus($status)
+    {
+        $labels = $this->getAssignmentStatusLabels();
+
+        if (isset($labels[$status])) {
+            return $labels[$status];
+        }
+
+        return Tools::ucfirst(str_replace('_', ' ', (string) $status));
+    }
+
+    private function getTaskAssignments($taskId)
+    {
+        $indexed = $this->fetchAssignmentsIndexed(array((int) $taskId));
+
+        return isset($indexed[$taskId]) ? $indexed[$taskId] : array();
+    }
+
+    private function getEmployeeOptions()
+    {
+        $query = new DbQuery();
+        $query->select('`id_employee`, `firstname`, `lastname`, `email`');
+        $query->from('employee');
+        $query->where('`active` = 1');
+        $query->orderBy('`firstname` ASC, `lastname` ASC');
+
+        $rows = Db::getInstance()->executeS($query) ?: array();
+        $options = array();
+        foreach ($rows as $row) {
+            $name = trim($row['firstname'] . ' ' . $row['lastname']);
+            if ($name === '') {
+                $name = $row['email'];
+            }
+            $options[] = array(
+                'id' => (int) $row['id_employee'],
+                'name' => $name,
+            );
+        }
+
+        return $options;
+    }
+
+    private function getTeamOptions()
+    {
+        $raw = trim((string) Configuration::get('KLOPERATIONS_TEAMS'));
+        if ($raw === '') {
+            return array();
+        }
+
+        return $this->parseTeamConfig($raw);
+    }
+
+    private function parseTeamConfig($raw)
+    {
+        $decoded = json_decode($raw, true);
+        $teams = array();
+
+        if (is_array($decoded)) {
+            foreach ($decoded as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $id = isset($entry['id']) ? trim((string) $entry['id']) : '';
+                $label = isset($entry['label']) ? trim((string) $entry['label']) : '';
+                if ($id === '' || $label === '') {
+                    continue;
+                }
+                $teams[] = array('id' => $id, 'label' => $label);
+            }
+
+            return $teams;
+        }
+
+        $lines = preg_split('/[\r\n]+/', $raw);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $parts = explode(':', $line, 2);
+            $id = trim($parts[0]);
+            $label = isset($parts[1]) ? trim($parts[1]) : $id;
+            if ($id === '' || $label === '') {
+                continue;
+            }
+            $teams[] = array('id' => $id, 'label' => $label);
+        }
+
+        return $teams;
+    }
+
+    private function syncTaskStatus($taskId)
+    {
+        $task = new KlOperationTask((int) $taskId);
+        if (!Validate::isLoadedObject($task)) {
+            return;
+        }
+
+        if ($task->status === 'cancelled') {
+            return;
+        }
+
+        $assignments = $this->getTaskAssignments($taskId);
+        if (empty($assignments)) {
+            if ($task->status !== 'pending' && $task->status !== 'completed') {
+                $task->status = 'pending';
+                $task->completed_at = null;
+                $task->completed_by = null;
+                $task->date_upd = date('Y-m-d H:i:s');
+                $task->update();
+            }
+
+            return;
+        }
+
+        $counts = array();
+        foreach ($assignments as $assignment) {
+            $status = $assignment['status'];
+            if (!isset($counts[$status])) {
+                $counts[$status] = 0;
+            }
+            $counts[$status]++;
+        }
+
+        $totalAssignments = array_sum($counts);
+        $now = date('Y-m-d H:i:s');
+        $updated = false;
+
+        if (!empty($counts['completed']) && $counts['completed'] === $totalAssignments) {
+            if ($task->status !== 'completed') {
+                $task->status = 'completed';
+                $task->completed_at = $now;
+                $task->completed_by = (int) $this->context->employee->id;
+                $updated = true;
+            }
+        } elseif (!empty($counts['in_progress']) || !empty($counts['acknowledged'])) {
+            if ($task->status !== 'in_progress') {
+                $task->status = 'in_progress';
+                $task->completed_at = null;
+                $task->completed_by = null;
+                $updated = true;
+            }
+        } elseif (!empty($counts['pending'])) {
+            if ($task->status !== 'pending') {
+                $task->status = 'pending';
+                $task->completed_at = null;
+                $task->completed_by = null;
+                $updated = true;
+            }
+        }
+
+        if ($updated) {
+            $task->date_upd = $now;
+            $task->update();
+        }
+    }
+
+    private function renderMobileView()
+    {
+        $rangeDays = max(1, (int) Tools::getValue('mobile_range_days', 3));
+        $timezone = $this->resolveTimezone();
+        $start = new DateTimeImmutable('today', $timezone)->sub(new DateInterval('P1D'));
+        $end = $start->add(new DateInterval('P' . ($rangeDays + 1) . 'D'));
+
+        $tasks = $this->module->getExportService()->fetchTasks($start, $end, array('pending', 'in_progress'));
+        $taskIds = array();
+        foreach ($tasks as $task) {
+            if (isset($task['id_kl_operation_task'])) {
+                $taskIds[] = (int) $task['id_kl_operation_task'];
+            }
+        }
+
+        $assignments = $this->fetchAssignmentsIndexed($taskIds);
+        $currentEmployeeId = (int) $this->context->employee->id;
+        $statusLabels = $this->getStatusLabelMap();
+        $assignmentLabels = $this->getAssignmentStatusLabels();
+
+        $myTasks = array();
+        $unassignedTasks = array();
+
+        foreach ($tasks as $task) {
+            $taskId = (int) $task['id_kl_operation_task'];
+            $taskAssignments = isset($assignments[$taskId]) ? $assignments[$taskId] : array();
+            $task['assignments'] = $taskAssignments;
+            $task['status_label'] = isset($statusLabels[$task['status']]) ? $statusLabels[$task['status']] : $task['status'];
+            $task['assignment_summary'] = $this->formatAssignmentSummaryForList($assignments, $taskId);
+
+            $currentAssignment = null;
+            foreach ($taskAssignments as $assignment) {
+                if ($assignment['assignee_type'] === 'employee' && (int) $assignment['id_employee'] === $currentEmployeeId) {
+                    $currentAssignment = $assignment;
+                    break;
+                }
+            }
+
+            if ($currentAssignment) {
+                $task['current_assignment'] = $currentAssignment;
+                $task['current_assignment']['status_label'] = isset($assignmentLabels[$currentAssignment['status']]) ? $assignmentLabels[$currentAssignment['status']] : $currentAssignment['status'];
+                $myTasks[] = $task;
+            } elseif (empty($taskAssignments)) {
+                $unassignedTasks[] = $task;
+            }
+        }
+
+        $this->context->smarty->assign(array(
+            'my_tasks' => $myTasks,
+            'unassigned_tasks' => $unassignedTasks,
+            'mobile_form_action' => $this->buildLink(array(
+                'token' => $this->token,
+                'mobile_view' => 1,
+                'mobile_range_days' => $rangeDays,
+            )),
+            'mobile_refresh_link' => $this->buildLink(array(
+                'token' => $this->token,
+                'mobile_view' => 1,
+            )),
+            'assignment_status_options' => $this->getAssignmentStatusOptions(),
+            'assignment_status_labels' => $assignmentLabels,
+            'current_employee_id' => $currentEmployeeId,
+            'mobile_range_days' => $rangeDays,
+            'status_labels' => $statusLabels,
+            'token' => $this->token,
+        ));
+
+        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/task_mobile.tpl');
+    }
+
+    private function getStatusLabelMap()
+    {
+        $map = array();
+        foreach ($this->getStatusOptions() as $option) {
+            $map[$option['id']] = $option['name'];
+        }
+
+        return $map;
     }
 
     private function resolveTimezone()
