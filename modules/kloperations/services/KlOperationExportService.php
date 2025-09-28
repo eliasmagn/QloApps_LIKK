@@ -15,6 +15,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require_once dirname(__DIR__) . '/classes/KlOperationTaskAssignment.php';
+
 class KlOperationExportService
 {
     /**
@@ -80,7 +82,7 @@ class KlOperationExportService
             $hydrated[] = $row;
         }
 
-        return $hydrated;
+        return $this->attachAssignments($hydrated);
     }
 
     /**
@@ -104,6 +106,7 @@ class KlOperationExportService
             'Priority',
             'Context',
             'Context ID',
+            'Assignments',
             'Summary',
         ));
 
@@ -119,6 +122,7 @@ class KlOperationExportService
                 $task['priority'],
                 $task['context_type'],
                 $task['context_id'],
+                $this->summariseAssignments($task),
                 $this->summariseTask($task),
             ));
         }
@@ -205,6 +209,10 @@ class KlOperationExportService
             $parts[] = $payload['task_hint'];
         }
 
+        if (!empty($task['assignments'])) {
+            $parts[] = $this->module->l('Assigned', 'KlOperationExportService') . ': ' . $this->summariseAssignments($task);
+        }
+
         if (!$parts) {
             $parts[] = $this->module->l('No additional context provided.', 'KlOperationExportService');
         }
@@ -248,5 +256,104 @@ class KlOperationExportService
         $value = str_replace(array("\\", ";", ",", "\r", "\n"), array('\\\\', '\\;', '\\,', '', '\\n'), $value);
 
         return $value;
+    }
+
+    private function attachAssignments(array $tasks)
+    {
+        if (empty($tasks)) {
+            return $tasks;
+        }
+
+        $ids = array();
+        foreach ($tasks as $task) {
+            if (isset($task['id_kl_operation_task'])) {
+                $ids[] = (int) $task['id_kl_operation_task'];
+            }
+        }
+
+        $rows = KlOperationTaskAssignment::getAssignmentsForTasks($ids);
+        $grouped = array();
+        foreach ($rows as $row) {
+            $taskId = (int) $row['id_kl_operation_task'];
+            if (!isset($grouped[$taskId])) {
+                $grouped[$taskId] = array();
+            }
+            $grouped[$taskId][] = $this->normaliseAssignmentRow($row);
+        }
+
+        foreach ($tasks as &$task) {
+            $taskId = (int) $task['id_kl_operation_task'];
+            $task['assignments'] = isset($grouped[$taskId]) ? $grouped[$taskId] : array();
+        }
+
+        return $tasks;
+    }
+
+    private function normaliseAssignmentRow(array $row)
+    {
+        $displayName = '';
+        if ($row['assignee_type'] === 'employee') {
+            $displayName = trim((string) $row['firstname'] . ' ' . (string) $row['lastname']);
+            if ($displayName === '') {
+                $displayName = (string) $row['assignee_label'];
+            }
+            if ($displayName === '' && !empty($row['email'])) {
+                $displayName = (string) $row['email'];
+            }
+            if ($displayName === '') {
+                $displayName = $this->module->l('Employee', 'KlOperationExportService');
+            }
+        } else {
+            $displayName = (string) $row['assignee_label'];
+            if ($displayName === '') {
+                $displayName = (string) $row['assignee_reference'];
+            }
+            if ($displayName === '') {
+                $displayName = $this->module->l('Team', 'KlOperationExportService');
+            }
+        }
+
+        return array(
+            'id_assignment' => (int) $row['id_kl_operation_task_assignment'],
+            'assignee_type' => (string) $row['assignee_type'],
+            'id_employee' => isset($row['id_employee']) ? (int) $row['id_employee'] : null,
+            'assignee_reference' => (string) $row['assignee_reference'],
+            'assignee_label' => (string) $row['assignee_label'],
+            'display_name' => $displayName,
+            'status' => (string) $row['status'],
+            'acknowledged_at' => $row['acknowledged_at'],
+            'completed_at' => $row['completed_at'],
+        );
+    }
+
+    private function summariseAssignments(array $task)
+    {
+        if (empty($task['assignments'])) {
+            return $this->module->l('Unassigned', 'KlOperationExportService');
+        }
+
+        $parts = array();
+        foreach ($task['assignments'] as $assignment) {
+            $parts[] = sprintf(
+                '%s (%s)',
+                $assignment['display_name'],
+                $this->translateAssignmentStatus($assignment['status'])
+            );
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function translateAssignmentStatus($status)
+    {
+        $map = array(
+            'pending' => $this->module->l('Pending', 'KlOperationExportService'),
+            'acknowledged' => $this->module->l('Acknowledged', 'KlOperationExportService'),
+            'in_progress' => $this->module->l('In progress', 'KlOperationExportService'),
+            'completed' => $this->module->l('Completed', 'KlOperationExportService'),
+            'declined' => $this->module->l('Declined', 'KlOperationExportService'),
+        );
+
+        return isset($map[$status]) ? $map[$status] : Tools::ucfirst(str_replace('_', ' ', (string) $status));
     }
 }

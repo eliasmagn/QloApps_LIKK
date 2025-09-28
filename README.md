@@ -24,7 +24,7 @@ Key characteristics of the fork:
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
-- 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for daily follow-up and manual task authoring.
+- 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for manual task authoring, assignment workflows and mobile checklists.
 - 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
@@ -182,10 +182,13 @@ Operations automation now ships inside `modules/kloperations`:
 - `KlOperationTaskGenerator` hooks into `actionCronJob` to create arrival and checkout housekeeping tasks each day based on `HotelBookingDetail` rows while skipping cancelled/refunded stays.
 - Room disable ranges spawn paired maintenance tasks: a morning "maintenance_start" checklist when the block begins and an afternoon "maintenance_release" follow-up on the day the block ends so spaces are reopened deliberately.
 - Booking lifecycle hooks keep generated tasks in sync—arrivals flip to `in_progress` when guests check in, checkouts mark completed when stays close.
-- The back office exposes **Operations → Tasks** for listings, bulk completion and payload/notes inspection.
+- The back office exposes **Operations → Tasks** for listings, bulk completion, payload/notes inspection and assignment management.
 - Manual task authoring is available from the same console, capturing structured payloads and optional kickoff notes while generating unique keys and audit trails automatically.
-- Toolbar buttons export pending tasks for the next seven days to CSV or iCalendar so schedules can be shared with external partners.
+- Assign tasks to employees or named teams, capture acknowledgement/completion timestamps and manage statuses inline without leaving the console.
+- A lightweight mobile view is available at `index.php?controller=AdminKlOperationTasks&mobile_view=1&token=…`, letting logged-in staff review their queue, update statuses, release tasks and claim unassigned work from housekeeping devices.
+- Toolbar buttons export pending tasks for the next seven days to CSV or iCalendar so schedules (now including assignment summaries) can be shared with external partners.
 - Daily cron runs also deliver an HTML/text digest and overdue reminders to the addresses listed in `KLOPERATIONS_DIGEST_RECIPIENTS` (comma/space separated emails via the `Configuration` table or module upgrade script).
+- Configure reusable teams by storing JSON or newline-delimited entries in `KLOPERATIONS_TEAMS`; each entry provides a `id`/`label` pair surfaced in the assignment form for quick selection.
 
 To run the generator on demand you can trigger the cron hook:
 
@@ -207,7 +210,7 @@ Use these constants in future contributions to gate legacy commerce flows.
 - Broaden resource annotations (rooms, ateliers, gastronomy) to enrich availability storytelling and reporting. See [`docs/blueprints/resource-taxonomy.md`](docs/blueprints/resource-taxonomy.md) for the canonical data model.
 - Replace the front-office room list with storytelling-driven templates and an enquiry form tied to curated packages. Content strategy is outlined in the taxonomy blueprint and will drive copy blocks surfaced on offer pages.
 - Wire up configurable rate plans and bundled packages on top of the new scaffolding so inquiries can be priced consistently, following [`docs/blueprints/rate-plans-packages.md`](docs/blueprints/rate-plans-packages.md).
-- Extend operations automation with manual task creation, assignment workflows and lightweight mobile views once staff test the new digests/exports (see [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md)).
+- Extend operations automation with follow-on analytics (utilisation dashboards, programme reporting) once assignment workflows and mobile checklists settle in (see [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md)).
 
 See [`checklist.md`](checklist.md) for the current implementation status.
 
