@@ -30,6 +30,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Operations automation now lives in the `kloperations` module, which seeds run/task tables, generates housekeeping and maintenance tasks via cron, emails daily digests/reminders and provides an Operations → Tasks console with manual task authoring, assignment workflows, CSV/ICS exports and a lightweight mobile checklist for housekeeping devices.
 - The front-office header ships as a static residency navigation strip with in-house quick links; cart/account/newsletter/social blocks have been removed from both the theme and core module set so no commerce widgets are expected.
 - The front-office home page now surfaces a residency showcase fed by published resource profiles so rooms, ateliers, gastronomy and programme spaces display live metadata instead of mockups.
+- A feature-flagged residencies landing (`/index.php?controller=residencies`) now consumes the same taxonomy showcase, featured packages and CMS-managed copy through `HotelReservationSystemStorytellingPresenter` when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.
 - A repo-level `start_dev.sh` script provisions a Python virtualenv for tooling, keeps Composer dependencies current, and boots the PHP built-in server for local testing.
 
