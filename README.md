@@ -87,6 +87,8 @@ Dragging a card to another column automatically updates its stage (and default s
 - Legacy e-commerce widgets (`blockcart`, `blockuserinfo`, `blockmyaccount`, `blocknewsletter`, `blocksocial`) have been removed from both `themes/hotel-reservation-theme/modules/` and `modules/`, and their default hook assignments have been stripped from installation metadata so fresh installs or upgrades never attempt to load them.
 - Core controllers now guard newsletter integration points so missing modules do not trigger autoload errors on identity or authentication flows.
 
+Upcoming storytelling templates for residencies, ateliers, gastronomy and programme spaces are being planned in [`docs/blueprints/front-office-storytelling.md`](docs/blueprints/front-office-storytelling.md), which defines the presenter layer, CMS content keys and rollout sequencing for the next milestone.
+
 ## Requirements
 The project still runs on the QloApps/PrestaShop stack. For development you will need:
 

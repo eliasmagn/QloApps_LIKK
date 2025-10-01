@@ -41,7 +41,12 @@
   - [x] Provide lightweight mobile checklists tuned for housekeeping devices.
 
 ## In Progress
-- _None at present._
+- [ ] Rebuild front-office templates around availability storytelling.
+  - [ ] Scaffold presenter/services plus feature flag for the storytelling rollout.
+  - [ ] Implement residency landing template with availability snapshot and CMS-driven copy.
+  - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
+  - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
+  - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
 
 ## Issues
 - [x] Align Composer's PHP requirement with the documented PHP 8 support window so installs work on current runtimes.
@@ -49,7 +54,6 @@
 - [x] Ignore the `.venv` directory created by `start_dev.sh` to keep repositories clean after running the dev helper.
 
 ## Planned
-- [ ] Rebuild front-office templates around availability storytelling (see [`devtasks/front-office-storytelling.task.md`](devtasks/front-office-storytelling.task.md)).
 - [ ] Layer internal notification channels on top of inquiry/timeline events once the operations hooks are in place.
 - [ ] Deliver utilisation dashboards and programme reporting.
 
