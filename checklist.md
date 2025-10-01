@@ -42,7 +42,7 @@
 
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.
-  - [ ] Scaffold presenter/services plus feature flag for the storytelling rollout.
+  - [x] Scaffold presenter/services plus feature flag for the storytelling rollout.
   - [ ] Implement residency landing template with availability snapshot and CMS-driven copy.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.

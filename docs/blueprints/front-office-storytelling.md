@@ -57,8 +57,9 @@ Each major resource type (Residencies, Ateliers & Studios, Gastronomy & Catering
 
 ## Rollout Plan
 1. **Scaffolding (Milestone Kick-off)**
-   - Build the presenter/service layer, register CMS keys, and stub Smarty templates with placeholder sections.
-   - Ship feature flags in `config/defines_custom.inc.php` for incremental rollout (`_KUNSTORT_STORYTELLING_LAUNCH_`).
+   - Build the presenter/service layer, register CMS keys, and stub Smarty templates with placeholder sections. ✅ Implemented via `HotelReservationSystemStorytellingPresenter`, a new `ResidenciesController` front controller and `themes/hotel-reservation-theme/storytelling/residencies.tpl`.
+   - Ship feature flags in `config/defines_custom.inc.php` for incremental rollout (`_KUNSTORT_STORYTELLING_LAUNCH_`, default `false`).
+   - CMS slot identifiers for the residency landing: `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`. Populate each with CMS page IDs via `Configuration` to hydrate the template.
 2. **Residencies Template**
    - Implement full content flow and availability snapshot.
    - Capture design QA feedback and iterate on components.

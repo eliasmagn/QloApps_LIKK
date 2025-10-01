@@ -21,6 +21,7 @@ Key characteristics of the fork:
 - 🧾 **Taxonomy editor enhancements** – amenity assignments, inline capacity validation, change history snapshots and residency showcase previews live directly inside the Resource Profiles form so staff can review impact before publishing.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
+- 🧶 **Storytelling scaffolding** – the gated residencies landing (`index.php?controller=residencies`) now pulls taxonomy-driven sections, featured packages and CMS-managed hero/FAQ slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
@@ -36,6 +37,16 @@ Visiting `/index.php?controller=inquiry` now renders a guided three-step submiss
 When `_KUNSTORT_CORE_MODE_` equals `inquiry`, legacy checkout URLs such as `/index.php?controller=order` continue to redirect to this form instead of exposing cart mechanics, but the original order and one-page-checkout controllers/templates remain in place so clearing the flag instantly restores the classic flow.
 
 While inquiry mode is active the cart controller refuses to mutate cart contents—direct requests receive an error (or redirect to the inquiry landing) so ghost carts cannot accumulate behind the scenes—and any AJAX checkout calls now short-circuit with a friendly JSON error explaining that checkout is disabled.
+
+### Residency Storytelling (feature flagged)
+
+Set `_KUNSTORT_STORYTELLING_LAUNCH_` to `true` in `config/defines_custom.inc.php` to expose the new storytelling landing at `/index.php?controller=residencies`. The page is powered by `HotelReservationSystemStorytellingPresenter`, which:
+
+- groups published `KLResourceProfile` entries by resource kind for section summaries,
+- surfaces featured `KLPackage` rows flagged for front-office promotion,
+- renders CMS-managed slots referenced by the following configuration keys: `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`.
+
+Assign the configuration keys to CMS page IDs (per shop) to hydrate copy blocks. Any missing content gracefully falls back to taxonomy data and placeholder messaging, keeping the page navigable during rollout rehearsals.
 
 ### Legacy PrestaShop Webservice
 
