@@ -144,8 +144,11 @@ class KLResourceProfile extends ObjectModel
         $query->select('p.`is_bookable`');
         $query->select('p.`is_published`');
         $query->select('p.`timezone`');
+        $query->select('p.`id_room_type`');
         $query->select('cap.`capacity_adults`, cap.`capacity_children`, cap.`capacity_total`, cap.`capacity_seated`, cap.`capacity_standing`, cap.`floor_area_sqm`, cap.`ceiling_height_m`, cap.`notes` AS capacity_notes');
         $query->select('pl.`name` AS room_type_name');
+        $query->select('hrt.`id_product` AS room_type_product_id');
+        $query->select('hrt.`id_hotel` AS room_type_hotel_id');
         $query->from('kl_resource_profile', 'p');
         $query->leftJoin('kl_resource_capacity', 'cap', 'cap.`id_kl_resource_profile` = p.`id_kl_resource_profile`');
         $query->leftJoin(
@@ -182,6 +185,9 @@ class KLResourceProfile extends ObjectModel
                 'is_bookable' => (bool) $row['is_bookable'],
                 'is_published' => (bool) $row['is_published'],
                 'timezone' => $row['timezone'],
+                'id_room_type' => $row['id_room_type'] !== null ? (int) $row['id_room_type'] : null,
+                'id_product' => $row['room_type_product_id'] !== null ? (int) $row['room_type_product_id'] : null,
+                'id_hotel' => $row['room_type_hotel_id'] !== null ? (int) $row['room_type_hotel_id'] : null,
                 'room_type_name' => $row['room_type_name'],
                 'capacity' => array(
                     'adults' => $row['capacity_adults'] !== null ? (int) $row['capacity_adults'] : null,

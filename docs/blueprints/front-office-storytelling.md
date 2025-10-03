@@ -20,6 +20,7 @@ Each major resource type (Residencies, Ateliers & Studios, Gastronomy & Catering
 2. **Availability Snapshot**
    - Surface next open residency windows or atelier slots using cached availability summaries from the booking timeline endpoints.
    - Provide a secondary CTA (“Request this slot”) that deep-links into the inquiry form with pre-filled resource preferences.
+   - `HotelReservationSystemStorytellingPresenter` now computes the snapshot directly from live bookings and maintenance blocks, caching the result for 15 minutes via `Cache::store()` to balance freshness with performance.
 
 3. **Storytelling Sections**
    - Markdown-enabled copy slots for artistic focus, facilities, community offerings and support services, stored via CMS fields so editors can update content without deployments.

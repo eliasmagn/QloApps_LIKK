@@ -8,6 +8,7 @@ Replace the remaining commodity product listings with narrative-driven templates
 - Build CMS-backed content slots so non-technical staff can adjust narratives without redeploying code.
 - Integrate rate plan/package highlights pulled from `KLRatePlan` and `KLPackage` metadata.
 - Provide accessibility-compliant layouts (WCAG 2.1 AA) with responsive behaviour for mobile, tablet and desktop breakpoints.
+- ✅ Residency availability snapshot now queries live bookings/maintenance blocks, caches results for 15 minutes and surfaces per-kind openings in the template.
 
 ## Technical Considerations
 - Reuse taxonomy metadata (amenities, capacities, storytelling fields) to avoid duplication; expose helper services if needed.

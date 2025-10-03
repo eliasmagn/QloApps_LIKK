@@ -44,6 +44,7 @@
 - [ ] Rebuild front-office templates around availability storytelling.
   - [x] Scaffold presenter/services plus feature flag for the storytelling rollout.
   - [ ] Implement residency landing template with availability snapshot and CMS-driven copy.
+    - [x] Wire the availability snapshot to live bookings/maintenance data with 15-minute caching and per-kind highlights.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
   - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
