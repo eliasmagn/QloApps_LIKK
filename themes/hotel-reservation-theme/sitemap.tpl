@@ -185,6 +185,18 @@
                         </a>
                     </li>
                 {/foreach}
+                {if isset($smarty.const._KUNSTORT_STORYTELLING_LAUNCH_) && $smarty.const._KUNSTORT_STORYTELLING_LAUNCH_}
+                    <li>
+                        <a href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Residency storytelling' d='Shop.Theme.Kunstort'}">
+                            {l s='Residencies' d='Shop.Theme.Kunstort'}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}" title="{l s='Atelier storytelling' d='Shop.Theme.Kunstort'}">
+                            {l s='Studios & ateliers' d='Shop.Theme.Kunstort'}
+                        </a>
+                    </li>
+                {/if}
                 <li>
                     <a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}" title="{l s='Contact'}">
                         {l s='Contact'}

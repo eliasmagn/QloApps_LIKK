@@ -29,6 +29,13 @@ class HotelReservationSystemStorytellingPresenter
             'faq' => 'KL_STORY_RESIDENCIES_FAQ',
             'testimonials' => 'KL_STORY_RESIDENCIES_TESTIMONIALS',
         ),
+        'ateliers' => array(
+            'hero' => 'KL_STORY_ATELIERS_HERO',
+            'availability' => 'KL_STORY_ATELIERS_AVAILABILITY',
+            'practical' => 'KL_STORY_ATELIERS_PRACTICAL',
+            'faq' => 'KL_STORY_ATELIERS_FAQ',
+            'testimonials' => 'KL_STORY_ATELIERS_TESTIMONIALS',
+        ),
     );
 
     /**
@@ -99,12 +106,47 @@ class HotelReservationSystemStorytellingPresenter
     }
 
     /**
+     * Builds the data payload required by the ateliers storytelling template.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     *
+     * @return array<string, mixed>
+     */
+    public function presentAteliersLanding($idLang = null, $idShop = null)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_ATELIER);
+
+        return array(
+            'generated_at' => date(DATE_ATOM),
+            'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
+            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'cms' => $this->resolveCmsSlots('ateliers', $idLang, $idShop),
+            'packages' => $this->filterPackagesByResourceKinds(
+                $this->getFeaturedPackages($idLang),
+                $resourceKinds
+            ),
+            'inquiry_url' => $context && $context->link
+                ? $context->link->getPageLink('inquiry', true, null, array(
+                    'utm_source' => 'story_ateliers',
+                ))
+                : null,
+        );
+    }
+
+    /**
      * @param int $idLang
      * @param int $idShop
      *
+     * @param array<int, string> $allowedResourceKinds
+     *
      * @return array<string, array<string, mixed>>
      */
-    protected function groupProfilesByKind($idLang, $idShop)
+    protected function groupProfilesByKind($idLang, $idShop, array $allowedResourceKinds = array())
     {
         $profiles = $this->getPublishedProfiles($idLang, $idShop);
         if (!$profiles) {
@@ -112,7 +154,14 @@ class HotelReservationSystemStorytellingPresenter
         }
 
         $translator = $this->getTranslator();
-        $sections = array(
+        $allowed = array();
+        if ($allowedResourceKinds) {
+            foreach ($allowedResourceKinds as $kind) {
+                $allowed[$kind] = true;
+            }
+        }
+
+        $defaults = array(
             KLResourceProfile::RESOURCE_KIND_ROOM => array(
                 'key' => 'residences',
                 'anchor' => 'residences',
@@ -143,9 +192,26 @@ class HotelReservationSystemStorytellingPresenter
             ),
         );
 
+        $sections = array();
+        foreach ($defaults as $resourceKind => $section) {
+            if ($allowed && !isset($allowed[$resourceKind])) {
+                continue;
+            }
+            $sections[$resourceKind] = $section;
+        }
+        if (!$sections) {
+            $sections = array();
+        }
+
         foreach ($profiles as $profile) {
             $resourceKind = $profile['resource_kind'];
+            if ($allowed && !isset($allowed[$resourceKind])) {
+                continue;
+            }
             if (!isset($sections[$resourceKind])) {
+                if ($allowed && !isset($allowed[$resourceKind])) {
+                    continue;
+                }
                 $sections[$resourceKind] = array(
                     'key' => Tools::strtolower($resourceKind),
                     'anchor' => Tools::strtolower($resourceKind),
@@ -159,7 +225,10 @@ class HotelReservationSystemStorytellingPresenter
         }
 
         $ordered = array();
-        foreach ($sections as $section) {
+        foreach ($sections as $resourceKind => $section) {
+            if ($allowed && !isset($allowed[$resourceKind])) {
+                continue;
+            }
             $ordered[$section['key']] = $section;
         }
 
@@ -370,9 +439,16 @@ class HotelReservationSystemStorytellingPresenter
      *
      * @return string
      */
-    protected function getAvailabilityCacheKey($idLang, $idShop)
+    protected function getAvailabilityCacheKey($idLang, $idShop, array $resourceKinds = array())
     {
-        return 'KL_STORY_AVAILABILITY_'.(int) $idShop.'_'.$idLang;
+        $suffix = '';
+        if ($resourceKinds) {
+            $sorted = $resourceKinds;
+            sort($sorted);
+            $suffix = '_'.md5(implode('-', $sorted));
+        }
+
+        return 'KL_STORY_AVAILABILITY_'.(int) $idShop.'_'.$idLang.$suffix;
     }
 
     /**
@@ -764,21 +840,36 @@ class HotelReservationSystemStorytellingPresenter
      *
      * @return array<string, mixed>
      */
-    protected function buildAvailabilitySnapshot($idLang, $idShop)
+    protected function buildAvailabilitySnapshot($idLang, $idShop, array $allowedResourceKinds = array())
     {
-        $cacheKey = $this->getAvailabilityCacheKey($idLang, $idShop);
+        $cacheKey = $this->getAvailabilityCacheKey($idLang, $idShop, $allowedResourceKinds);
         if ($cached = $this->retrieveAvailabilityCache($cacheKey)) {
             return $cached;
         }
 
         $translator = $this->getTranslator();
         $profiles = $this->getPublishedProfiles($idLang, $idShop);
+        $allowed = array();
+        if ($allowedResourceKinds) {
+            foreach ($allowedResourceKinds as $kind) {
+                $allowed[$kind] = true;
+            }
+        }
+        if ($allowed && $profiles) {
+            $filteredProfiles = array();
+            foreach ($profiles as $profile) {
+                if (isset($allowed[$profile['resource_kind']])) {
+                    $filteredProfiles[] = $profile;
+                }
+            }
+            $profiles = $filteredProfiles;
+        }
         if (!$profiles) {
             $payload = array(
                 'status' => 'empty',
                 'message' => $translator
-                    ? $translator->trans('Availability insights will appear once residency profiles are published.', array(), 'Shop.Theme.Kunstort')
-                    : 'Availability insights will appear once residency profiles are published.',
+                    ? $translator->trans('Availability insights will appear once resource profiles are published.', array(), 'Shop.Theme.Kunstort')
+                    : 'Availability insights will appear once resource profiles are published.',
                 'slots' => array(),
             );
             $this->storeAvailabilityCache($cacheKey, $payload);
@@ -791,6 +882,9 @@ class HotelReservationSystemStorytellingPresenter
         $slotsByKind = array();
 
         foreach ($profiles as $profile) {
+            if ($allowed && !isset($allowed[$profile['resource_kind']])) {
+                continue;
+            }
             if (empty($profile['is_bookable']) || empty($profile['id_product']) || empty($profile['id_room_type'])) {
                 continue;
             }
@@ -821,8 +915,8 @@ class HotelReservationSystemStorytellingPresenter
             $payload = array(
                 'status' => 'pending',
                 'message' => $translator
-                    ? $translator->trans('We are crunching live bookings to surface the next open residency windows. Please check back shortly.', array(), 'Shop.Theme.Kunstort')
-                    : 'We are crunching live bookings to surface the next open residency windows. Please check back shortly.',
+                    ? $translator->trans('We are crunching live bookings to surface the next open windows. Please check back shortly.', array(), 'Shop.Theme.Kunstort')
+                    : 'We are crunching live bookings to surface the next open windows. Please check back shortly.',
                 'slots' => array(),
             );
             $this->storeAvailabilityCache($cacheKey, $payload);
@@ -841,6 +935,45 @@ class HotelReservationSystemStorytellingPresenter
         $this->storeAvailabilityCache($cacheKey, $payload);
 
         return $payload;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $packages
+     * @param array<int, string> $resourceKinds
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function filterPackagesByResourceKinds(array $packages, array $resourceKinds)
+    {
+        if (!$resourceKinds) {
+            return $packages;
+        }
+
+        $allowed = array();
+        foreach ($resourceKinds as $kind) {
+            $allowed[$kind] = true;
+        }
+
+        $filtered = array();
+        foreach ($packages as $package) {
+            $scope = isset($package['resource_kind_scope']) ? $package['resource_kind_scope'] : array();
+            if (!is_array($scope)) {
+                $scope = array();
+            }
+            if (!$scope) {
+                $filtered[] = $package;
+                continue;
+            }
+
+            foreach ($scope as $kind) {
+                if (isset($allowed[$kind])) {
+                    $filtered[] = $package;
+                    break;
+                }
+            }
+        }
+
+        return $filtered;
     }
 
     /**
