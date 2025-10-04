@@ -102,10 +102,23 @@
                                                                 <div class="row">
                                                                         <div class="col-xs-12">
                                                                                 {assign var='residencyChainName' value=Configuration::get('WK_HTL_CHAIN_NAME', $cookie->id_lang)}
+                                                                                {assign var='storytellingLaunch' value=(isset($smarty.const._KUNSTORT_STORYTELLING_LAUNCH_) && $smarty.const._KUNSTORT_STORYTELLING_LAUNCH_)}
                                                                                 <nav class="residency-primary-nav" role="navigation" aria-label="{l s='Residency primary navigation'}">
                                                                                         <ul class="nav nav-pills nav-justified">
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#residences-overview">{l s='Residences'}</a></li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers">{l s='Studios & ateliers'}</a></li>
+                                                                                                <li>
+                                                                                                        {if $storytellingLaunch}
+                                                                                                                <a href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}">{l s='Residences'}</a>
+                                                                                                        {else}
+                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#residences-overview">{l s='Residences'}</a>
+                                                                                                        {/if}
+                                                                                                </li>
+                                                                                                <li>
+                                                                                                        {if $storytellingLaunch}
+                                                                                                                <a href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}">{l s='Studios & ateliers'}</a>
+                                                                                                        {else}
+                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers">{l s='Studios & ateliers'}</a>
+                                                                                                        {/if}
+                                                                                                </li>
                                                                                                 <li><a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a></li>
                                                                                                 <li><a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a></li>
                                                                                                 <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
@@ -147,8 +160,13 @@
                                                                                                 {/if}
                                                                                         </div>
                                                                                         <div class="residency-quick-actions">
-                                                                                                <a class="our_properties_link" href="{$link->getPageLink('our-properties')}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
-                                                                                                <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
+                                                                                                {if $storytellingLaunch}
+                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
+                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
+                                                                                                {else}
+                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties')}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
+                                                                                                        <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
+                                                                                                {/if}
                                                                                         </div>
                                                                                 </div>
                                                                         </div>
