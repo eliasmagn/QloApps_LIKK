@@ -47,6 +47,7 @@
   - [x] Launch atelier storytelling landing with taxonomy-driven sections, CMS slots and navigation updates.
     - [x] Wire the availability snapshot to live bookings/maintenance data with 15-minute caching and per-kind highlights.
   - [x] Launch gastronomy storytelling landing with amenity callouts, CMS slots and feature-flagged navigation links.
+  - [x] Launch programme storytelling landing with grouped availability, CMS highlights and feature-flagged navigation links.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
   - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.

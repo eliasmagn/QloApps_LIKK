@@ -23,7 +23,13 @@
                     <a class="residency-top-link" href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy' mod='hotelreservationsystem'}</a>
                 {/if}
             </li>
-            <li><a class="residency-top-link" href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces' mod='hotelreservationsystem'}</a></li>
+            <li>
+                {if $storytellingLaunch}
+                    <a class="residency-top-link" href="{$link->getPageLink('programme', true)|escape:'html':'UTF-8'}">{l s='Programme spaces' mod='hotelreservationsystem'}</a>
+                {else}
+                    <a class="residency-top-link" href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces' mod='hotelreservationsystem'}</a>
+                {/if}
+            </li>
         </ul>
     </div>
 </div>

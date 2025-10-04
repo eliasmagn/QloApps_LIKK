@@ -201,6 +201,11 @@
                             {l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}
                         </a>
                     </li>
+                    <li>
+                        <a href="{$link->getPageLink('programme', true)|escape:'html':'UTF-8'}" title="{l s='Programme storytelling' d='Shop.Theme.Kunstort'}">
+                            {l s='Programme spaces' d='Shop.Theme.Kunstort'}
+                        </a>
+                    </li>
                 {/if}
                 <li>
                     <a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}" title="{l s='Contact'}">
