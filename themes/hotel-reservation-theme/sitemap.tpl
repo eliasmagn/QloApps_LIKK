@@ -196,6 +196,11 @@
                             {l s='Studios & ateliers' d='Shop.Theme.Kunstort'}
                         </a>
                     </li>
+                    <li>
+                        <a href="{$link->getPageLink('gastronomy', true)|escape:'html':'UTF-8'}" title="{l s='Gastronomy storytelling' d='Shop.Theme.Kunstort'}">
+                            {l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}
+                        </a>
+                    </li>
                 {/if}
                 <li>
                     <a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}" title="{l s='Contact'}">

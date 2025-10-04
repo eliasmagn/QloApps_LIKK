@@ -21,7 +21,7 @@ Key characteristics of the fork:
 - 🧾 **Taxonomy editor enhancements** – amenity assignments, inline capacity validation, change history snapshots and residency showcase previews live directly inside the Resource Profiles form so staff can review impact before publishing.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
-- 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`) and ateliers (`index.php?controller=ateliers`) landings now pull taxonomy-driven sections, featured packages, cached availability snapshots and CMS-managed hero/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
+- 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`), ateliers (`index.php?controller=ateliers`) and gastronomy (`index.php?controller=gastronomy`) landings now pull taxonomy-driven sections, featured packages, cached availability snapshots, amenity callouts and CMS-managed hero/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
@@ -40,10 +40,11 @@ While inquiry mode is active the cart controller refuses to mutate cart contents
 
 ### Storytelling landings (feature flagged)
 
-Set `_KUNSTORT_STORYTELLING_LAUNCH_` to `true` in `config/defines_custom.inc.php` to expose the storytelling landings at `/index.php?controller=residencies` and `/index.php?controller=ateliers`. Both pages are powered by `HotelReservationSystemStorytellingPresenter`, which aggregates taxonomy-driven sections, surfaces featured `KLPackage` entries flagged for promotion, caches live availability highlights and hydrates CMS-managed copy slots.
+Set `_KUNSTORT_STORYTELLING_LAUNCH_` to `true` in `config/defines_custom.inc.php` to expose the storytelling landings at `/index.php?controller=residencies`, `/index.php?controller=ateliers` and `/index.php?controller=gastronomy`. Each page is powered by `HotelReservationSystemStorytellingPresenter`, which aggregates taxonomy-driven sections, surfaces featured `KLPackage` entries flagged for promotion, caches live availability highlights, hydrates CMS-managed copy slots and now feeds amenity callouts alongside capacity summaries.
 
 - **Residencies CMS keys:** `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`.
 - **Ateliers CMS keys:** `KL_STORY_ATELIERS_HERO`, `KL_STORY_ATELIERS_AVAILABILITY`, `KL_STORY_ATELIERS_PRACTICAL`, `KL_STORY_ATELIERS_FAQ`, `KL_STORY_ATELIERS_TESTIMONIALS`.
+- **Gastronomy CMS keys:** `KL_STORY_GASTRONOMY_HERO`, `KL_STORY_GASTRONOMY_AVAILABILITY`, `KL_STORY_GASTRONOMY_PRACTICAL`, `KL_STORY_GASTRONOMY_FAQ`, `KL_STORY_GASTRONOMY_TESTIMONIALS`.
 
 Assign the configuration keys to CMS page IDs (per shop) to hydrate copy blocks. Any missing content gracefully falls back to taxonomy data and placeholder messaging, keeping both pages navigable during rollout rehearsals.
 

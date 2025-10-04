@@ -36,6 +36,13 @@ class HotelReservationSystemStorytellingPresenter
             'faq' => 'KL_STORY_ATELIERS_FAQ',
             'testimonials' => 'KL_STORY_ATELIERS_TESTIMONIALS',
         ),
+        'gastronomy' => array(
+            'hero' => 'KL_STORY_GASTRONOMY_HERO',
+            'availability' => 'KL_STORY_GASTRONOMY_AVAILABILITY',
+            'practical' => 'KL_STORY_GASTRONOMY_PRACTICAL',
+            'faq' => 'KL_STORY_GASTRONOMY_FAQ',
+            'testimonials' => 'KL_STORY_GASTRONOMY_TESTIMONIALS',
+        ),
     );
 
     /**
@@ -133,6 +140,39 @@ class HotelReservationSystemStorytellingPresenter
             'inquiry_url' => $context && $context->link
                 ? $context->link->getPageLink('inquiry', true, null, array(
                     'utm_source' => 'story_ateliers',
+                ))
+                : null,
+        );
+    }
+
+    /**
+     * Builds the data payload required by the gastronomy storytelling template.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     *
+     * @return array<string, mixed>
+     */
+    public function presentGastronomyLanding($idLang = null, $idShop = null)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_GASTRONOMY);
+
+        return array(
+            'generated_at' => date(DATE_ATOM),
+            'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
+            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'cms' => $this->resolveCmsSlots('gastronomy', $idLang, $idShop),
+            'packages' => $this->filterPackagesByResourceKinds(
+                $this->getFeaturedPackages($idLang),
+                $resourceKinds
+            ),
+            'inquiry_url' => $context && $context->link
+                ? $context->link->getPageLink('inquiry', true, null, array(
+                    'utm_source' => 'story_gastronomy',
                 ))
                 : null,
         );
@@ -261,6 +301,8 @@ class HotelReservationSystemStorytellingPresenter
         }
 
         $capacitySummary = $this->summariseCapacity($profile);
+        $amenitySummary = $this->summariseAmenities($profile);
+        $amenityDetails = isset($profile['amenities']) && is_array($profile['amenities']) ? $profile['amenities'] : array();
 
         return array(
             'id_kl_resource_profile' => (int) $profile['id_kl_resource_profile'],
@@ -270,6 +312,8 @@ class HotelReservationSystemStorytellingPresenter
             'capacity_summary' => $capacitySummary,
             'is_bookable' => (bool) $profile['is_bookable'],
             'timezone' => $profile['timezone'],
+            'amenities' => $amenitySummary,
+            'amenity_details' => $amenityDetails,
         );
     }
 
@@ -386,6 +430,49 @@ class HotelReservationSystemStorytellingPresenter
     }
 
     /**
+     * @param array<string, mixed> $profile
+     *
+     * @return array<int, string>
+     */
+    protected function summariseAmenities(array $profile)
+    {
+        $amenities = isset($profile['amenities']) && is_array($profile['amenities']) ? $profile['amenities'] : array();
+        if (!$amenities) {
+            return array();
+        }
+
+        $translator = $this->getTranslator();
+        $summary = array();
+
+        foreach ($amenities as $amenity) {
+            $label = '';
+            if (!empty($amenity['label'])) {
+                $label = trim($amenity['label']);
+            } elseif (!empty($amenity['amenity_code'])) {
+                $label = trim($amenity['amenity_code']);
+            }
+
+            if ($label === '') {
+                continue;
+            }
+
+            $note = isset($amenity['note']) ? trim($amenity['note']) : '';
+            if ($note !== '') {
+                $label .= ' — '.$note;
+            } elseif (!empty($amenity['is_required'])) {
+                $requiredLabel = $translator
+                    ? $translator->trans('Required', array(), 'Shop.Theme.Kunstort')
+                    : 'Required';
+                $label .= ' — '.$requiredLabel;
+            }
+
+            $summary[] = $label;
+        }
+
+        return $summary;
+    }
+
+    /**
      * @param string $group
      * @param int $idLang
      * @param int $idShop
@@ -431,6 +518,142 @@ class HotelReservationSystemStorytellingPresenter
             'content' => $cms->content,
             'link' => $this->context && $this->context->link ? $this->context->link->getCMSLink($cms, $cms->link_rewrite) : null,
         );
+    }
+
+    /**
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getPublishedProfiles($idLang, $idShop)
+    {
+        $profiles = KLResourceProfile::getPublishedProfilesWithDetails($idLang, $idShop);
+        if (!$profiles) {
+            return array();
+        }
+
+        $profileIds = array();
+        foreach ($profiles as &$profile) {
+            $idProfile = isset($profile['id_kl_resource_profile']) ? (int) $profile['id_kl_resource_profile'] : 0;
+            if ($idProfile > 0) {
+                $profileIds[] = $idProfile;
+            }
+            if (!isset($profile['amenities']) || !is_array($profile['amenities'])) {
+                $profile['amenities'] = array();
+            }
+        }
+        unset($profile);
+
+        $amenitiesByProfile = $this->loadAmenitiesForProfiles($profileIds);
+        if ($amenitiesByProfile) {
+            foreach ($profiles as &$profile) {
+                $idProfile = isset($profile['id_kl_resource_profile']) ? (int) $profile['id_kl_resource_profile'] : 0;
+                if ($idProfile > 0 && isset($amenitiesByProfile[$idProfile])) {
+                    $profile['amenities'] = $amenitiesByProfile[$idProfile];
+                }
+            }
+            unset($profile);
+        }
+
+        return $profiles;
+    }
+
+    /**
+     * @param array<int, int> $profileIds
+     *
+     * @return array<int, array<int, array<string, mixed>>>
+     */
+    protected function loadAmenitiesForProfiles(array $profileIds)
+    {
+        if (empty($profileIds)) {
+            return array();
+        }
+
+        $uniqueIds = array();
+        foreach ($profileIds as $idProfile) {
+            $idProfile = (int) $idProfile;
+            if ($idProfile > 0) {
+                $uniqueIds[$idProfile] = true;
+            }
+        }
+        if (empty($uniqueIds)) {
+            return array();
+        }
+
+        $idList = implode(',', array_keys($uniqueIds));
+
+        $query = new DbQuery();
+        $query->select('link.`id_kl_resource_profile`, link.`note`, link.`is_required`');
+        $query->select('amenity.`id_kl_resource_amenity`, amenity.`amenity_code`, amenity.`category_code`, amenity.`translation_domain`');
+        $query->from('kl_resource_amenity_link', 'link');
+        $query->innerJoin('kl_resource_amenity', 'amenity', 'amenity.`id_kl_resource_amenity` = link.`id_kl_resource_amenity`');
+        $query->where('link.`id_kl_resource_profile` IN ('.$idList.')');
+        $query->where('amenity.`is_active` = 1');
+        $query->orderBy('amenity.`category_code` ASC, amenity.`amenity_code` ASC');
+
+        $rows = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
+        if (!$rows) {
+            return array();
+        }
+
+        $amenitiesByProfile = array();
+        foreach ($rows as $row) {
+            $idProfile = isset($row['id_kl_resource_profile']) ? (int) $row['id_kl_resource_profile'] : 0;
+            if ($idProfile <= 0) {
+                continue;
+            }
+
+            $amenity = array(
+                'id_kl_resource_amenity' => isset($row['id_kl_resource_amenity']) ? (int) $row['id_kl_resource_amenity'] : 0,
+                'amenity_code' => isset($row['amenity_code']) ? trim($row['amenity_code']) : '',
+                'category_code' => isset($row['category_code']) ? trim($row['category_code']) : '',
+                'label' => $this->buildAmenityLabel($row),
+                'note' => isset($row['note']) && $row['note'] !== null ? trim(strip_tags($row['note'])) : '',
+                'is_required' => !empty($row['is_required']),
+            );
+
+            if (!isset($amenitiesByProfile[$idProfile])) {
+                $amenitiesByProfile[$idProfile] = array();
+            }
+            $amenitiesByProfile[$idProfile][] = $amenity;
+        }
+
+        return $amenitiesByProfile;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return string
+     */
+    protected function buildAmenityLabel(array $row)
+    {
+        $category = isset($row['category_code']) ? trim($row['category_code']) : '';
+        $code = isset($row['amenity_code']) ? trim($row['amenity_code']) : '';
+
+        $parts = array();
+        if ($category !== '') {
+            $parts[] = $category;
+        }
+        if ($code !== '') {
+            $parts[] = $code;
+        }
+
+        $label = implode(' — ', $parts);
+        if ($label === '' && $code !== '') {
+            $label = $code;
+        }
+
+        $translator = $this->getTranslator();
+        if ($translator && $code !== '' && !empty($row['translation_domain'])) {
+            $translated = $translator->trans($code, array(), $row['translation_domain']);
+            if ($translated && $translated !== $code) {
+                $label = $label !== '' ? $label.' · '.$translated : $translated;
+            }
+        }
+
+        return $label;
     }
 
     /**
