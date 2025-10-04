@@ -19,6 +19,7 @@
  *}
 
 {block name='storytelling_residencies'}
+  {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
   <div class="kl-storytelling kl-storytelling--residencies">
     <section class="kl-storytelling__hero">
       <div class="kl-storytelling__hero-copy">
@@ -158,5 +159,14 @@
         </div>
       </section>
     {/if}
+
+    {block name='storytelling_deferred_scripts'}
+      {capture name='klStorytellingScriptsResidencies'}{hook h='displayStorytellingScripts'}{/capture}
+      {if trim($smarty.capture.klStorytellingScriptsResidencies)}
+        <div class="kl-storytelling__defer" aria-hidden="true">
+          {$smarty.capture.klStorytellingScriptsResidencies nofilter}
+        </div>
+      {/if}
+    {/block}
   </div>
 {/block}

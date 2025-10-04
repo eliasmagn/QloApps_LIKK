@@ -19,6 +19,7 @@
  *}
 
 {block name='storytelling_ateliers'}
+  {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
   <div class="kl-storytelling kl-storytelling--ateliers">
     <section class="kl-storytelling__hero">
       <div class="kl-storytelling__hero-copy">
@@ -158,5 +159,14 @@
         </div>
       </section>
     {/if}
+
+    {block name='storytelling_deferred_scripts'}
+      {capture name='klStorytellingScriptsAteliers'}{hook h='displayStorytellingScripts'}{/capture}
+      {if trim($smarty.capture.klStorytellingScriptsAteliers)}
+        <div class="kl-storytelling__defer" aria-hidden="true">
+          {$smarty.capture.klStorytellingScriptsAteliers nofilter}
+        </div>
+      {/if}
+    {/block}
   </div>
 {/block}

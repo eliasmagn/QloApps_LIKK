@@ -42,6 +42,17 @@ While inquiry mode is active the cart controller refuses to mutate cart contents
 
 Set `_KUNSTORT_STORYTELLING_LAUNCH_` to `true` in `config/defines_custom.inc.php` to expose the storytelling landings at `/index.php?controller=residencies`, `/index.php?controller=ateliers`, `/index.php?controller=gastronomy` and `/index.php?controller=programme`. Each page is powered by `HotelReservationSystemStorytellingPresenter`, which aggregates taxonomy-driven sections with metadata, surfaces featured `KLPackage` entries flagged for promotion, caches grouped availability highlights, hydrates CMS-managed copy slots and now feeds amenity callouts alongside capacity summaries.
 
+All storytelling controllers register `themes/hotel-reservation-theme/css/storytelling.css`, which is authored in `sass/storytelling.scss` and scoped to the `.kl-storytelling` namespace. The bundle introduces responsive grid/flex layouts, WCAG 2.1 AA colour tokens and accessible focus states while a trimmed inline block (`_partials/storytelling-critical.tpl`) ensures hero and container styling render immediately without blocking requests.
+
+Non-critical JavaScript can opt into the new `klStorytellingDefer` helper. Either enqueue payloads with:
+
+```javascript
+window.klStorytellingDeferQueue = window.klStorytellingDeferQueue || [];
+window.klStorytellingDeferQueue.push({ src: 'https://example.test/analytics.js', async: true });
+```
+
+or output `<template data-kl-storytelling-defer data-src="/modules/feature.js" data-kl-async>` from a module hooked into `displayStorytellingScripts`. The helper processes queued entries after the `load` event, appending scripts with `defer`/`async` semantics so analytics widgets, galleries and other enhancements stay out of the critical rendering path.
+
 - **Residencies CMS keys:** `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`.
 - **Ateliers CMS keys:** `KL_STORY_ATELIERS_HERO`, `KL_STORY_ATELIERS_AVAILABILITY`, `KL_STORY_ATELIERS_PRACTICAL`, `KL_STORY_ATELIERS_FAQ`, `KL_STORY_ATELIERS_TESTIMONIALS`.
 - **Gastronomy CMS keys:** `KL_STORY_GASTRONOMY_HERO`, `KL_STORY_GASTRONOMY_AVAILABILITY`, `KL_STORY_GASTRONOMY_PRACTICAL`, `KL_STORY_GASTRONOMY_FAQ`, `KL_STORY_GASTRONOMY_TESTIMONIALS`.
