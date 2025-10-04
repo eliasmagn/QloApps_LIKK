@@ -48,6 +48,8 @@
     - [x] Wire the availability snapshot to live bookings/maintenance data with 15-minute caching and per-kind highlights.
   - [x] Launch gastronomy storytelling landing with amenity callouts, CMS slots and feature-flagged navigation links.
   - [x] Launch programme storytelling landing with grouped availability, CMS highlights and feature-flagged navigation links.
+  - [x] Introduce a shared storytelling style layer (`storytelling.scss` → `storytelling.css`) with responsive layouts, WCAG-compliant colour tokens and inline critical hero rules.
+  - [x] Add the `klStorytellingDefer` helper plus template hooks so non-critical scripts lazy-load after the main storytelling paint.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
   - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.

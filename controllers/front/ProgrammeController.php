@@ -21,6 +21,14 @@ class ProgrammeControllerCore extends FrontController
 {
     public $php_self = 'programme';
 
+    public function setMedia()
+    {
+        parent::setMedia();
+
+        $this->addCSS(_THEME_CSS_DIR_.'storytelling.css');
+        $this->addJS(_THEME_JS_DIR_.'storytelling-defer.js');
+    }
+
     public function initContent()
     {
         $this->display_column_left = false;

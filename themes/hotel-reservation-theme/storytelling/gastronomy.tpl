@@ -19,6 +19,7 @@
  *}
 
 {block name='storytelling_gastronomy'}
+  {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
   <div class="kl-storytelling kl-storytelling--gastronomy">
     <section class="kl-storytelling__hero">
       <div class="kl-storytelling__hero-copy">
@@ -165,5 +166,14 @@
         </div>
       </section>
     {/if}
+
+    {block name='storytelling_deferred_scripts'}
+      {capture name='klStorytellingScriptsGastronomy'}{hook h='displayStorytellingScripts'}{/capture}
+      {if trim($smarty.capture.klStorytellingScriptsGastronomy)}
+        <div class="kl-storytelling__defer" aria-hidden="true">
+          {$smarty.capture.klStorytellingScriptsGastronomy nofilter}
+        </div>
+      {/if}
+    {/block}
   </div>
 {/block}
