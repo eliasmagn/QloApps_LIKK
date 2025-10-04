@@ -119,7 +119,13 @@
                                                                                                                 <a href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers">{l s='Studios & ateliers'}</a>
                                                                                                         {/if}
                                                                                                 </li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a></li>
+                                                                                                <li>
+                                                                                                        {if $storytellingLaunch}
+                                                                                                                <a href="{$link->getPageLink('gastronomy', true)|escape:'html':'UTF-8'}">{l s='Dining & gastronomy'}</a>
+                                                                                                        {else}
+                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a>
+                                                                                                        {/if}
+                                                                                                </li>
                                                                                                 <li><a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a></li>
                                                                                                 <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
                                                                                         </ul>
@@ -163,9 +169,11 @@
                                                                                                 {if $storytellingLaunch}
                                                                                                         <a class="our_properties_link" href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
                                                                                                         <a class="our_properties_link" href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
+                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('gastronomy', true)|escape:'html':'UTF-8'}" title="{l s='Dining & gastronomy'}">{l s='Dining & gastronomy'}</a>
                                                                                                 {else}
                                                                                                         <a class="our_properties_link" href="{$link->getPageLink('our-properties')}" title="{l s='Explore all residences'}">{l s='Our Residences'}</a>
                                                                                                         <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers" title="{l s='Studios & ateliers'}">{l s='Studios & ateliers'}</a>
+                                                                                                        <a class="our_properties_link" href="{$base_dir|escape:'html':'UTF-8'}#dining" title="{l s='Dining & gastronomy'}">{l s='Dining & gastronomy'}</a>
                                                                                                 {/if}
                                                                                         </div>
                                                                                 </div>

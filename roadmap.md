@@ -23,6 +23,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Scaffolding complete: `_KUNSTORT_STORYTELLING_LAUNCH_` gates a new `ResidenciesController`, `HotelReservationSystemStorytellingPresenter` aggregates taxonomy/packages/CMS data and `themes/hotel-reservation-theme/storytelling/residencies.tpl` renders placeholder sections ready for editorial content.
   - ✅ Residency availability snapshot now pulls live booking/maintenance data, caches results for 15 minutes and renders per-kind openings on the storytelling landing.
   - ✅ Ateliers storytelling landing mirrors the presenter, filters sections to studio resources, exposes dedicated CMS slots and updates navigation links under the same feature flag.
+  - ✅ Gastronomy storytelling landing extends the presenter with amenity callouts, CMS slots and gastronomy-scoped availability/packages while navigation, quick links and the sitemap point to `/index.php?controller=gastronomy` when the flag is active.
 
 ## Phase 3 – Operations Automation (🚧 In progress)
 - ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).
