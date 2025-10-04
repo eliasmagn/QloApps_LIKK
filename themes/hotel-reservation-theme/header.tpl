@@ -126,7 +126,13 @@
                                                                                                                 <a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a>
                                                                                                         {/if}
                                                                                                 </li>
-                                                                                                <li><a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a></li>
+                                                                                                <li>
+                                                                                                        {if $storytellingLaunch}
+                                                                                                                <a href="{$link->getPageLink('programme', true)|escape:'html':'UTF-8'}">{l s='Programme spaces'}</a>
+                                                                                                        {else}
+                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a>
+                                                                                                        {/if}
+                                                                                                </li>
                                                                                                 <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
                                                                                         </ul>
                                                                                 </nav>

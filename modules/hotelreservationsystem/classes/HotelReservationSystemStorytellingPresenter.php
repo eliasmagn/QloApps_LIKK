@@ -43,6 +43,14 @@ class HotelReservationSystemStorytellingPresenter
             'faq' => 'KL_STORY_GASTRONOMY_FAQ',
             'testimonials' => 'KL_STORY_GASTRONOMY_TESTIMONIALS',
         ),
+        'programme' => array(
+            'hero' => 'KL_STORY_PROGRAMME_HERO',
+            'highlights' => 'KL_STORY_PROGRAMME_HIGHLIGHTS',
+            'availability' => 'KL_STORY_PROGRAMME_AVAILABILITY',
+            'schedule' => 'KL_STORY_PROGRAMME_SCHEDULE',
+            'inquiry' => 'KL_STORY_PROGRAMME_INQUIRY',
+            'faq' => 'KL_STORY_PROGRAMME_FAQ',
+        ),
     );
 
     /**
@@ -101,6 +109,7 @@ class HotelReservationSystemStorytellingPresenter
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop),
+            'section_metadata' => $this->getSectionMetadata($idLang, $idShop),
             'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop),
             'cms' => $this->resolveCmsSlots('residencies', $idLang, $idShop),
             'packages' => $this->getFeaturedPackages($idLang),
@@ -131,6 +140,7 @@ class HotelReservationSystemStorytellingPresenter
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
+            'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
             'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
             'cms' => $this->resolveCmsSlots('ateliers', $idLang, $idShop),
             'packages' => $this->filterPackagesByResourceKinds(
@@ -164,6 +174,7 @@ class HotelReservationSystemStorytellingPresenter
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
+            'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
             'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
             'cms' => $this->resolveCmsSlots('gastronomy', $idLang, $idShop),
             'packages' => $this->filterPackagesByResourceKinds(
@@ -179,6 +190,108 @@ class HotelReservationSystemStorytellingPresenter
     }
 
     /**
+     * Builds the data payload required by the programme storytelling template.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     *
+     * @return array<string, mixed>
+     */
+    public function presentProgrammeLanding($idLang = null, $idShop = null)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_SEMINAR);
+
+        return array(
+            'generated_at' => date(DATE_ATOM),
+            'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
+            'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
+            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'cms' => $this->resolveCmsSlots('programme', $idLang, $idShop),
+            'packages' => $this->filterPackagesByResourceKinds(
+                $this->getFeaturedPackages($idLang),
+                $resourceKinds
+            ),
+            'inquiry_url' => $context && $context->link
+                ? $context->link->getPageLink('inquiry', true, null, array(
+                    'utm_source' => 'story_programme',
+                ))
+                : null,
+        );
+    }
+
+    /**
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @param array<int, string> $allowedResourceKinds
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    /**
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @param array<int, string> $allowedResourceKinds
+     *
+     * @return array<string, array<string, mixed>> keyed by resource kind
+     */
+    protected function getSectionMetadata($idLang, $idShop, array $allowedResourceKinds = array())
+    {
+        $translator = $this->getTranslator();
+        $metadata = array(
+            KLResourceProfile::RESOURCE_KIND_ROOM => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_ROOM,
+                'key' => 'residences',
+                'anchor' => 'residences',
+                'title' => $translator ? $translator->trans('Residency houses', array(), 'Modules.Hotelreservationsystem.Front') : 'Residency houses',
+                'intro' => $translator ? $translator->trans('Private rooms and shared apartments hosting artists in residence.', array(), 'Modules.Hotelreservationsystem.Front') : 'Private rooms and shared apartments hosting artists in residence.',
+            ),
+            KLResourceProfile::RESOURCE_KIND_ATELIER => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_ATELIER,
+                'key' => 'ateliers',
+                'anchor' => 'ateliers',
+                'title' => $translator ? $translator->trans('Studios & ateliers', array(), 'Modules.Hotelreservationsystem.Front') : 'Studios & ateliers',
+                'intro' => $translator ? $translator->trans('Workspaces prepared for production, rehearsal and collaboration.', array(), 'Modules.Hotelreservationsystem.Front') : 'Workspaces prepared for production, rehearsal and collaboration.',
+            ),
+            KLResourceProfile::RESOURCE_KIND_GASTRONOMY => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_GASTRONOMY,
+                'key' => 'gastronomy',
+                'anchor' => 'gastronomy',
+                'title' => $translator ? $translator->trans('Gastronomy & communal dining', array(), 'Modules.Hotelreservationsystem.Front') : 'Gastronomy & communal dining',
+                'intro' => $translator ? $translator->trans('Kitchens and dining rooms that support communal meals and catering.', array(), 'Modules.Hotelreservationsystem.Front') : 'Kitchens and dining rooms that support communal meals and catering.',
+            ),
+            KLResourceProfile::RESOURCE_KIND_SEMINAR => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_SEMINAR,
+                'key' => 'programme',
+                'anchor' => 'programme',
+                'title' => $translator ? $translator->trans('Programme & gathering spaces', array(), 'Modules.Hotelreservationsystem.Front') : 'Programme & gathering spaces',
+                'intro' => $translator ? $translator->trans('Halls for talks, workshops, rehearsals and performances.', array(), 'Modules.Hotelreservationsystem.Front') : 'Halls for talks, workshops, rehearsals and performances.',
+            ),
+        );
+
+        $allowed = array();
+        if ($allowedResourceKinds) {
+            foreach ($allowedResourceKinds as $kind) {
+                $allowed[$kind] = true;
+            }
+        }
+
+        if ($allowed) {
+            foreach ($metadata as $resourceKind => $section) {
+                if (!isset($allowed[$resourceKind])) {
+                    unset($metadata[$resourceKind]);
+                }
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
      * @param int $idLang
      * @param int $idShop
      *
@@ -190,10 +303,10 @@ class HotelReservationSystemStorytellingPresenter
     {
         $profiles = $this->getPublishedProfiles($idLang, $idShop);
         if (!$profiles) {
-            return array();
+            $profiles = array();
         }
 
-        $translator = $this->getTranslator();
+        $metadata = $this->getSectionMetadata($idLang, $idShop, $allowedResourceKinds);
         $allowed = array();
         if ($allowedResourceKinds) {
             foreach ($allowedResourceKinds as $kind) {
@@ -201,46 +314,11 @@ class HotelReservationSystemStorytellingPresenter
             }
         }
 
-        $defaults = array(
-            KLResourceProfile::RESOURCE_KIND_ROOM => array(
-                'key' => 'residences',
-                'anchor' => 'residences',
-                'title' => $translator ? $translator->trans('Residency houses', array(), 'Modules.Hotelreservationsystem.Front') : 'Residency houses',
-                'intro' => $translator ? $translator->trans('Private rooms and shared apartments hosting artists in residence.', array(), 'Modules.Hotelreservationsystem.Front') : 'Private rooms and shared apartments hosting artists in residence.',
-                'profiles' => array(),
-            ),
-            KLResourceProfile::RESOURCE_KIND_ATELIER => array(
-                'key' => 'ateliers',
-                'anchor' => 'ateliers',
-                'title' => $translator ? $translator->trans('Studios & ateliers', array(), 'Modules.Hotelreservationsystem.Front') : 'Studios & ateliers',
-                'intro' => $translator ? $translator->trans('Workspaces prepared for production, rehearsal and collaboration.', array(), 'Modules.Hotelreservationsystem.Front') : 'Workspaces prepared for production, rehearsal and collaboration.',
-                'profiles' => array(),
-            ),
-            KLResourceProfile::RESOURCE_KIND_GASTRONOMY => array(
-                'key' => 'gastronomy',
-                'anchor' => 'gastronomy',
-                'title' => $translator ? $translator->trans('Gastronomy & communal dining', array(), 'Modules.Hotelreservationsystem.Front') : 'Gastronomy & communal dining',
-                'intro' => $translator ? $translator->trans('Kitchens and dining rooms that support communal meals and catering.', array(), 'Modules.Hotelreservationsystem.Front') : 'Kitchens and dining rooms that support communal meals and catering.',
-                'profiles' => array(),
-            ),
-            KLResourceProfile::RESOURCE_KIND_SEMINAR => array(
-                'key' => 'programme',
-                'anchor' => 'programme',
-                'title' => $translator ? $translator->trans('Programme & gathering spaces', array(), 'Modules.Hotelreservationsystem.Front') : 'Programme & gathering spaces',
-                'intro' => $translator ? $translator->trans('Halls for talks, workshops, rehearsals and performances.', array(), 'Modules.Hotelreservationsystem.Front') : 'Halls for talks, workshops, rehearsals and performances.',
-                'profiles' => array(),
-            ),
-        );
-
         $sections = array();
-        foreach ($defaults as $resourceKind => $section) {
-            if ($allowed && !isset($allowed[$resourceKind])) {
-                continue;
-            }
-            $sections[$resourceKind] = $section;
-        }
-        if (!$sections) {
-            $sections = array();
+        foreach ($metadata as $resourceKind => $sectionMeta) {
+            $sections[$resourceKind] = array_merge($sectionMeta, array(
+                'profiles' => array(),
+            ));
         }
 
         foreach ($profiles as $profile) {
@@ -249,10 +327,8 @@ class HotelReservationSystemStorytellingPresenter
                 continue;
             }
             if (!isset($sections[$resourceKind])) {
-                if ($allowed && !isset($allowed[$resourceKind])) {
-                    continue;
-                }
                 $sections[$resourceKind] = array(
+                    'resource_kind' => $resourceKind,
                     'key' => Tools::strtolower($resourceKind),
                     'anchor' => Tools::strtolower($resourceKind),
                     'title' => Tools::ucfirst($resourceKind),
@@ -812,7 +888,7 @@ class HotelReservationSystemStorytellingPresenter
      *
      * @return array<string, mixed>
      */
-    protected function normaliseSlotForTemplate(array $slot)
+    protected function normaliseSlotForTemplate(array $slot, array $sectionMetadata = array())
     {
         /** @var DateTimeImmutable $start */
         $start = $slot['start'];
@@ -834,9 +910,16 @@ class HotelReservationSystemStorytellingPresenter
             $windowParts[] = $availabilityNote;
         }
 
+        $sectionKey = isset($sectionMetadata['key']) ? $sectionMetadata['key'] : Tools::strtolower($slot['resource_kind']);
+        $sectionAnchor = isset($sectionMetadata['anchor']) ? $sectionMetadata['anchor'] : $sectionKey;
+        $sectionLabel = isset($sectionMetadata['title']) && $sectionMetadata['title'] !== ''
+            ? $sectionMetadata['title']
+            : $this->getResourceKindLabel($slot['resource_kind']);
+        $sectionIntro = isset($sectionMetadata['intro']) ? $sectionMetadata['intro'] : '';
+
         return array(
             'resource_kind' => $slot['resource_kind'],
-            'label' => $this->getResourceKindLabel($slot['resource_kind']),
+            'label' => $sectionLabel,
             'window' => implode(' · ', $windowParts),
             'start' => $start->format(DATE_ATOM),
             'end' => $end->format(DATE_ATOM),
@@ -844,6 +927,9 @@ class HotelReservationSystemStorytellingPresenter
             'total_rooms' => $slot['total_rooms'],
             'profile_code' => $profile['resource_code'],
             'profile_display' => $profileName,
+            'section_key' => $sectionKey,
+            'section_anchor' => $sectionAnchor,
+            'section_intro' => $sectionIntro,
         );
     }
 
@@ -1078,6 +1164,22 @@ class HotelReservationSystemStorytellingPresenter
                 $allowed[$kind] = true;
             }
         }
+        $sectionMetadata = $this->getSectionMetadata($idLang, $idShop, $allowedResourceKinds);
+        $groups = array();
+        foreach ($sectionMetadata as $resourceKind => $metadata) {
+            if ($allowed && !isset($allowed[$resourceKind])) {
+                continue;
+            }
+
+            $groups[$metadata['key']] = array(
+                'resource_kind' => $resourceKind,
+                'label' => $metadata['title'],
+                'anchor' => $metadata['anchor'],
+                'intro' => $metadata['intro'],
+                'slot' => null,
+                'slots' => array(),
+            );
+        }
         if ($allowed && $profiles) {
             $filteredProfiles = array();
             foreach ($profiles as $profile) {
@@ -1094,6 +1196,7 @@ class HotelReservationSystemStorytellingPresenter
                     ? $translator->trans('Availability insights will appear once resource profiles are published.', array(), 'Shop.Theme.Kunstort')
                     : 'Availability insights will appear once resource profiles are published.',
                 'slots' => array(),
+                'groups' => $groups,
             );
             $this->storeAvailabilityCache($cacheKey, $payload);
 
@@ -1124,8 +1227,33 @@ class HotelReservationSystemStorytellingPresenter
         }
 
         $slots = array();
-        foreach ($slotsByKind as $slot) {
-            $slots[] = $this->normaliseSlotForTemplate($slot);
+        foreach ($slotsByKind as $resourceKind => $slot) {
+            if (!isset($sectionMetadata[$resourceKind])) {
+                $sectionMetadata[$resourceKind] = array(
+                    'resource_kind' => $resourceKind,
+                    'key' => Tools::strtolower($resourceKind),
+                    'anchor' => Tools::strtolower($resourceKind),
+                    'title' => $this->getResourceKindLabel($resourceKind),
+                    'intro' => '',
+                );
+            }
+
+            $groupKey = $sectionMetadata[$resourceKind]['key'];
+            if (!isset($groups[$groupKey])) {
+                $groups[$groupKey] = array(
+                    'resource_kind' => $resourceKind,
+                    'label' => $sectionMetadata[$resourceKind]['title'],
+                    'anchor' => $sectionMetadata[$resourceKind]['anchor'],
+                    'intro' => $sectionMetadata[$resourceKind]['intro'],
+                    'slot' => null,
+                    'slots' => array(),
+                );
+            }
+
+            $normalisedSlot = $this->normaliseSlotForTemplate($slot, $sectionMetadata[$resourceKind]);
+            $slots[] = $normalisedSlot;
+            $groups[$groupKey]['slot'] = $normalisedSlot;
+            $groups[$groupKey]['slots'] = array($normalisedSlot);
         }
 
         if ($slots) {
@@ -1141,6 +1269,7 @@ class HotelReservationSystemStorytellingPresenter
                     ? $translator->trans('We are crunching live bookings to surface the next open windows. Please check back shortly.', array(), 'Shop.Theme.Kunstort')
                     : 'We are crunching live bookings to surface the next open windows. Please check back shortly.',
                 'slots' => array(),
+                'groups' => $groups,
             );
             $this->storeAvailabilityCache($cacheKey, $payload);
 
@@ -1153,6 +1282,7 @@ class HotelReservationSystemStorytellingPresenter
                 ? $translator->trans('Availability refreshes every 15 minutes based on current bookings and maintenance blocks.', array(), 'Shop.Theme.Kunstort')
                 : 'Availability refreshes every 15 minutes based on current bookings and maintenance blocks.',
             'slots' => $slots,
+            'groups' => $groups,
         );
 
         $this->storeAvailabilityCache($cacheKey, $payload);
