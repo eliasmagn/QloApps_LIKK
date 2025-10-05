@@ -10,6 +10,8 @@
 .svn
 .DS_Store
 .sass-cache
+node_modules/
+**/node_modules/
 config.codekit
 *.sublime-project
 *.sublime-workspace

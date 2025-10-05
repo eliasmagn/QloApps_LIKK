@@ -79,6 +79,7 @@
               <div class="kl-storytelling__section-profiles">
                 {foreach from=$section.profiles item=profile}
                   <div class="kl-storytelling__profile">
+                    {include file="$tpl_dir./_partials/storytelling-profile-media.tpl" profile=$profile}
                     <h3 class="h3">{$profile.display_name|escape:'html':'UTF-8'}</h3>
                     {if $profile.excerpt}
                       <p class="kl-storytelling__profile-excerpt text-muted">{$profile.excerpt|escape:'html':'UTF-8'}</p>
