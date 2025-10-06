@@ -139,6 +139,8 @@ class HotelReservationSystemStorytellingPresenter
                     'utm_source' => 'story_residencies',
                 ))
                 : null,
+            'resource_key' => 'residencies',
+            'cms_endpoints' => $this->getCmsEndpointsForGroup('residencies'),
         );
     }
 
@@ -180,6 +182,8 @@ class HotelReservationSystemStorytellingPresenter
                     'utm_source' => 'story_ateliers',
                 ))
                 : null,
+            'resource_key' => 'ateliers',
+            'cms_endpoints' => $this->getCmsEndpointsForGroup('ateliers'),
         );
     }
 
@@ -221,6 +225,8 @@ class HotelReservationSystemStorytellingPresenter
                     'utm_source' => 'story_gastronomy',
                 ))
                 : null,
+            'resource_key' => 'gastronomy',
+            'cms_endpoints' => $this->getCmsEndpointsForGroup('gastronomy'),
         );
     }
 
@@ -262,6 +268,8 @@ class HotelReservationSystemStorytellingPresenter
                     'utm_source' => 'story_programme',
                 ))
                 : null,
+            'resource_key' => 'programme',
+            'cms_endpoints' => $this->getCmsEndpointsForGroup('programme'),
         );
     }
 
@@ -722,6 +730,59 @@ class HotelReservationSystemStorytellingPresenter
      *
      * @return array<string, array<string, mixed>|null>
      */
+    /**
+     * @param string $group
+     * @param int|null $idLang
+     * @param int|null $idShop
+     *
+     * @return array<string, mixed>
+     */
+    public function getCmsSlotsForGroup($group, $idLang = null, $idShop = null)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        return $this->resolveCmsSlots($group, $idLang, $idShop);
+    }
+
+    /**
+     * @param string $group
+     *
+     * @return array<string, string|null>
+     */
+    public function getCmsEndpointsForGroup($group)
+    {
+        $link = $this->context && $this->context->link ? $this->context->link : null;
+
+        $endpoints = array(
+            'testimonials' => null,
+            'faq' => null,
+        );
+
+        if (!$link) {
+            return $endpoints;
+        }
+
+        $params = array('resource' => $group);
+
+        $endpoints['testimonials'] = $link->getModuleLink(
+            'hotelreservationsystem',
+            'inquirylookup',
+            array_merge($params, array('action' => 'testimonials')),
+            true
+        );
+
+        $endpoints['faq'] = $link->getModuleLink(
+            'hotelreservationsystem',
+            'inquirylookup',
+            array_merge($params, array('action' => 'faq')),
+            true
+        );
+
+        return $endpoints;
+    }
+
     protected function resolveCmsSlots($group, $idLang, $idShop)
     {
         if (!isset(self::CMS_SLOT_KEYS[$group])) {

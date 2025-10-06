@@ -31,6 +31,8 @@ The module front controller `InquiryLookupModuleFrontController` responds with J
 - **Resources** – published `KLResourceProfile` rows including resource code, kind, capacity snapshot and publication/bookability flags.
 - **Packages** – active `KLPackage` entries, optionally filtered by resource kind.
 - **Quote preview** – a pass-through to `KLQuotePricingEngine::generateQuote()` for upcoming UI enhancements that will surface price guidance during submission.
+- **Testimonials** – cached CMS payloads keyed by storytelling resource type so headless consumers can reuse editorial copy without direct database reads.
+- **FAQ** – cached accordion markup sourced from the storytelling CMS keys, filtered by resource type.
 
 All endpoints require HTTPS and reuse PrestaShop’s `ModuleFrontController` stack so authentication/CSRF behaviour is consistent with other AJAX controllers.
 

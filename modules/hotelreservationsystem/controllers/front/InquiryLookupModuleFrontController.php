@@ -20,10 +20,20 @@
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/KLResourceProfile.php';
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/KLPackage.php';
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/KLQuotePricingEngine.php';
+require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/HotelReservationSystemStorytellingPresenter.php';
 
 class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFrontController
 {
     public $ssl = true;
+
+    const CMS_CACHE_TTL = 600;
+
+    const THROTTLE_WINDOW = 2;
+
+    /**
+     * @var HotelReservationSystemStorytellingPresenter|null
+     */
+    protected $storytellingPresenter = null;
 
     public function initContent()
     {
@@ -38,6 +48,9 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
         $status = 200;
 
         try {
+            $this->assertJsonAccess();
+            $this->enforceThrottle($action);
+
             switch ($action) {
                 case 'resources':
                     $payload = $this->getResourceSuggestions();
@@ -48,12 +61,28 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
                 case 'quote':
                     $payload = $this->getQuotePreview();
                     break;
+                case 'testimonials':
+                    $payload = $this->getStorytellingCmsPayload('testimonials');
+                    break;
+                case 'faq':
+                    $payload = $this->getStorytellingCmsPayload('faq');
+                    break;
                 default:
                     $status = 400;
                     $payload = array(
                         'error' => 'Unknown action',
                     );
             }
+        } catch (KLInquiryLookupRateLimitException $exception) {
+            $status = 429;
+            $payload = array(
+                'error' => 'Too many requests',
+            );
+        } catch (KLInquiryLookupPermissionException $exception) {
+            $status = 403;
+            $payload = array(
+                'error' => $exception->getMessage(),
+            );
         } catch (PrestaShopException $exception) {
             $status = 500;
             $payload = array(
@@ -68,6 +97,174 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
         }
 
         die(json_encode($payload));
+    }
+
+    /**
+     * @return void
+     */
+    protected function assertJsonAccess()
+    {
+        if (!$this->module || !$this->module->active) {
+            throw new KLInquiryLookupPermissionException('Module disabled');
+        }
+
+        if (Configuration::get('PS_SSL_ENABLED') && !Tools::usingSecureMode()) {
+            throw new KLInquiryLookupPermissionException('HTTPS required');
+        }
+    }
+
+    /**
+     * @param string|null $action
+     *
+     * @return void
+     */
+    protected function enforceThrottle($action)
+    {
+        $identifier = $action ? (string) $action : 'default';
+        $remoteAddr = Tools::getRemoteAddr();
+        if (!$remoteAddr) {
+            return;
+        }
+
+        $cacheKey = 'KL_INQUIRYLOOKUP_THROTTLE_'.md5($identifier.'|'.$remoteAddr);
+        $now = time();
+
+        if (Cache::isStored($cacheKey)) {
+            $stored = Cache::retrieve($cacheKey);
+            $expiresAt = is_array($stored) && isset($stored['expires_at'])
+                ? (int) $stored['expires_at']
+                : (int) $stored;
+
+            if ($expiresAt > $now) {
+                throw new KLInquiryLookupRateLimitException('Rate limit exceeded');
+            }
+        }
+
+        Cache::store($cacheKey, array(
+            'expires_at' => $now + self::THROTTLE_WINDOW,
+        ));
+    }
+
+    /**
+     * @param string $slot
+     *
+     * @return array<string, mixed>
+     */
+    protected function getStorytellingCmsPayload($slot)
+    {
+        $slot = Tools::strtolower($slot);
+
+        $resource = Tools::getValue('resource');
+        if (is_string($resource)) {
+            $resource = Tools::strtolower(trim($resource));
+        } else {
+            $resource = null;
+        }
+
+        $idLang = (int) $this->context->language->id;
+        $idShop = (int) $this->context->shop->id;
+
+        $cacheKey = $this->buildCacheKey(array('cms', $slot, $idLang, $idShop, $resource ?: 'all'));
+        $cached = $this->fetchCachedPayload($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $presenter = $this->getStorytellingPresenter();
+        if (!$presenter || !$presenter->isEnabled()) {
+            throw new KLInquiryLookupPermissionException('Storytelling content unavailable');
+        }
+
+        $groups = array_keys(HotelReservationSystemStorytellingPresenter::CMS_SLOT_KEYS);
+        if ($resource && !in_array($resource, $groups, true)) {
+            throw new PrestaShopException('Unknown resource');
+        }
+
+        $mapping = HotelReservationSystemStorytellingPresenter::CMS_SLOT_KEYS;
+        $results = array();
+
+        foreach ($groups as $group) {
+            if ($resource && $resource !== $group) {
+                continue;
+            }
+
+            if (!isset($mapping[$group][$slot])) {
+                $results[$group] = null;
+                continue;
+            }
+
+            $slots = $presenter->getCmsSlotsForGroup($group, $idLang, $idShop);
+            $results[$group] = isset($slots[$slot]) ? $slots[$slot] : null;
+        }
+
+        $payload = array(
+            $slot => $results,
+            'generated_at' => date(DATE_ATOM),
+        );
+
+        $this->storeCachedPayload($cacheKey, $payload, self::CMS_CACHE_TTL);
+
+        return $payload;
+    }
+
+    /**
+     * @param array<int, string> $parts
+     *
+     * @return string
+     */
+    protected function buildCacheKey(array $parts)
+    {
+        return 'KL_INQUIRYLOOKUP_'.md5(implode('|', $parts));
+    }
+
+    /**
+     * @param string $cacheKey
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function fetchCachedPayload($cacheKey)
+    {
+        if (!Cache::isStored($cacheKey)) {
+            return null;
+        }
+
+        $cached = Cache::retrieve($cacheKey);
+        if (!is_array($cached) || !isset($cached['expires_at'], $cached['payload'])) {
+            return null;
+        }
+
+        if ((int) $cached['expires_at'] < time()) {
+            return null;
+        }
+
+        return $cached['payload'];
+    }
+
+    /**
+     * @param string $cacheKey
+     * @param array<string, mixed> $payload
+     * @param int $ttl
+     *
+     * @return void
+     */
+    protected function storeCachedPayload($cacheKey, array $payload, $ttl)
+    {
+        Cache::store($cacheKey, array(
+            'expires_at' => time() + (int) $ttl,
+            'payload' => $payload,
+        ));
+    }
+
+    /**
+     * @return HotelReservationSystemStorytellingPresenter
+     */
+    protected function getStorytellingPresenter()
+    {
+        if ($this->storytellingPresenter === null) {
+            $this->storytellingPresenter = new HotelReservationSystemStorytellingPresenter($this->context);
+        }
+
+        return $this->storytellingPresenter;
     }
 
     /**
@@ -180,4 +377,12 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
             'generated_at' => date(DATE_ATOM),
         );
     }
+}
+
+class KLInquiryLookupPermissionException extends PrestaShopException
+{
+}
+
+class KLInquiryLookupRateLimitException extends PrestaShopException
+{
 }

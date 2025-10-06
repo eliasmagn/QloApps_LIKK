@@ -52,7 +52,7 @@ Each major resource type (Residencies, Ateliers & Studios, Gastronomy & Catering
 - Extend the `KLQuotePricingEngine` to expose highlight data (starting weekly rate, package inclusions) for templates.
 - Add helper methods on `HotelReservationSystemStorytellingPresenter` (new class) that merges taxonomy, package and availability data for consumption by Smarty.
 - Cache availability snippets in `Cache::store()` for 15 minutes to balance freshness with performance.
-- Create JSON endpoints for testimonials and FAQ groups to support potential headless reuse.
+- ✅ Create JSON endpoints for testimonials and FAQ groups to support potential headless reuse. Implemented via the inquiry lookup controller’s `testimonials`/`faq` actions with caching, HTTPS enforcement and throttling.
 
 ## Performance & Accessibility Guardrails
 - Optimise hero and gallery images via the theme’s build pipeline (WebP + responsive `srcset`).
