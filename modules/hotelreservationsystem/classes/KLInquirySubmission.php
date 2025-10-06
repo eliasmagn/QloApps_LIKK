@@ -19,6 +19,7 @@
 
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/HotelInquiry.php';
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/HotelInquiryNote.php';
+require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/KLStoryAvailabilityCache.php';
 
 class KLInquirySubmission
 {
@@ -62,6 +63,8 @@ class KLInquirySubmission
             'inquiry' => $inquiry,
             'values' => $values,
         ));
+
+        KLStoryAvailabilityCache::invalidateAll();
 
         return array(
             'inquiry' => $inquiry,

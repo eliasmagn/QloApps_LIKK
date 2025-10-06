@@ -3,6 +3,11 @@
 ## Purpose
 Establish a narrative-driven front-office experience that replaces the remaining commodity product listings with curated storytelling for Kunstort Lehnin's residencies, ateliers, gastronomy and programme spaces. The templates should surface availability cues, highlight relevant packages and guide visitors toward the inquiry workflow instead of instant checkout interactions.
 
+## Availability caching & automation
+- Availability snapshots from `HotelReservationSystemStorytellingPresenter` are cached for 15 minutes using `KL_STORY_AVAILABILITY_*` keys.
+- The `KLStoryAvailabilityCache` helper invalidates these snapshots whenever bookings, inquiries or room disable ranges mutate, ensuring the next front-office request rebuilds a fresh payload.
+- The `kloperations` cron (`php bin/console prestashop:module run-hook kloperations actionCronJob`) should continue running on its existing schedule so booking syncs occur promptly after cache busts.
+
 ## Experience Pillars
 - **Narrative first** – hero copy, photography and programme highlights lead each page so visitors understand the artistic context before scanning rates or schedules.
 - **Inquiry centric** – every call-to-action routes to the inquiry form (or a tailored step) and reflects whether `_KUNSTORT_CORE_MODE_` is set to `inquiry`.

@@ -29,6 +29,7 @@ require_once __DIR__ . '/services/KlOperationTaskGenerator.php';
 require_once __DIR__ . '/services/KlOperationNotificationService.php';
 require_once __DIR__ . '/services/KlOperationExportService.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelBookingDetail.php';
+require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/KLStoryAvailabilityCache.php';
 
 class Kloperations extends Module
 {
@@ -233,6 +234,7 @@ class Kloperations extends Module
         }
 
         $this->getTaskGenerator()->syncBookingTasks($booking);
+        KLStoryAvailabilityCache::invalidateAll();
     }
 
     public function getContent()
