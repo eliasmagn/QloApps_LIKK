@@ -52,6 +52,7 @@
   - [x] Add the `klStorytellingDefer` helper plus template hooks so non-critical scripts lazy-load after the main storytelling paint.
   - [x] Pipe taxonomy hero media into responsive `<picture>` components with lazy loading, captions and WebP/JPEG variants generated via `npm run build:hero-media`.
   - [x] Wire slot-specific inquiry CTAs so availability windows launch the inquiry form with matching resource codes and dates prefilled.
+  - [x] Group featured packages by resource scope, add inquiry CTA buttons per card and provide a campus-wide fallback for unscoped bundles.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
   - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.

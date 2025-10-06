@@ -180,6 +180,19 @@ class InquiryControllerCore extends FrontController
             $values['resource_notes'] = $resourceCode;
         }
 
+        $packagePreferences = Tools::getValue('package_preferences');
+        if (is_string($packagePreferences) && $packagePreferences !== '') {
+            $packagePreferences = array($packagePreferences);
+        }
+        if (is_array($packagePreferences)) {
+            $values['package_preferences'] = array_values(array_unique(array_filter(array_map('strval', $packagePreferences))));
+        } else {
+            $packageCode = trim((string) Tools::getValue('package_code'));
+            if ($packageCode !== '') {
+                $values['package_preferences'] = array($packageCode);
+            }
+        }
+
         return $values;
     }
 

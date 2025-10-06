@@ -28,6 +28,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Storytelling style layer ships with a shared SCSS/CSS bundle, inline critical hero rules and a `klStorytellingDefer` helper so optional scripts load after first paint.
   - ✅ Storytelling hero media pipeline generates WebP/JPEG variants via `npm run build:hero-media`, exposes taxonomy alt text in the presenter payload and renders lazy-loaded `<picture>` components with accessible captions across all storytelling templates.
   - ✅ Storytelling availability slots now surface CTA buttons wired to slot-specific inquiry URLs so arrival/departure dates, resource kind and resource codes prefill the inquiry flow.
+  - ✅ Featured packages now display as scope-aware groups with inquiry CTA buttons and a campus-wide fallback when scope metadata is missing.
 
 ## Phase 3 – Operations Automation (🚧 In progress)
 - ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).

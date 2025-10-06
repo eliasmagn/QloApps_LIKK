@@ -121,7 +121,12 @@ class HotelReservationSystemStorytellingPresenter
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop),
             'availability' => $availability,
             'cms' => $this->resolveCmsSlots('residencies', $idLang, $idShop),
-            'packages' => $this->getFeaturedPackages($idLang),
+            'packages' => $this->buildPackageGroups(
+                $idLang,
+                $idShop,
+                array(KLResourceProfile::RESOURCE_KIND_ROOM),
+                array('utm_source' => 'story_residencies_package')
+            ),
             'inquiry_url' => $context && $context->link
                 ? $context->link->getPageLink('inquiry', true, null, array(
                     'utm_source' => 'story_residencies',
@@ -157,9 +162,11 @@ class HotelReservationSystemStorytellingPresenter
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
             'availability' => $availability,
             'cms' => $this->resolveCmsSlots('ateliers', $idLang, $idShop),
-            'packages' => $this->filterPackagesByResourceKinds(
-                $this->getFeaturedPackages($idLang),
-                $resourceKinds
+            'packages' => $this->buildPackageGroups(
+                $idLang,
+                $idShop,
+                $resourceKinds,
+                array('utm_source' => 'story_ateliers_package')
             ),
             'inquiry_url' => $context && $context->link
                 ? $context->link->getPageLink('inquiry', true, null, array(
@@ -196,9 +203,11 @@ class HotelReservationSystemStorytellingPresenter
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
             'availability' => $availability,
             'cms' => $this->resolveCmsSlots('gastronomy', $idLang, $idShop),
-            'packages' => $this->filterPackagesByResourceKinds(
-                $this->getFeaturedPackages($idLang),
-                $resourceKinds
+            'packages' => $this->buildPackageGroups(
+                $idLang,
+                $idShop,
+                $resourceKinds,
+                array('utm_source' => 'story_gastronomy_package')
             ),
             'inquiry_url' => $context && $context->link
                 ? $context->link->getPageLink('inquiry', true, null, array(
@@ -235,9 +244,11 @@ class HotelReservationSystemStorytellingPresenter
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
             'availability' => $availability,
             'cms' => $this->resolveCmsSlots('programme', $idLang, $idShop),
-            'packages' => $this->filterPackagesByResourceKinds(
-                $this->getFeaturedPackages($idLang),
-                $resourceKinds
+            'packages' => $this->buildPackageGroups(
+                $idLang,
+                $idShop,
+                $resourceKinds,
+                array('utm_source' => 'story_programme_package')
             ),
             'inquiry_url' => $context && $context->link
                 ? $context->link->getPageLink('inquiry', true, null, array(
@@ -1308,6 +1319,217 @@ class HotelReservationSystemStorytellingPresenter
     }
 
     /**
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @param array<int, string> $allowedResourceKinds
+     * @param array<string, string> $baseParameters
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function buildPackageGroups($idLang, $idShop, array $allowedResourceKinds = array(), array $baseParameters = array())
+    {
+        $packages = $this->getFeaturedPackages($idLang);
+        if (!$packages) {
+            return array();
+        }
+
+        return $this->groupPackagesByScope($packages, $idLang, $idShop, $allowedResourceKinds, $baseParameters);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $packages
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @param array<int, string> $allowedResourceKinds
+     * @param array<string, string> $baseParameters
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function groupPackagesByScope(array $packages, $idLang, $idShop, array $allowedResourceKinds, array $baseParameters)
+    {
+        $metadata = $this->getSectionMetadata($idLang, $idShop, $allowedResourceKinds);
+        $translator = $this->getTranslator();
+        $link = $this->context && $this->context->link ? $this->context->link : null;
+
+        $allowed = array();
+        foreach ($allowedResourceKinds as $kind) {
+            $allowed[$kind] = true;
+        }
+
+        $groups = array();
+        foreach ($metadata as $resourceKind => $section) {
+            if ($allowed && !isset($allowed[$resourceKind])) {
+                continue;
+            }
+
+            $groups[$section['key']] = array(
+                'key' => $section['key'],
+                'resource_kind' => $resourceKind,
+                'label' => $section['title'],
+                'anchor' => $section['anchor'],
+                'intro' => $section['intro'],
+                'packages' => array(),
+            );
+        }
+
+        $generalKey = 'campus_highlights';
+        $generalAnchor = 'campus-highlights';
+
+        foreach ($packages as $package) {
+            $scopes = isset($package['resource_kind_scope']) && is_array($package['resource_kind_scope'])
+                ? array_values(array_unique(array_filter(array_map('strval', $package['resource_kind_scope']))))
+                : array();
+
+            $scopesToApply = $scopes;
+            if (!$scopesToApply) {
+                $scopesToApply = array(null);
+            }
+
+            foreach ($scopesToApply as $scope) {
+                if ($scope !== null && $allowed && !isset($allowed[$scope])) {
+                    continue;
+                }
+
+                if ($scope === null && $allowed && $scopes) {
+                    continue;
+                }
+
+                $groupKey = null;
+
+                if ($scope !== null && isset($metadata[$scope])) {
+                    $groupKey = $metadata[$scope]['key'];
+                } elseif ($scope !== null) {
+                    $groupKey = Tools::link_rewrite($scope);
+                    if ($groupKey === '') {
+                        $groupKey = 'scope_'.md5($scope);
+                    }
+                    if (!isset($groups[$groupKey])) {
+                        $groups[$groupKey] = array(
+                            'key' => $groupKey,
+                            'resource_kind' => $scope,
+                            'label' => $this->buildFallbackScopeLabel($scope),
+                            'anchor' => $groupKey,
+                            'intro' => '',
+                            'packages' => array(),
+                        );
+                    }
+                } else {
+                    if (!isset($groups[$generalKey])) {
+                        $groups[$generalKey] = array(
+                            'key' => $generalKey,
+                            'resource_kind' => null,
+                            'label' => $translator
+                                ? $translator->trans('Campus-wide highlights', array(), 'Shop.Theme.Kunstort')
+                                : 'Campus-wide highlights',
+                            'anchor' => $generalAnchor,
+                            'intro' => $translator
+                                ? $translator->trans('These packages span multiple space types—start an inquiry and we will tailor the details together.', array(), 'Shop.Theme.Kunstort')
+                                : 'These packages span multiple space types—start an inquiry and we will tailor the details together.',
+                            'packages' => array(),
+                        );
+                    }
+                    $groupKey = $generalKey;
+                }
+
+                if ($groupKey === null || !isset($groups[$groupKey])) {
+                    continue;
+                }
+
+                $groups[$groupKey]['packages'][] = $this->buildPackageEntryForStorytelling(
+                    $package,
+                    $scope,
+                    $baseParameters,
+                    $link
+                );
+            }
+        }
+
+        foreach ($groups as &$group) {
+            if (!$group['packages']) {
+                continue;
+            }
+
+            usort($group['packages'], function ($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            });
+        }
+        unset($group);
+
+        $groups = array_filter($groups, function ($group) {
+            return !empty($group['packages']);
+        });
+
+        return array_values($groups);
+    }
+
+    /**
+     * @param array<string, mixed> $package
+     * @param string|null $scope
+     * @param array<string, string> $baseParameters
+     * @param Link|null $link
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildPackageEntryForStorytelling(array $package, $scope, array $baseParameters, $link)
+    {
+        $translator = $this->getTranslator();
+
+        $entry = array(
+            'id_kl_package' => isset($package['id_kl_package']) ? (int) $package['id_kl_package'] : 0,
+            'package_code' => isset($package['package_code']) ? $package['package_code'] : '',
+            'name' => isset($package['name']) ? $package['name'] : '',
+            'tagline' => isset($package['tagline']) ? $package['tagline'] : '',
+            'description' => isset($package['description']) ? $package['description'] : '',
+            'resource_kind_scope' => isset($package['resource_kind_scope']) && is_array($package['resource_kind_scope'])
+                ? $package['resource_kind_scope']
+                : array(),
+            'primary_scope' => $scope,
+        );
+
+        $parameters = $baseParameters;
+        if ($scope !== null && $scope !== '') {
+            $parameters['resource_kind'] = $scope;
+        }
+        if (!empty($entry['package_code'])) {
+            $parameters['package_code'] = $entry['package_code'];
+        }
+
+        $entry['inquiry_params'] = $parameters;
+        $entry['inquiry_query'] = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
+
+        if ($link) {
+            $entry['inquiry_url'] = $link->getPageLink('inquiry', true, null, $parameters);
+        } else {
+            $entry['inquiry_url'] = 'index.php?controller=inquiry';
+            if ($entry['inquiry_query'] !== '') {
+                $entry['inquiry_url'] .= '&'.$entry['inquiry_query'];
+            }
+        }
+
+        $entry['cta_label'] = $translator
+            ? $translator->trans('Request this package', array(), 'Shop.Theme.Kunstort')
+            : 'Request this package';
+
+        return $entry;
+    }
+
+    /**
+     * @param string $scope
+     *
+     * @return string
+     */
+    protected function buildFallbackScopeLabel($scope)
+    {
+        $normalized = Tools::strtolower(trim((string) $scope));
+        $normalized = str_replace(array('_', '-'), ' ', $normalized);
+        $normalized = preg_replace('/\s+/', ' ', $normalized);
+
+        return $normalized !== '' ? Tools::ucfirst($normalized) : '';
+    }
+
+    /**
      * Builds the availability payload consumed by the residencies template.
      * Aggregates live booking/maintenance windows, caches results briefly and
      * returns per resource-kind highlights plus a status/message tuple.
@@ -1532,45 +1754,6 @@ class HotelReservationSystemStorytellingPresenter
         $slot['inquiry_query'] = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
 
         return $slot;
-    }
-
-    /**
-     * @param array<int, array<string, mixed>> $packages
-     * @param array<int, string> $resourceKinds
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    protected function filterPackagesByResourceKinds(array $packages, array $resourceKinds)
-    {
-        if (!$resourceKinds) {
-            return $packages;
-        }
-
-        $allowed = array();
-        foreach ($resourceKinds as $kind) {
-            $allowed[$kind] = true;
-        }
-
-        $filtered = array();
-        foreach ($packages as $package) {
-            $scope = isset($package['resource_kind_scope']) ? $package['resource_kind_scope'] : array();
-            if (!is_array($scope)) {
-                $scope = array();
-            }
-            if (!$scope) {
-                $filtered[] = $package;
-                continue;
-            }
-
-            foreach ($scope as $kind) {
-                if (isset($allowed[$kind])) {
-                    $filtered[] = $package;
-                    break;
-                }
-            }
-        }
-
-        return $filtered;
     }
 
     /**
