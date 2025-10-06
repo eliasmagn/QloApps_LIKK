@@ -20,6 +20,7 @@
 * @copyright Since 2010 Webkul
 * @license https://opensource.org/license/osl-3-0-php Open Software License version 3.0
 */
+require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/KLStoryAvailabilityCache.php';
 
 class HotelRoomDisableDates extends ObjectModel
 {
@@ -78,19 +79,34 @@ class HotelRoomDisableDates extends ObjectModel
             $roomDisableDates->date_from = $params['date_from'];
             $roomDisableDates->date_to = $params['date_to'];
             $roomDisableDates->reason = $params['reason'];
-            return $roomDisableDates->save();
+            $saved = $roomDisableDates->save();
+            if ($saved) {
+                KLStoryAvailabilityCache::invalidateAll();
+            }
+
+            return $saved;
         }
         return false;
     }
 
     public function deleteDisabledDatesForDateRange($params)
     {
-        return Db::getInstance()->delete('htl_room_disable_dates', '`id_room` = '.(int)$params['id_room'].' AND `date_from` >= \''.pSQL($params['date_from']).'\' AND `date_to` <= \''.pSQL($params['date_to']).'\'');
+        $deleted = Db::getInstance()->delete('htl_room_disable_dates', '`id_room` = '.(int)$params['id_room'].' AND `date_from` >= \''.pSQL($params['date_from']).'\' AND `date_to` <= \''.pSQL($params['date_to']).'\'');
+        if ($deleted) {
+            KLStoryAvailabilityCache::invalidateAll();
+        }
+
+        return $deleted;
     }
 
     public function deleteRoomDisableDates($id_room)
     {
-        return Db::getInstance()->delete('htl_room_disable_dates', '`id_room`='.(int)$id_room);
+        $deleted = Db::getInstance()->delete('htl_room_disable_dates', '`id_room`='.(int)$id_room);
+        if ($deleted) {
+            KLStoryAvailabilityCache::invalidateAll();
+        }
+
+        return $deleted;
     }
 
 
@@ -133,7 +149,12 @@ class HotelRoomDisableDates extends ObjectModel
             return false;
         }
 
-        return Db::getInstance()->delete('htl_room_disable_dates', '`id_room_type`='.(int)$idRoomType);
+        $deleted = Db::getInstance()->delete('htl_room_disable_dates', '`id_room_type`='.(int)$idRoomType);
+        if ($deleted) {
+            KLStoryAvailabilityCache::invalidateAll();
+        }
+
+        return $deleted;
     }
 
 }

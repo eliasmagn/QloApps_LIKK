@@ -43,6 +43,22 @@ class HotelReservationSystem extends Module
         $this->confirmUninstall = $this->l('This module should not be uninstalled under any circumstances. Doing so may cause undesired results.');
     }
 
+    /**
+     * @return void
+     */
+    private function invalidateStoryAvailabilityCache()
+    {
+        $idShop = $this->context && isset($this->context->shop) && $this->context->shop
+            ? (int) $this->context->shop->id
+            : 0;
+
+        if ($idShop > 0) {
+            KLStoryAvailabilityCache::invalidateForShop($idShop);
+        } else {
+            KLStoryAvailabilityCache::invalidateAll();
+        }
+    }
+
     public function hookDisplayHeader()
     {
         if (!Configuration::get('PS_CATALOG_MODE')) {
@@ -561,6 +577,7 @@ class HotelReservationSystem extends Module
             $objRoomTypeDemand = new HotelRoomTypeDemand();
             $objRoomTypeDemand->deleteRoomTypeDemands($idProduct); // delete additional demands for room type
         }
+        $this->invalidateStoryAvailabilityCache();
     }
 
     // Add profile hotel access while profile is added
@@ -619,6 +636,7 @@ class HotelReservationSystem extends Module
                 }
             }
         }
+        $this->invalidateStoryAvailabilityCache();
     }
 
     public function hookActionOrderStatusPostUpdate($params)
@@ -635,6 +653,8 @@ class HotelReservationSystem extends Module
             if (!$objHtlBkDtl->updateOrderRefundStatus($params['id_order'], false, false, array(), 1, $isCancelled)) {
                 $this->context->controller->errors[] = $this->l('Error while making booked rooms available, attached with this order. Please try again !!');
             }
+
+            $this->invalidateStoryAvailabilityCache();
         }
     }
 

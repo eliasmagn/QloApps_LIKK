@@ -38,7 +38,7 @@
 - [x] Added manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
   - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
-  - [x] Provide lightweight mobile checklists tuned for housekeeping devices.
+  - [x] Wired `KLStoryAvailabilityCache` so storytelling availability snapshots purge when bookings, inquiries or room disable ranges mutate, with cron-safe rebuilds validated by unit tests.
 
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.

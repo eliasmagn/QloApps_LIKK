@@ -65,6 +65,7 @@ require_once 'classes/KLPackageComponent.php';
 require_once 'classes/KLQuote.php';
 require_once 'classes/KLQuotePricingEngine.php';
 require_once 'classes/HotelReservationSystemStorytellingPresenter.php';
+require_once 'classes/KLStoryAvailabilityCache.php';
 
 require_once 'classes/HotelSettingsLink.php';
 require_once 'classes/HotelBookingDocument.php';
