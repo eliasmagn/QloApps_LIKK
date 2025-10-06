@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Kunstort Lehnin Residencies</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" as="image" href="/media/hero-large.jpg" />
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        main { display: block; }
+        .story-hero { padding: 3rem 1.5rem; background: #f3f1ed; }
+        .story-sections { padding: 2rem 1.5rem; }
+        .story-section { margin-bottom: 2rem; }
+        .story-packages { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+        .story-card { border: 1px solid #dedad2; padding: 1.5rem; border-radius: 1rem; }
+        .story-availability { background: #111; color: #fff; padding: 2rem 1.5rem; }
+        .story-availability a { color: #ffe6b3; text-decoration: underline; }
+    </style>
+</head>
+<body>
+<main id="storytelling" data-template="residencies">
+    <section class="story-hero" data-story-hero>
+        <h1>Residencies at Kunstort Lehnin</h1>
+        <p class="story-hero__dek">Stay on campus for uninterrupted work time surrounded by forest and lakes.</p>
+    </section>
+
+    <section class="story-sections" aria-label="Residency profiles">
+        <section class="story-section" data-story-section="residencies">
+            <header>
+                <h2>Residency Studios</h2>
+                <p>Dedicated workspaces with natural light and blackout shades.</p>
+            </header>
+            <ul class="story-capacity" data-story-capacity>
+                <li>Sleeps up to 4 guests (2 adults + 2 children).</li>
+                <li>Floor area: 120.46 m²</li>
+                <li>Available on request via inquiry.</li>
+            </ul>
+        </section>
+    </section>
+
+    <section class="story-packages" data-story-packages>
+        <article class="story-card" data-story-package>
+            <h3>Winter Retreat</h3>
+            <p class="story-card__lede">Three nights with catering and rehearsal hall access.</p>
+            <a class="story-card__cta" href="/index.php?controller=inquiry&amp;utm_source=story_residencies_package&amp;package_code=WINTER-RETREAT">Request this package</a>
+        </article>
+    </section>
+
+    <section class="story-availability" data-story-availability>
+        <h2>Next available windows</h2>
+        <ul>
+            <li data-slot data-resource-kind="room" data-start="2024-10-01">
+                <time datetime="2024-10-01">1 Oct 2024</time>
+                <a class="story-slot__cta" href="/index.php?controller=inquiry&amp;resource_kind=room&amp;start=2024-10-01">Request stay</a>
+            </li>
+        </ul>
+    </section>
+</main>
+<script>
+    if (performance && performance.mark) {
+        performance.mark('storytelling-ready');
+    }
+</script>
+</body>
+</html>

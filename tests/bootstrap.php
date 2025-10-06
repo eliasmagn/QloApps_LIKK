@@ -21,7 +21,13 @@
 * @license https://opensource.org/license/osl-3-0-php Open Software License version 3.0
 */
 
-require(dirname(__FILE__).'/vendor/autoload.php');
+require dirname(__FILE__).'/vendor/autoload.php';
+
+require_once dirname(__DIR__).'/config/defines.inc.php';
+if (file_exists(dirname(__DIR__).'/config/defines_custom.inc.php')) {
+    require_once dirname(__DIR__).'/config/defines_custom.inc.php';
+}
+require_once dirname(__DIR__).'/config/autoload.php';
 
 if (!function_exists('each')) {
     /**

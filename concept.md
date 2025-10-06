@@ -41,6 +41,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Availability slots across residencies, ateliers, gastronomy and programme storytelling landings now display per-slot inquiry CTAs that deep-link into the inquiry form with arrival/departure dates, resource kind and resource codes prefilled.
 - Featured packages on storytelling landings are grouped by scope with CTA buttons that prefill package codes and resource interests on the inquiry form, with a campus-wide fallback for bundles that lack scope metadata.
 - Storytelling package cards now display cached pricing highlights—starting rates, sample stay context and inclusion summaries—powered by canonical sample stays passed to `KLQuotePricingEngine::generateQuote()`.
+- The storytelling presenter now carries dedicated PHPUnit coverage for section grouping, capacity messaging, package payloads and availability caching alongside Panther smoke tests that exercise the residencies template and enforce Lighthouse-aligned navigation timings.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.
 - A repo-level `start_dev.sh` script provisions a Python virtualenv for tooling, keeps Composer dependencies current, and boots the PHP built-in server for local testing.
 

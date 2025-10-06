@@ -31,6 +31,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Storytelling availability slots now surface CTA buttons wired to slot-specific inquiry URLs so arrival/departure dates, resource kind and resource codes prefill the inquiry flow.
   - ✅ Featured packages now display as scope-aware groups with inquiry CTA buttons and a campus-wide fallback when scope metadata is missing.
   - ✅ Storytelling package cards now surface cached pricing highlights generated from canonical sample stays via `KLQuotePricingEngine::generateQuote()`.
+  - ✅ Storytelling presenter payloads are now covered by PHPUnit tests while Panther smoke tests verify residencies template rendering and Lighthouse navigation timing targets.
 
 ## Phase 3 – Operations Automation (🚧 In progress)
 - ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).

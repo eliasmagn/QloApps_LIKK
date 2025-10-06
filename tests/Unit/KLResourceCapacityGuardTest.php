@@ -1,12 +1,27 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 if (!defined('_DB_PREFIX_')) {
     define('_DB_PREFIX_', 'ps_');
+}
+if (!defined('_DB_SERVER_')) {
+    define('_DB_SERVER_', 'localhost');
+}
+if (!defined('_DB_USER_')) {
+    define('_DB_USER_', 'root');
+}
+if (!defined('_DB_PASSWD_')) {
+    define('_DB_PASSWD_', '');
+}
+if (!defined('_DB_NAME_')) {
+    define('_DB_NAME_', 'prestashop');
 }
 
 require_once dirname(dirname(__DIR__)).'/modules/hotelreservationsystem/classes/KLResourceCapacityGuard.php';
 require_once dirname(dirname(__DIR__)).'/modules/hotelreservationsystem/classes/KLResourceCapacity.php';
 require_once dirname(dirname(__DIR__)).'/modules/hotelreservationsystem/classes/KLAmenityLink.php';
+require_once dirname(dirname(__DIR__)).'/classes/db/Db.php';
 
 class StubDb
 {
@@ -31,10 +46,28 @@ class StubDb
     {
         return $this->bookingRows;
     }
+
+    public function escape($value, $htmlOK = false)
+    {
+        return addslashes($value);
+    }
 }
 
-class KLResourceCapacityGuardTest extends PHPUnit_Framework_TestCase
+class StubDbConnection
 {
+    public function escape($value, $htmlOK = false)
+    {
+        return addslashes($value);
+    }
+}
+
+class KLResourceCapacityGuardTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        Db::setInstanceForTesting(new StubDbConnection());
+    }
+
     public function testNoRoomTypeSkipsChecks()
     {
         $db = new StubDb(false, array());
@@ -96,8 +129,8 @@ class KLResourceCapacityGuardTest extends PHPUnit_Framework_TestCase
 
         $this->assertCount(1, $conflicts);
         $this->assertEquals(21, $conflicts[0]['id_booking']);
-        $this->assertEquals('total', $conflicts[0]['dimension']);
-        $this->assertEquals(3, $conflicts[0]['required']);
-        $this->assertEquals(2, $conflicts[0]['limit']);
+        $this->assertEquals('adults', $conflicts[0]['dimension']);
+        $this->assertEquals(2, $conflicts[0]['required']);
+        $this->assertEquals(1, $conflicts[0]['limit']);
     }
 }

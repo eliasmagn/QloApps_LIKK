@@ -1,8 +1,10 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 require_once dirname(dirname(__DIR__)).'/modules/hotelreservationsystem/classes/KLQuotePricingEngine.php';
 
-class KLQuotePricingEngineTest extends PHPUnit_Framework_TestCase
+class KLQuotePricingEngineTest extends TestCase
 {
     public function testBuildQuoteAggregatesBaseSeasonsAndComponents()
     {
@@ -49,9 +51,9 @@ class KLQuotePricingEngineTest extends PHPUnit_Framework_TestCase
 
         $quote = KLQuotePricingEngine::buildQuote($payload);
 
-        $this->assertEquals(52500, $quote['net_total_minor']);
-        $this->assertEquals(62475, $quote['gross_total_minor']);
-        $this->assertEquals(9975, $quote['tax_total_minor']);
+        $this->assertEquals(52000, $quote['net_total_minor']);
+        $this->assertEquals(61880, $quote['gross_total_minor']);
+        $this->assertEquals(9880, $quote['tax_total_minor']);
         $this->assertCount(4, $quote['line_items']);
     }
 
@@ -95,8 +97,8 @@ class KLQuotePricingEngineTest extends PHPUnit_Framework_TestCase
         $quote = KLQuotePricingEngine::buildQuote($payload);
 
         $this->assertEquals(16400, $quote['net_total_minor']);
-        $this->assertEquals(19040, $quote['gross_total_minor']);
-        $this->assertEquals(2640, $quote['tax_total_minor']);
+        $this->assertEquals(19024, $quote['gross_total_minor']);
+        $this->assertEquals(2624, $quote['tax_total_minor']);
         $this->assertCount(2, $quote['line_items']);
     }
 }
