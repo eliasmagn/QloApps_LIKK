@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Booking timeline</title>
+  </head>
+  <body>
+    <div class="panel panel-booking-timeline">
+      <div class="panel-body">
+        <div class="panel panel-default kloperations-timeline-widget" data-kloperations-widget="timeline">
+          <div class="panel-heading">
+            <i class="icon-tasks"></i> Operations summary
+            <a class="btn btn-default btn-xs pull-right" href="index.php?controller=AdminKlOperationTasks" target="_blank" rel="noopener">
+              <i class="icon-external-link"></i> Open operations console
+            </a>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped kloperations-timeline-summary" data-kloperations-widget-table>
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th class="text-center">Overdue</th>
+                    <th class="text-center">Today</th>
+                    <th class="text-center">Tomorrow</th>
+                    <th class="text-center">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-kloperations-resource="room">
+                    <td>
+                      <strong>Rooms</strong>
+                      <div><a class="btn btn-link btn-xs" href="index.php?controller=AdminKlOperationTasks&amp;kl_operation_taskFilter_resource_type=room&amp;submitFilterkl_operation_task=1">View tasks</a></div>
+                    </td>
+                    <td class="text-center"><a class="label label-warning" href="#">2</a></td>
+                    <td class="text-center"><a class="label label-warning" href="#">3</a></td>
+                    <td class="text-center"><span class="text-muted">0</span></td>
+                    <td class="text-center"><span class="label label-default">5</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="help-block">Snapshot generated at 2024-04-05 08:00:00 (Europe/Berlin).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

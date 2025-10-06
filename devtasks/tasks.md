@@ -7,6 +7,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Front-office storytelling templates](front-office-storytelling.task.md) | ⏳ Planned | Replace legacy product grids with narrative-driven offer pages tied to inquiries. |
 | [Inquiry submission pipeline](inquiry-submission.task.md) | ✅ Complete | Deliver the dedicated front-office inquiry flow and supporting APIs. |
 | [Housekeeping & maintenance automation](operations-automation.task.md) | 🚧 In progress | Bootstrap task generation, notifications and exports for daily operations. |
+| [Operations timeline widget](operations-timeline-widget.task.md) | ⏳ Planned | Embed the operations summary widget on the booking timeline with console shortcuts. |
 | [Ateliers storytelling landing](storytelling-ateliers.task.md) | 🚧 In progress | Launch the atelier-focused storytelling page with taxonomy sections, CMS copy and navigation links. |
 | [Gastronomy storytelling landing](storytelling-gastronomy.task.md) | 🚧 In progress | Publish the dining-focused storytelling page with amenity callouts, CMS slots and inquiry CTAs. |
 | [Programme storytelling landing](storytelling-programme.task.md) | ✅ Complete | Ship the programme-focused storytelling page with grouped availability, CMS highlights and inquiry pathways. |

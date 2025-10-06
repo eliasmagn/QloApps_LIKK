@@ -28,6 +28,7 @@ require_once __DIR__ . '/classes/KlOperationTaskNote.php';
 require_once __DIR__ . '/services/KlOperationTaskGenerator.php';
 require_once __DIR__ . '/services/KlOperationNotificationService.php';
 require_once __DIR__ . '/services/KlOperationExportService.php';
+require_once __DIR__ . '/services/KlOperationTimelineSummaryService.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelBookingDetail.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/KLStoryAvailabilityCache.php';
 
@@ -92,6 +93,7 @@ class Kloperations extends Module
             'actionCronJob',
             'actionObjectHotelBookingDetailAddAfter',
             'actionObjectHotelBookingDetailUpdateAfter',
+            'displayAdminRoomsBookingCalendarAfter',
         );
 
         foreach ($hooks as $hook) {
@@ -259,6 +261,38 @@ class Kloperations extends Module
         return new KlOperationExportService($this);
     }
 
+    public function getTimelineSummaryService()
+    {
+        return new KlOperationTimelineSummaryService($this);
+    }
+
+    public function hookDisplayAdminRoomsBookingCalendarAfter($params)
+    {
+        $summary = $this->getTimelineSummaryService()->buildSummary();
+        $resources = array();
+        foreach ($summary['resources'] as $resource) {
+            $resource['link_all'] = $this->buildConsoleLink($this->buildResourceFilterParams($resource['key']));
+            $resource['links'] = array(
+                'overdue' => $this->buildConsoleLink($this->buildResourceFilterParams($resource['key'], 'overdue')),
+                'today' => $this->buildConsoleLink($this->buildResourceFilterParams($resource['key'], 'today')),
+                'tomorrow' => $this->buildConsoleLink($this->buildResourceFilterParams($resource['key'], 'tomorrow')),
+            );
+            $resources[] = $resource;
+        }
+
+        $summary['resources'] = $resources;
+
+        $this->context->smarty->assign(array(
+            'kloperations_timeline_widget' => array(
+                'summary' => $summary,
+                'console_url' => $this->buildConsoleLink(),
+                'buckets' => array('overdue', 'today', 'tomorrow'),
+            ),
+        ));
+
+        return $this->display(__FILE__, 'views/templates/hook/admin_timeline_summary.tpl');
+    }
+
     private function installTab($className, $name, $parentClassName = 'AdminParentModules')
     {
         $idParent = 0;
@@ -302,6 +336,32 @@ class Kloperations extends Module
         if (!$exists) {
             Db::getInstance()->execute('ALTER TABLE `' . $tableName . '` ADD INDEX `' . $indexName . '` (' . $definition . ')');
         }
+    }
+
+    private function buildConsoleLink(array $params = array())
+    {
+        $link = $this->context && $this->context->link ? $this->context->link->getAdminLink(self::ADMIN_TAB_CLASS) : 'index.php?controller=' . self::ADMIN_TAB_CLASS;
+        if (empty($params)) {
+            return $link;
+        }
+
+        $separator = strpos($link, '?') === false ? '?' : '&';
+
+        return $link . $separator . http_build_query($params);
+    }
+
+    private function buildResourceFilterParams($resourceKey, $bucket = null)
+    {
+        $params = array('submitFilter' . KlOperationTask::$definition['table'] => 1);
+        if ($resourceKey !== 'general') {
+            $params[KlOperationTask::$definition['table'] . 'Filter_resource_type'] = $resourceKey;
+        }
+
+        if ($bucket) {
+            $params['kloperations_widget_bucket'] = $bucket;
+        }
+
+        return $params;
     }
 
     private function uninstallTab($className)
