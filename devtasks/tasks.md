@@ -13,5 +13,6 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Storytelling style layer](storytelling-style-layer.task.md) | 🚧 In progress | Introduce the dedicated storytelling stylesheet, critical CSS inline block and deferral hooks for non-critical scripts. |
 | [Storytelling hero media](storytelling-hero-media.task.md) | 🚧 In progress | Stand up the hero media pipeline, responsive `<picture>` markup and asset tooling for storytelling templates. |
 | [Storytelling availability CTAs](storytelling-availability-cta.task.md) | 🚧 In progress | Surface inquiry buttons on availability slots and prefill the inquiry form from slot metadata. |
+| [Storytelling package CTAs](storytelling-package-ctas.task.md) | 🚧 In progress | Group featured packages by scope and surface inquiry buttons on storytelling landings. |
 
 Update this table whenever task briefs change status or new tasks are added.

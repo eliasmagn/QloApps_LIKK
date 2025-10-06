@@ -115,19 +115,38 @@
           <h2 class="h2">{l s='Featured studio programmes' d='Shop.Theme.Kunstort'}</h2>
           <p class="text-muted">{l s='These packages spotlight atelier-focused residencies once editors flag them for promotion.' d='Shop.Theme.Kunstort'}</p>
         </header>
-        <div class="kl-storytelling__package-list">
-          {foreach from=$storytelling.packages item=package}
-            <article class="kl-storytelling__package">
-              <h3 class="h3">{$package.name|escape:'html':'UTF-8'}</h3>
-              {if $package.tagline}
-                <p class="text-muted">{$package.tagline|escape:'html':'UTF-8'}</p>
-              {/if}
-              {if $package.description}
-                <div class="kl-storytelling__package-description text-muted">
-                  {$package.description nofilter}
-                </div>
-              {/if}
-            </article>
+        <div class="kl-storytelling__package-groups">
+          {foreach from=$storytelling.packages item=packageGroup}
+            <div class="kl-storytelling__package-group" id="packages-{$packageGroup.anchor|escape:'html':'UTF-8'}">
+              <header class="kl-storytelling__package-group-header">
+                <h3 class="h3">{$packageGroup.label|escape:'html':'UTF-8'}</h3>
+                {if $packageGroup.intro}
+                  <p class="text-muted">{$packageGroup.intro|escape:'html':'UTF-8'}</p>
+                {/if}
+              </header>
+              <div class="kl-storytelling__package-list">
+                {foreach from=$packageGroup.packages item=package}
+                  <article class="kl-storytelling__package">
+                    <h4 class="h4">{$package.name|escape:'html':'UTF-8'}</h4>
+                    {if $package.tagline}
+                      <p class="text-muted">{$package.tagline|escape:'html':'UTF-8'}</p>
+                    {/if}
+                    {if $package.description}
+                      <div class="kl-storytelling__package-description text-muted">
+                        {$package.description nofilter}
+                      </div>
+                    {/if}
+                    {if $package.inquiry_url}
+                      <div class="kl-storytelling__package-actions">
+                        <a class="btn btn-primary" href="{$package.inquiry_url|escape:'html':'UTF-8'}">
+                          {$package.cta_label|escape:'html':'UTF-8'}
+                        </a>
+                      </div>
+                    {/if}
+                  </article>
+                {/foreach}
+              </div>
+            </div>
           {/foreach}
         </div>
       </section>
