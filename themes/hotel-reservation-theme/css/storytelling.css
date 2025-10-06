@@ -217,6 +217,31 @@
   gap: 0.5rem;
   padding-block: 0.3rem;
 }
+.kl-storytelling__profile-media {
+  background: var(--kl-storytelling-border);
+  border-radius: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: calc(-1 * clamp(1.25rem, 3vw, 1.75rem)) calc(-1 * clamp(1.25rem, 3vw, 1.75rem)) clamp(0.75rem, 2vw, 1.25rem);
+  overflow: hidden;
+}
+.kl-storytelling__profile-media picture {
+  display: block;
+}
+.kl-storytelling__profile-image {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+.kl-storytelling__profile-caption {
+  background: rgba(15, 31, 48, 0.55);
+  color: var(--kl-storytelling-hero-text);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin: 0;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(1.25rem, 3vw, 1.75rem);
+}
 .kl-storytelling__package-list {
   display: grid;
   gap: clamp(1.75rem, 4vw, 2.75rem);

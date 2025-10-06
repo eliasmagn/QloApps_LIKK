@@ -53,6 +53,10 @@ class HotelReservationSystemStorytellingPresenter
         ),
     );
 
+    const MEDIA_BREAKPOINTS = array(480, 768, 1200);
+
+    const MEDIA_SIZES_ATTRIBUTE = '(min-width: 75rem) 520px, (min-width: 48rem) 420px, 100vw';
+
     /**
      * @var Context
      */
@@ -358,18 +362,20 @@ class HotelReservationSystemStorytellingPresenter
      */
     protected function formatProfileForSection(array $profile)
     {
+        $story = isset($profile['story']) && is_array($profile['story']) ? $profile['story'] : array();
+
         $displayName = $profile['resource_code'];
-        if (!empty($profile['story']['headline'])) {
-            $displayName = trim($profile['story']['headline']);
+        if (!empty($story['headline'])) {
+            $displayName = trim($story['headline']);
         } elseif (!empty($profile['room_type_name'])) {
             $displayName = $profile['room_type_name'];
         }
 
         $excerptSource = '';
-        if (!empty($profile['story']['excerpt'])) {
-            $excerptSource = $profile['story']['excerpt'];
-        } elseif (!empty($profile['story']['body'])) {
-            $excerptSource = $profile['story']['body'];
+        if (!empty($story['excerpt'])) {
+            $excerptSource = $story['excerpt'];
+        } elseif (!empty($story['body'])) {
+            $excerptSource = $story['body'];
         }
         $excerptText = trim(strip_tags($excerptSource));
         if ($excerptText !== '') {
@@ -379,6 +385,7 @@ class HotelReservationSystemStorytellingPresenter
         $capacitySummary = $this->summariseCapacity($profile);
         $amenitySummary = $this->summariseAmenities($profile);
         $amenityDetails = isset($profile['amenities']) && is_array($profile['amenities']) ? $profile['amenities'] : array();
+        $media = $this->buildProfileMediaPayload($story, $displayName, $excerptText);
 
         return array(
             'id_kl_resource_profile' => (int) $profile['id_kl_resource_profile'],
@@ -390,7 +397,129 @@ class HotelReservationSystemStorytellingPresenter
             'timezone' => $profile['timezone'],
             'amenities' => $amenitySummary,
             'amenity_details' => $amenityDetails,
+            'media' => $media,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $story
+     * @param string $displayName
+     * @param string $excerpt
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function buildProfileMediaPayload(array $story, $displayName, $excerpt)
+    {
+        if (empty($story['image_reference'])) {
+            return null;
+        }
+
+        $normalizedReference = Tools::link_rewrite(trim((string) $story['image_reference']));
+        if ($normalizedReference === '') {
+            return null;
+        }
+
+        $absoluteBaseDir = rtrim(_PS_THEME_DIR_, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'storytelling'.DIRECTORY_SEPARATOR.'media'.DIRECTORY_SEPARATOR;
+        $relativeBaseDir = _THEME_DIR_.'storytelling/media/';
+
+        $formats = array(
+            array('extension' => 'webp', 'type' => 'image/webp'),
+            array('extension' => 'jpg', 'type' => 'image/jpeg'),
+        );
+
+        $sources = array();
+        $fallback = null;
+
+        foreach ($formats as $format) {
+            $srcsetEntries = array();
+
+            foreach (self::MEDIA_BREAKPOINTS as $width) {
+                $fileName = $normalizedReference.'-'.(int) $width.'.'.$format['extension'];
+                $absolutePath = $absoluteBaseDir.$fileName;
+                if (!Tools::file_exists_cache($absolutePath)) {
+                    continue;
+                }
+
+                $src = $this->context && $this->context->link
+                    ? $this->context->link->getMediaLink($relativeBaseDir.$fileName)
+                    : $relativeBaseDir.$fileName;
+
+                $srcsetEntries[] = array(
+                    'src' => $src,
+                    'descriptor' => $width.'w',
+                    'width' => (int) $width,
+                );
+            }
+
+            if (!$srcsetEntries) {
+                continue;
+            }
+
+            if ($format['extension'] === 'jpg' || $format['extension'] === 'jpeg') {
+                $lastEntry = $srcsetEntries[count($srcsetEntries) - 1];
+                $fallback = array(
+                    'src' => $lastEntry['src'],
+                    'width' => $lastEntry['width'],
+                );
+            }
+
+            $sources[] = array(
+                'type' => $format['type'],
+                'srcset' => $this->compileSrcsetString($srcsetEntries),
+                'sizes' => self::MEDIA_SIZES_ATTRIBUTE,
+            );
+        }
+
+        if (!$sources) {
+            return null;
+        }
+
+        if ($fallback === null) {
+            $firstSource = $sources[0]['srcset'];
+            $firstCandidate = trim(explode(',', $firstSource)[0]);
+            $parts = preg_split('/\s+/', $firstCandidate);
+            $fallback = array('src' => $parts[0]);
+        }
+
+        $altText = isset($story['alt_text']) ? trim(strip_tags($story['alt_text'])) : '';
+        if ($altText === '') {
+            $altText = $displayName;
+        }
+
+        $caption = null;
+        $excerptText = trim((string) $excerpt);
+        if ($altText !== '') {
+            $caption = $altText;
+        }
+        if ($excerptText !== '') {
+            $caption = Tools::truncate($excerptText, 200, '…');
+        }
+
+        return array(
+            'reference' => $normalizedReference,
+            'alt' => $altText,
+            'caption' => $caption,
+            'sources' => $sources,
+            'fallback' => $fallback,
+        );
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $entries
+     *
+     * @return string
+     */
+    protected function compileSrcsetString(array $entries)
+    {
+        $parts = array();
+        foreach ($entries as $entry) {
+            if (empty($entry['src']) || empty($entry['descriptor'])) {
+                continue;
+            }
+            $parts[] = $entry['src'].' '.$entry['descriptor'];
+        }
+
+        return implode(', ', $parts);
     }
 
     /**

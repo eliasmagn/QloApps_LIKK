@@ -22,6 +22,7 @@ Key characteristics of the fork:
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 - 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`), ateliers (`index.php?controller=ateliers`), gastronomy (`index.php?controller=gastronomy`) and programme (`index.php?controller=programme`) landings now pull taxonomy-driven sections, featured packages, grouped availability snapshots, amenity callouts and CMS-managed hero/highlight/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
+- 🖼️ **Hero media pipeline** – taxonomy stories expose hero media references and alt text; the theme ships `npm run build:hero-media` to emit responsive WebP/JPEG variants while storytelling templates render lazy-loaded `<picture>` elements with accessible captions.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
@@ -59,6 +60,10 @@ or output `<template data-kl-storytelling-defer data-src="/modules/feature.js" d
 - **Programme CMS keys:** `KL_STORY_PROGRAMME_HERO`, `KL_STORY_PROGRAMME_HIGHLIGHTS`, `KL_STORY_PROGRAMME_AVAILABILITY`, `KL_STORY_PROGRAMME_SCHEDULE`, `KL_STORY_PROGRAMME_INQUIRY`, `KL_STORY_PROGRAMME_FAQ`.
 
 Assign the configuration keys to CMS page IDs (per shop) to hydrate copy blocks. Any missing content gracefully falls back to taxonomy data and placeholder messaging, keeping both pages navigable during rollout rehearsals.
+
+### Hero media workflow
+
+Resource story records now surface `image_reference` slugs and `alt_text` copy. Drop full-resolution assets into `themes/hotel-reservation-theme/storytelling/media/source/`, run `npm install` (the first time) and then `npm run build:hero-media` from the theme directory to generate responsive WebP/JPEG variants in `storytelling/media/`. The presenter exposes hero media only when the `{reference}-{width}.{ext}` files exist, so templates fall back gracefully if imagery has not been processed. Smarty renders the payload as a lazy-loaded `<picture>` element with a figcaption derived from the story metadata, keeping accessibility descriptions aligned with editorial updates.
 
 ### Legacy PrestaShop Webservice
 

@@ -1,0 +1,13 @@
+{
+  "name": "hotel-reservation-theme",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:hero-media": "node tools/build-hero-media.mjs"
+  },
+  "dependencies": {
+    "globby": "^13.2.2",
+    "sharp": "^0.33.2"
+  }
+}

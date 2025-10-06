@@ -11,5 +11,6 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Gastronomy storytelling landing](storytelling-gastronomy.task.md) | 🚧 In progress | Publish the dining-focused storytelling page with amenity callouts, CMS slots and inquiry CTAs. |
 | [Programme storytelling landing](storytelling-programme.task.md) | ✅ Complete | Ship the programme-focused storytelling page with grouped availability, CMS highlights and inquiry pathways. |
 | [Storytelling style layer](storytelling-style-layer.task.md) | 🚧 In progress | Introduce the dedicated storytelling stylesheet, critical CSS inline block and deferral hooks for non-critical scripts. |
+| [Storytelling hero media](storytelling-hero-media.task.md) | 🚧 In progress | Stand up the hero media pipeline, responsive `<picture>` markup and asset tooling for storytelling templates. |
 
 Update this table whenever task briefs change status or new tasks are added.
