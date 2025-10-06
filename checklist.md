@@ -39,6 +39,7 @@
   - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
   - [x] Wired `KLStoryAvailabilityCache` so storytelling availability snapshots purge when bookings, inquiries or room disable ranges mutate, with cron-safe rebuilds validated by unit tests.
+- [x] Added PHPUnit coverage and Panther smoke tests that exercise storytelling presenter payloads, residencies template rendering and Lighthouse-aligned navigation timings.
 
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.
@@ -56,7 +57,7 @@
   - [x] Surface pricing highlights on storytelling package cards by caching canonical quotes from `KLQuotePricingEngine`.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
-  - [ ] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
+  - [x] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
 
 ## Issues
 - [x] Align Composer's PHP requirement with the documented PHP 8 support window so installs work on current runtimes.

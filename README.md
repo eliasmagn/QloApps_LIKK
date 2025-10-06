@@ -29,6 +29,7 @@ Key characteristics of the fork:
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 - 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for manual task authoring, assignment workflows and mobile checklists.
 - 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
+- ✅ **Storytelling test harness** – dedicated PHPUnit and Panther suites guard the presenter payloads, residency template rendering and Lighthouse-aligned navigation timings.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
 
@@ -156,6 +157,18 @@ For day-to-day development run:
 The helper script creates (or reuses) a local Python virtual environment at `.venv`, installs Composer dependencies, warns if the application still needs to be installed, and finally starts the PHP built-in server on `http://127.0.0.1:8000`. Override the host or port by exporting `HOST`/`PORT` before executing the script. The bundled development router stays compatible with PHP 7.4+, so the server can run on environments that have not yet upgraded to PHP 8.
 
 After installation you can log into the admin back office at `/admin` (rename the directory for security). The module catalogue will no longer attempt to connect to external stores; only locally available modules are listed.
+
+### Testing
+
+Install the test dependencies and execute the suites from the `tests/` directory:
+
+```bash
+cd tests
+composer install
+./vendor/bin/phpunit
+```
+
+Run specific suites with `./vendor/bin/phpunit --testsuite Unit` or `./vendor/bin/phpunit --testsuite Storytelling`. Set `PANTHER_NO_WEBDRIVER=1` if Chrome or Chromedriver are unavailable to skip the Panther UI checks; otherwise the storytelling suite boots a lightweight PHP server that the browser exercises while asserting navigation timing thresholds.
 
 ## Known issues
 

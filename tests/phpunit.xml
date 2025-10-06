@@ -6,5 +6,8 @@
         <testsuite name="Unit">
             <directory>Unit</directory>
         </testsuite>
+        <testsuite name="Storytelling">
+            <directory>Storytelling</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

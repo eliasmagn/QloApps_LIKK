@@ -1,5 +1,7 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+
 if (!defined('_PS_ROOT_DIR_')) {
     define('_PS_ROOT_DIR_', dirname(dirname(__DIR__)));
 }
@@ -97,7 +99,7 @@ class StoryPresenterTestDouble extends HotelReservationSystemStorytellingPresent
     }
 }
 
-class KLStoryAvailabilityCacheTest extends PHPUnit_Framework_TestCase
+class KLStoryAvailabilityCacheTest extends TestCase
 {
     protected function setUp()
     {
