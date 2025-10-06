@@ -21,6 +21,8 @@ class HotelReservationSystemStorytellingPresenter
 {
     const AVAILABILITY_CACHE_TTL = 900;
 
+    const PACKAGE_HIGHLIGHT_CACHE_TTL = 1800;
+
     const CMS_SLOT_KEYS = array(
         'residencies' => array(
             'hero' => 'KL_STORY_RESIDENCIES_HERO',
@@ -71,6 +73,11 @@ class HotelReservationSystemStorytellingPresenter
      * @var array<string, array<int, array<string, mixed>>> cache of published profiles per lang/shop
      */
     private $profileCache = array();
+
+    /**
+     * @var array<string, array<string, mixed>> cache of package highlight payloads per lang/shop/package
+     */
+    private $packageHighlightCache = array();
 
     /**
      * @var array<int, int> cache of active room counts per product id
@@ -764,8 +771,18 @@ class HotelReservationSystemStorytellingPresenter
      */
     protected function getPublishedProfiles($idLang, $idShop)
     {
+        $idLang = (int) $idLang;
+        $idShop = (int) $idShop;
+
+        $cacheKey = $idLang.'-'.$idShop;
+        if (isset($this->profileCache[$cacheKey])) {
+            return $this->profileCache[$cacheKey];
+        }
+
         $profiles = KLResourceProfile::getPublishedProfilesWithDetails($idLang, $idShop);
         if (!$profiles) {
+            $this->profileCache[$cacheKey] = array();
+
             return array();
         }
 
@@ -791,6 +808,8 @@ class HotelReservationSystemStorytellingPresenter
             }
             unset($profile);
         }
+
+        $this->profileCache[$cacheKey] = $profiles;
 
         return $profiles;
     }
@@ -1291,6 +1310,7 @@ class HotelReservationSystemStorytellingPresenter
     {
         $query = new DbQuery();
         $query->select('p.`id_kl_package`, p.`package_code`, p.`resource_kind_scope`');
+        $query->select('p.`id_kl_rate_plan`, p.`duration_mode`, p.`duration_value`');
         $query->select('pl.`name`, pl.`tagline`, pl.`description`');
         $query->from('kl_package', 'p');
         $query->innerJoin('kl_package_lang', 'pl', 'p.`id_kl_package` = pl.`id_kl_package` AND pl.`id_lang` = '.(int) $idLang);
@@ -1312,6 +1332,9 @@ class HotelReservationSystemStorytellingPresenter
                 'tagline' => $row['tagline'],
                 'description' => $row['description'],
                 'resource_kind_scope' => $this->decodeJsonArray($row['resource_kind_scope']),
+                'id_kl_rate_plan' => isset($row['id_kl_rate_plan']) ? (int) $row['id_kl_rate_plan'] : 0,
+                'duration_mode' => isset($row['duration_mode']) ? $row['duration_mode'] : null,
+                'duration_value' => isset($row['duration_value']) ? (int) $row['duration_value'] : null,
             );
         }
 
@@ -1441,7 +1464,9 @@ class HotelReservationSystemStorytellingPresenter
                     $package,
                     $scope,
                     $baseParameters,
-                    $link
+                    $link,
+                    $idLang,
+                    $idShop
                 );
             }
         }
@@ -1469,10 +1494,12 @@ class HotelReservationSystemStorytellingPresenter
      * @param string|null $scope
      * @param array<string, string> $baseParameters
      * @param Link|null $link
+     * @param int $idLang
+     * @param int $idShop
      *
      * @return array<string, mixed>
      */
-    protected function buildPackageEntryForStorytelling(array $package, $scope, array $baseParameters, $link)
+    protected function buildPackageEntryForStorytelling(array $package, $scope, array $baseParameters, $link, $idLang, $idShop)
     {
         $translator = $this->getTranslator();
 
@@ -1512,7 +1539,509 @@ class HotelReservationSystemStorytellingPresenter
             ? $translator->trans('Request this package', array(), 'Shop.Theme.Kunstort')
             : 'Request this package';
 
+        $entry['highlight'] = $this->resolvePackageHighlight($package, $idLang, $idShop);
+
         return $entry;
+    }
+
+    /**
+     * @param array<string, mixed> $package
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @return array<string, mixed>
+     */
+    protected function resolvePackageHighlight(array $package, $idLang, $idShop)
+    {
+        $translator = $this->getTranslator();
+
+        $message = $translator
+            ? $translator->trans('Pricing preview coming soon.', array(), 'Shop.Theme.Kunstort')
+            : 'Pricing preview coming soon.';
+
+        $baseHighlight = array(
+            'status' => 'pending',
+            'message' => $message,
+            'warnings' => array(),
+            'generated_at' => date(DATE_ATOM),
+        );
+
+        $idPackage = isset($package['id_kl_package']) ? (int) $package['id_kl_package'] : 0;
+        if ($idPackage <= 0) {
+            return $baseHighlight;
+        }
+
+        $cacheKey = $this->getPackageHighlightCacheKey($idLang, $idShop, $idPackage);
+        if ($cacheKey !== '' && isset($this->packageHighlightCache[$cacheKey])) {
+            return $this->packageHighlightCache[$cacheKey];
+        }
+
+        if ($cacheKey !== '') {
+            $cached = $this->retrievePackageHighlightCache($cacheKey);
+            if ($cached !== null) {
+                $this->packageHighlightCache[$cacheKey] = $cached;
+
+                return $cached;
+            }
+        }
+
+        $highlight = $this->buildPackageHighlightPayload($package, $idLang, $idShop, $baseHighlight);
+
+        if ($cacheKey !== '') {
+            $this->packageHighlightCache[$cacheKey] = $highlight;
+            $this->storePackageHighlightCache($cacheKey, $highlight);
+        }
+
+        return $highlight;
+    }
+
+    /**
+     * @param array<string, mixed> $package
+     * @param int $idLang
+     * @param int $idShop
+     * @param array<string, mixed> $fallback
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildPackageHighlightPayload(array $package, $idLang, $idShop, array $fallback)
+    {
+        $translator = $this->getTranslator();
+
+        $idRatePlan = isset($package['id_kl_rate_plan']) ? (int) $package['id_kl_rate_plan'] : 0;
+        if ($idRatePlan <= 0) {
+            return $fallback;
+        }
+
+        $plan = new KLRatePlan($idRatePlan, $idLang);
+        if (!Validate::isLoadedObject($plan) || !$plan->is_active) {
+            return $fallback;
+        }
+
+        $idProfile = $this->findHighlightResourceProfileId($package, $plan, $idLang, $idShop);
+        if ($idProfile <= 0) {
+            $fallback['message'] = $translator
+                ? $translator->trans('Pricing preview activates once sample resources are published.', array(), 'Shop.Theme.Kunstort')
+                : 'Pricing preview activates once sample resources are published.';
+
+            return $fallback;
+        }
+
+        $stay = $this->buildCanonicalStayWindow($package, $plan);
+
+        try {
+            $quote = KLQuotePricingEngine::generateQuote(array(
+                'id_kl_rate_plan' => (int) $plan->id,
+                'id_kl_package' => isset($package['id_kl_package']) ? (int) $package['id_kl_package'] : 0,
+                'id_kl_resource_profile' => $idProfile,
+                'check_in' => $stay['check_in'],
+                'check_out' => $stay['check_out'],
+                'id_lang' => (int) $idLang,
+            ));
+        } catch (Exception $exception) {
+            $fallback['status'] = 'error';
+            $fallback['message'] = $translator
+                ? $translator->trans('Pricing preview is temporarily unavailable.', array(), 'Shop.Theme.Kunstort')
+                : 'Pricing preview is temporarily unavailable.';
+
+            return $fallback;
+        }
+
+        $price = $this->formatMinorCurrency(
+            isset($quote['gross_total_minor']) ? (int) $quote['gross_total_minor'] : 0,
+            isset($quote['currency_iso_code']) ? (string) $quote['currency_iso_code'] : '',
+            $idShop
+        );
+
+        $headline = $translator
+            ? $translator->trans('Starting from %price%', array('%price%' => $price['formatted']), 'Shop.Theme.Kunstort')
+            : 'Starting from '.$price['formatted'];
+
+        $nights = isset($quote['nights']) ? (int) $quote['nights'] : 0;
+        if ($nights <= 0) {
+            $nights = isset($stay['nights']) ? (int) $stay['nights'] : 1;
+        }
+        if ($nights <= 0) {
+            $nights = 1;
+        }
+
+        $planLabel = '';
+        if (isset($quote['plan']) && is_array($quote['plan'])) {
+            if (!empty($quote['plan']['name'])) {
+                $planLabel = (string) $quote['plan']['name'];
+            } elseif (!empty($quote['plan']['plan_code'])) {
+                $planLabel = (string) $quote['plan']['plan_code'];
+            }
+        }
+        $planLabel = trim($planLabel);
+
+        if ($planLabel !== '') {
+            $sampleLabel = $translator
+                ? $translator->trans(
+                    'Sample stay: %nights%-night stay on the %plan% plan.',
+                    array(
+                        '%nights%' => $nights,
+                        '%plan%' => $planLabel,
+                    ),
+                    'Shop.Theme.Kunstort'
+                )
+                : sprintf('Sample stay: %d-night stay on the %s plan.', $nights, $planLabel);
+        } else {
+            $sampleLabel = $translator
+                ? $translator->trans(
+                    'Sample stay: %nights%-night stay.',
+                    array('%nights%' => $nights),
+                    'Shop.Theme.Kunstort'
+                )
+                : sprintf('Sample stay: %d-night stay.', $nights);
+        }
+
+        $inclusions = $this->summariseHighlightInclusions($quote);
+        $inclusionsLabel = '';
+        if (!empty($inclusions)) {
+            $inclusionsLabel = $translator
+                ? $translator->trans(
+                    'Includes: %list%',
+                    array('%list%' => implode(', ', $inclusions)),
+                    'Shop.Theme.Kunstort'
+                )
+                : 'Includes: '.implode(', ', $inclusions);
+        }
+
+        $warningLabel = '';
+        if (!empty($quote['warnings'])) {
+            $warningLabel = $translator
+                ? $translator->trans('Additional conditions apply—our team will confirm the final quote.', array(), 'Shop.Theme.Kunstort')
+                : 'Additional conditions apply—our team will confirm the final quote.';
+        }
+
+        return array(
+            'status' => 'ready',
+            'message' => '',
+            'headline' => $headline,
+            'price' => $price,
+            'sample_label' => $sampleLabel,
+            'inclusions' => $inclusions,
+            'inclusions_label' => $inclusionsLabel,
+            'warning_label' => $warningLabel,
+            'warnings' => isset($quote['warnings']) && is_array($quote['warnings']) ? $quote['warnings'] : array(),
+            'generated_at' => date(DATE_ATOM),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $package
+     * @param KLRatePlan $plan
+     * @param int $idLang
+     * @param int $idShop
+     *
+     * @return int
+     */
+    protected function findHighlightResourceProfileId(array $package, KLRatePlan $plan, $idLang, $idShop)
+    {
+        $profiles = $this->getPublishedProfiles($idLang, $idShop);
+        if (empty($profiles)) {
+            return 0;
+        }
+
+        $scopes = array();
+        if (!empty($package['resource_kind_scope']) && is_array($package['resource_kind_scope'])) {
+            foreach ($package['resource_kind_scope'] as $scope) {
+                $scope = trim((string) $scope);
+                if ($scope !== '') {
+                    $scopes[] = $scope;
+                }
+            }
+        }
+
+        if (!$scopes) {
+            $planScopes = $plan->getResourceKindScope();
+            if (!empty($planScopes)) {
+                foreach ($planScopes as $scope) {
+                    $scope = trim((string) $scope);
+                    if ($scope !== '') {
+                        $scopes[] = $scope;
+                    }
+                }
+            }
+        }
+
+        if (!$scopes) {
+            $scopes = KLResourceProfile::getSupportedResourceKinds();
+        }
+
+        foreach ($scopes as $scope) {
+            $idProfile = $this->pickProfileForHighlight($profiles, (string) $scope);
+            if ($idProfile > 0) {
+                return $idProfile;
+            }
+        }
+
+        return $this->pickProfileForHighlight($profiles, null);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $profiles
+     * @param string|null $resourceKind
+     *
+     * @return int
+     */
+    protected function pickProfileForHighlight(array $profiles, $resourceKind)
+    {
+        foreach ($profiles as $profile) {
+            $profileKind = isset($profile['resource_kind']) ? (string) $profile['resource_kind'] : '';
+            if ($resourceKind !== null && $profileKind !== (string) $resourceKind) {
+                continue;
+            }
+            if (empty($profile['is_bookable'])) {
+                continue;
+            }
+            if (empty($profile['id_kl_resource_profile'])) {
+                continue;
+            }
+            if (empty($profile['id_product'])) {
+                continue;
+            }
+
+            return (int) $profile['id_kl_resource_profile'];
+        }
+
+        return 0;
+    }
+
+    /**
+     * @param array<string, mixed> $package
+     * @param KLRatePlan $plan
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildCanonicalStayWindow(array $package, KLRatePlan $plan)
+    {
+        $durationMode = isset($package['duration_mode']) ? (string) $package['duration_mode'] : '';
+        $durationValue = isset($package['duration_value']) ? (int) $package['duration_value'] : 0;
+
+        $nights = $this->resolveCanonicalNights($durationMode, $durationValue, $plan);
+
+        try {
+            $start = new DateTimeImmutable('first day of next month');
+        } catch (Exception $exception) {
+            $start = new DateTimeImmutable('now');
+        }
+
+        $checkIn = $start->format('Y-m-d');
+        $checkOut = $start->add(new DateInterval('P'.$nights.'D'))->format('Y-m-d');
+
+        return array(
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'nights' => $nights,
+        );
+    }
+
+    /**
+     * @param string $durationMode
+     * @param int $durationValue
+     * @param KLRatePlan $plan
+     *
+     * @return int
+     */
+    protected function resolveCanonicalNights($durationMode, $durationValue, KLRatePlan $plan)
+    {
+        $value = (int) $durationValue;
+
+        switch ($durationMode) {
+            case 'nights':
+                $nights = max(1, $value);
+                break;
+            case 'days':
+                $nights = max(1, $value > 0 ? $value - 1 : 0);
+                break;
+            case 'weeks':
+                $nights = max(1, $value * 7);
+                break;
+            default:
+                if ($plan->pricing_method === 'weekly') {
+                    $nights = 7;
+                } elseif ($plan->pricing_method === 'nightly') {
+                    $nights = max(1, $value);
+                } else {
+                    $nights = max(1, $value);
+                }
+        }
+
+        return $nights;
+    }
+
+    /**
+     * @param array<string, mixed> $quote
+     *
+     * @return array<int, string>
+     */
+    protected function summariseHighlightInclusions(array $quote)
+    {
+        if (empty($quote['component_applications']) || !is_array($quote['component_applications'])) {
+            return array();
+        }
+
+        $labels = $this->getComponentTypeLabels();
+        $inclusions = array();
+
+        foreach ($quote['component_applications'] as $component) {
+            if (!is_array($component)) {
+                continue;
+            }
+
+            $isOptional = !empty($component['is_optional']);
+            $selected = isset($component['selected']) ? (bool) $component['selected'] : true;
+            if ($isOptional && !$selected) {
+                continue;
+            }
+
+            $type = '';
+            if (isset($component['metadata']) && is_array($component['metadata']) && !empty($component['metadata']['component_type'])) {
+                $type = Tools::strtolower((string) $component['metadata']['component_type']);
+            } elseif (!empty($component['label'])) {
+                $type = Tools::strtolower((string) $component['label']);
+            }
+
+            $label = '';
+            if ($type !== '' && isset($labels[$type])) {
+                $label = $labels[$type];
+            } elseif ($type !== '') {
+                $label = Tools::ucfirst(str_replace('_', ' ', $type));
+            }
+
+            if ($label === '' && !empty($component['label'])) {
+                $label = (string) $component['label'];
+            }
+
+            $label = trim($label);
+            if ($label === '') {
+                continue;
+            }
+
+            $inclusions[$label] = true;
+        }
+
+        return array_keys($inclusions);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getComponentTypeLabels()
+    {
+        $translator = $this->getTranslator();
+
+        return array(
+            'lodging' => $translator
+                ? $translator->trans('Residency lodging', array(), 'Shop.Theme.Kunstort')
+                : 'Residency lodging',
+            'atelier' => $translator
+                ? $translator->trans('Atelier or studio session', array(), 'Shop.Theme.Kunstort')
+                : 'Atelier or studio session',
+            'meal' => $translator
+                ? $translator->trans('Meal or catering service', array(), 'Shop.Theme.Kunstort')
+                : 'Meal or catering service',
+            'experience' => $translator
+                ? $translator->trans('Experience or excursion', array(), 'Shop.Theme.Kunstort')
+                : 'Experience or excursion',
+            'custom' => $translator
+                ? $translator->trans('Custom component', array(), 'Shop.Theme.Kunstort')
+                : 'Custom component',
+        );
+    }
+
+    /**
+     * @param int $amountMinor
+     * @param string $currencyIso
+     * @param int $idShop
+     *
+     * @return array<string, mixed>
+     */
+    protected function formatMinorCurrency($amountMinor, $currencyIso, $idShop)
+    {
+        $amountMinor = (int) $amountMinor;
+        $currencyIso = (string) $currencyIso;
+        $idShop = (int) $idShop;
+
+        $idCurrency = 0;
+        if ($currencyIso !== '') {
+            $idCurrency = (int) Currency::getIdByIsoCode($currencyIso, $idShop > 0 ? $idShop : null);
+            if (!$idCurrency) {
+                $idCurrency = (int) Currency::getIdByIsoCode($currencyIso);
+            }
+        }
+
+        if (!$idCurrency) {
+            $idCurrency = (int) Configuration::get('PS_CURRENCY_DEFAULT');
+        }
+
+        $currency = Currency::getCurrencyInstance($idCurrency);
+        $amount = $amountMinor / 100;
+
+        return array(
+            'amount_minor' => $amountMinor,
+            'amount' => $amount,
+            'currency_iso_code' => $currency ? (string) $currency->iso_code : $currencyIso,
+            'formatted' => Tools::displayPrice($amount, $currency),
+        );
+    }
+
+    /**
+     * @param int $idLang
+     * @param int $idShop
+     * @param int $idPackage
+     *
+     * @return string
+     */
+    protected function getPackageHighlightCacheKey($idLang, $idShop, $idPackage)
+    {
+        $idPackage = (int) $idPackage;
+        if ($idPackage <= 0) {
+            return '';
+        }
+
+        return 'KL_STORY_PACKAGE_HIGHLIGHT_'.(int) $idLang.'_'.(int) $idShop.'_'.$idPackage;
+    }
+
+    /**
+     * @param string $cacheKey
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function retrievePackageHighlightCache($cacheKey)
+    {
+        if ($cacheKey === '' || !Cache::isStored($cacheKey)) {
+            return null;
+        }
+
+        $cached = Cache::retrieve($cacheKey);
+        if (!is_array($cached) || !isset($cached['expires_at']) || !isset($cached['payload'])) {
+            return null;
+        }
+        if ($cached['expires_at'] < time()) {
+            return null;
+        }
+
+        return is_array($cached['payload']) ? $cached['payload'] : null;
+    }
+
+    /**
+     * @param string $cacheKey
+     * @param array<string, mixed> $payload
+     *
+     * @return void
+     */
+    protected function storePackageHighlightCache($cacheKey, array $payload)
+    {
+        if ($cacheKey === '') {
+            return;
+        }
+
+        Cache::store($cacheKey, array(
+            'expires_at' => time() + self::PACKAGE_HIGHLIGHT_CACHE_TTL,
+            'payload' => $payload,
+        ));
     }
 
     /**

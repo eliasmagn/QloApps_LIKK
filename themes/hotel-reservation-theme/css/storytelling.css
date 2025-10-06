@@ -290,6 +290,29 @@
 .kl-storytelling__package h4 {
   margin-bottom: 0.5rem;
 }
+.kl-storytelling__package-highlight {
+  background-color: rgba(44, 123, 229, 0.06);
+  border-radius: 0.75rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+}
+.kl-storytelling__package-price {
+  color: var(--kl-storytelling-accent-dark);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.kl-storytelling__package-sample,
+.kl-storytelling__package-inclusions {
+  margin-bottom: 0.35rem;
+}
+.kl-storytelling__package-warning {
+  color: #b45309;
+  font-size: 0.9375rem;
+  margin-bottom: 0;
+}
+.kl-storytelling__package-message {
+  margin: 0.5rem 0 0;
+}
 .kl-storytelling__package-actions {
   margin-top: clamp(0.75rem, 2vw, 1.25rem);
 }
