@@ -37,6 +37,7 @@ class InquiryControllerCore extends FrontController
         $this->addJS(_THEME_JS_DIR_.'inquiry-form.js');
 
         $resourceKindOptions = $this->getResourceKindOptions();
+        $this->bootstrapFormValues($resourceKindOptions);
 
         $this->context->smarty->assign(array(
             'form_values' => $this->formValues,
@@ -116,6 +117,68 @@ class InquiryControllerCore extends FrontController
             'consent_data_usage' => Tools::getValue('consent_data_usage') ? true : false,
             'consent_newsletter' => Tools::getValue('consent_newsletter') ? true : false,
         );
+
+        return $values;
+    }
+
+    /**
+     * @param array<string, string> $resourceKindOptions
+     *
+     * @return void
+     */
+    protected function bootstrapFormValues(array $resourceKindOptions)
+    {
+        $defaults = array(
+            'guest_name' => '',
+            'guest_email' => '',
+            'guest_phone' => '',
+            'programme_focus' => '',
+            'arrival_date' => '',
+            'departure_date' => '',
+            'date_flexibility' => false,
+            'party_size_adults' => 1,
+            'party_size_children' => 0,
+            'resource_interests' => array(),
+            'resource_notes' => '',
+            'package_preferences' => array(),
+            'additional_notes' => '',
+            'consent_data_usage' => false,
+            'consent_newsletter' => false,
+        );
+
+        $prefill = $this->getQueryPrefillValues($resourceKindOptions);
+
+        $this->formValues = array_merge($defaults, $prefill, $this->formValues);
+    }
+
+    /**
+     * @param array<string, string> $resourceKindOptions
+     *
+     * @return array<string, mixed>
+     */
+    protected function getQueryPrefillValues(array $resourceKindOptions)
+    {
+        $values = array();
+
+        $arrival = Tools::getValue('arrival_date');
+        if ($arrival && Validate::isDateFormat($arrival)) {
+            $values['arrival_date'] = $arrival;
+        }
+
+        $departure = Tools::getValue('departure_date');
+        if ($departure && Validate::isDateFormat($departure)) {
+            $values['departure_date'] = $departure;
+        }
+
+        $resourceKind = Tools::getValue('resource_kind');
+        if ($resourceKind && is_string($resourceKind) && isset($resourceKindOptions[$resourceKind])) {
+            $values['resource_interests'] = array($resourceKind);
+        }
+
+        $resourceCode = trim((string) Tools::getValue('resource_code'));
+        if ($resourceCode !== '') {
+            $values['resource_notes'] = $resourceCode;
+        }
 
         return $values;
     }

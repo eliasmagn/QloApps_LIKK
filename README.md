@@ -21,7 +21,7 @@ Key characteristics of the fork:
 - 🧾 **Taxonomy editor enhancements** – amenity assignments, inline capacity validation, change history snapshots and residency showcase previews live directly inside the Resource Profiles form so staff can review impact before publishing.
 - 🏷️ **Amenity catalogue manager** – a new Catalog → Amenities screen lets staff create reusable amenity codes, toggle availability and capture icon/translation metadata in preparation for resource-level linking.
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
-- 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`), ateliers (`index.php?controller=ateliers`), gastronomy (`index.php?controller=gastronomy`) and programme (`index.php?controller=programme`) landings now pull taxonomy-driven sections, featured packages, grouped availability snapshots, amenity callouts and CMS-managed hero/highlight/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
+- 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`), ateliers (`index.php?controller=ateliers`), gastronomy (`index.php?controller=gastronomy`) and programme (`index.php?controller=programme`) landings now pull taxonomy-driven sections, featured packages, grouped availability snapshots, amenity callouts, slot-level inquiry CTAs and CMS-managed hero/highlight/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
 - 🖼️ **Hero media pipeline** – taxonomy stories expose hero media references and alt text; the theme ships `npm run build:hero-media` to emit responsive WebP/JPEG variants while storytelling templates render lazy-loaded `<picture>` elements with accessible captions.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
@@ -53,6 +53,8 @@ window.klStorytellingDeferQueue.push({ src: 'https://example.test/analytics.js',
 ```
 
 or output `<template data-kl-storytelling-defer data-src="/modules/feature.js" data-kl-async>` from a module hooked into `displayStorytellingScripts`. The helper processes queued entries after the `load` event, appending scripts with `defer`/`async` semantics so analytics widgets, galleries and other enhancements stay out of the critical rendering path.
+
+Availability snapshots surface CTA buttons beside each slot; the presenter now emits slot-specific inquiry URLs so clicking a CTA opens the inquiry form with arrival/departure fields, resource kind and the highlighted resource code already filled in.
 
 - **Residencies CMS keys:** `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`.
 - **Ateliers CMS keys:** `KL_STORY_ATELIERS_HERO`, `KL_STORY_ATELIERS_AVAILABILITY`, `KL_STORY_ATELIERS_PRACTICAL`, `KL_STORY_ATELIERS_FAQ`, `KL_STORY_ATELIERS_TESTIMONIALS`.

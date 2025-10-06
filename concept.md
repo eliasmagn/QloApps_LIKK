@@ -37,6 +37,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - Storytelling landings now share a dedicated SCSS/CSS bundle with inline critical hero rules and a lightweight deferral helper so responsive layouts load quickly while non-essential scripts queue behind the new `klStorytellingDefer` API.
 - Storytelling templates now hydrate hero media from taxonomy stories, outputting responsive `<picture>` blocks with lazy-loaded WebP/JPEG variants generated via `npm run build:hero-media`; captions and alt text stay in sync with `KLResourceStory` metadata so accessibility guidance travels with editorial copy.
 - The residencies landing availability snapshot now queries live bookings and maintenance blocks, surfaces the earliest openings per resource kind and caches the summary for 15 minutes so visitors see timely inquiry prompts without hammering the booking tables.
+- Availability slots across residencies, ateliers, gastronomy and programme storytelling landings now display per-slot inquiry CTAs that deep-link into the inquiry form with arrival/departure dates, resource kind and resource codes prefilled.
 - Legacy PrestaShop webservice entry points are stubbed; `/webservice` responds with HTTP 410 and no admin UI exposes API keys.
 - A repo-level `start_dev.sh` script provisions a Python virtualenv for tooling, keeps Composer dependencies current, and boots the PHP built-in server for local testing.
 
