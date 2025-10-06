@@ -56,7 +56,7 @@
   - [x] Group featured packages by resource scope, add inquiry CTA buttons per card and provide a campus-wide fallback for unscoped bundles.
   - [x] Surface pricing highlights on storytelling package cards by caching canonical quotes from `KLQuotePricingEngine`.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
-  - [ ] Wire CMS content keys, testimonial feed and FAQ data sources.
+  - [x] Wire CMS content keys, testimonial feed and FAQ data sources via cached JSON actions and front-end hydration hooks.
   - [x] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
 
 ## Issues

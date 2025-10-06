@@ -15,6 +15,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Storytelling availability CTAs](storytelling-availability-cta.task.md) | 🚧 In progress | Surface inquiry buttons on availability slots and prefill the inquiry form from slot metadata. |
 | [Storytelling package CTAs](storytelling-package-ctas.task.md) | 🚧 In progress | Group featured packages by scope and surface inquiry buttons on storytelling landings. |
 | [Storytelling pricing highlights](storytelling-pricing-highlights.task.md) | 🚧 In progress | Expose canonical starting rates and inclusions on storytelling package cards. |
+| [Storytelling content API](storytelling-content-api.task.md) | 🚧 In progress | Expose cached testimonials/FAQ JSON endpoints and hydrate storytelling slots via JS. |
 | [Storytelling availability cache invalidation](storytelling-cache-invalidation.task.md) | ✅ Complete | Purge storytelling availability caches whenever availability inputs change. |
 | [Storytelling presenter test hardening](storytelling-presenter-tests.task.md) | ✅ Complete | Expand presenter unit coverage and Panther UI checks for storytelling landings. |
 

@@ -20,7 +20,10 @@
 
 {block name='storytelling_programme'}
   {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
-  <div class="kl-storytelling kl-storytelling--programme">
+  <div class="kl-storytelling kl-storytelling--programme"
+    {if isset($storytelling.resource_key) && $storytelling.resource_key} data-kl-storytelling-resource="{$storytelling.resource_key|escape:'html':'UTF-8'}"{/if}
+    {if isset($storytelling.cms_endpoints.testimonials) && $storytelling.cms_endpoints.testimonials} data-kl-storytelling-testimonials-endpoint="{$storytelling.cms_endpoints.testimonials|escape:'html':'UTF-8'}"{/if}
+    {if isset($storytelling.cms_endpoints.faq) && $storytelling.cms_endpoints.faq} data-kl-storytelling-faq-endpoint="{$storytelling.cms_endpoints.faq|escape:'html':'UTF-8'}"{/if}>
     <section class="kl-storytelling__hero">
       <div class="kl-storytelling__hero-copy">
         {if isset($storytelling.cms.hero) && $storytelling.cms.hero}
@@ -250,7 +253,7 @@
         <header class="kl-storytelling__section-header">
           <h2 class="h2">{l s='Frequently asked questions' d='Shop.Theme.Kunstort'}</h2>
         </header>
-        <div class="panel-group" id="kl-storytelling-programme-faq" role="tablist">
+        <div class="panel-group" id="kl-storytelling-programme-faq" role="tablist" data-kl-storytelling-slot="faq">
           {$storytelling.cms.faq.content nofilter}
         </div>
       </section>
