@@ -29,6 +29,7 @@ Key characteristics of the fork:
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 - 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for manual task authoring, assignment workflows and mobile checklists.
+- 📊 **Timeline operations widget** – the admin booking timeline now surfaces a summary widget that groups overdue, today and tomorrow workloads per resource kind with quick links into the Operations console for follow-up.
 - 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
 - ✅ **Storytelling test harness** – dedicated PHPUnit and Panther suites guard the presenter payloads, residency template rendering and Lighthouse-aligned navigation timings.
 

@@ -39,6 +39,9 @@
   - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
   - [x] Wired `KLStoryAvailabilityCache` so storytelling availability snapshots purge when bookings, inquiries or room disable ranges mutate, with cron-safe rebuilds validated by unit tests.
+- [x] Embedded an operations summary widget on the booking timeline.
+  - [x] Aggregate pending and in-progress tasks into overdue, today and tomorrow buckets per resource kind via a dedicated timeline summary service.
+  - [x] Inject the widget through `displayAdminRoomsBookingCalendarAfter` with console quick links and Panther acceptance coverage ensuring it renders when `kloperations` is enabled.
 - [x] Added PHPUnit coverage and Panther smoke tests that exercise storytelling presenter payloads, residencies template rendering and Lighthouse-aligned navigation timings.
 - [x] Finalised the storytelling content API payload (resource/resource_groups metadata) and hardened the front-end hydration helper so templates consume the cached testimonials/FAQ endpoints consistently.
 

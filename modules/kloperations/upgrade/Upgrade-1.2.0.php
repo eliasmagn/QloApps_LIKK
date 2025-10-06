@@ -13,5 +13,11 @@ function upgrade_module_1_2_0(Kloperations $module)
         Configuration::updateValue('KLOPERATIONS_TEAMS', '');
     }
 
+    if (!$module->isRegisteredInHook('displayAdminRoomsBookingCalendarAfter')) {
+        if (!$module->registerHook('displayAdminRoomsBookingCalendarAfter')) {
+            return false;
+        }
+    }
+
     return true;
 }
