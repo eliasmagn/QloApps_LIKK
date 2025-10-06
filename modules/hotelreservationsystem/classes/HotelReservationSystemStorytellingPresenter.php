@@ -110,11 +110,16 @@ class HotelReservationSystemStorytellingPresenter
         $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
         $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
 
+        $availability = $this->buildAvailabilitySnapshot($idLang, $idShop);
+        $availability = $this->applyInquiryUrls($availability, array(
+            'utm_source' => 'story_residencies',
+        ));
+
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop),
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop),
-            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop),
+            'availability' => $availability,
             'cms' => $this->resolveCmsSlots('residencies', $idLang, $idShop),
             'packages' => $this->getFeaturedPackages($idLang),
             'inquiry_url' => $context && $context->link
@@ -141,11 +146,16 @@ class HotelReservationSystemStorytellingPresenter
 
         $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_ATELIER);
 
+        $availability = $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds);
+        $availability = $this->applyInquiryUrls($availability, array(
+            'utm_source' => 'story_ateliers',
+        ));
+
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
-            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'availability' => $availability,
             'cms' => $this->resolveCmsSlots('ateliers', $idLang, $idShop),
             'packages' => $this->filterPackagesByResourceKinds(
                 $this->getFeaturedPackages($idLang),
@@ -175,11 +185,16 @@ class HotelReservationSystemStorytellingPresenter
 
         $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_GASTRONOMY);
 
+        $availability = $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds);
+        $availability = $this->applyInquiryUrls($availability, array(
+            'utm_source' => 'story_gastronomy',
+        ));
+
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
-            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'availability' => $availability,
             'cms' => $this->resolveCmsSlots('gastronomy', $idLang, $idShop),
             'packages' => $this->filterPackagesByResourceKinds(
                 $this->getFeaturedPackages($idLang),
@@ -209,11 +224,16 @@ class HotelReservationSystemStorytellingPresenter
 
         $resourceKinds = array(KLResourceProfile::RESOURCE_KIND_SEMINAR);
 
+        $availability = $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds);
+        $availability = $this->applyInquiryUrls($availability, array(
+            'utm_source' => 'story_programme',
+        ));
+
         return array(
             'generated_at' => date(DATE_ATOM),
             'sections' => $this->groupProfilesByKind($idLang, $idShop, $resourceKinds),
             'section_metadata' => $this->getSectionMetadata($idLang, $idShop, $resourceKinds),
-            'availability' => $this->buildAvailabilitySnapshot($idLang, $idShop, $resourceKinds),
+            'availability' => $availability,
             'cms' => $this->resolveCmsSlots('programme', $idLang, $idShop),
             'packages' => $this->filterPackagesByResourceKinds(
                 $this->getFeaturedPackages($idLang),
@@ -1046,12 +1066,29 @@ class HotelReservationSystemStorytellingPresenter
             : $this->getResourceKindLabel($slot['resource_kind']);
         $sectionIntro = isset($sectionMetadata['intro']) ? $sectionMetadata['intro'] : '';
 
+        $arrivalDate = $start->format('Y-m-d');
+        $departureDate = $end->format('Y-m-d');
+        $inquiryParams = array(
+            'arrival_date' => $arrivalDate,
+            'departure_date' => $departureDate,
+        );
+        if (!empty($slot['resource_kind'])) {
+            $inquiryParams['resource_kind'] = $slot['resource_kind'];
+        }
+        if (!empty($profile['resource_code'])) {
+            $inquiryParams['resource_code'] = $profile['resource_code'];
+        }
+
+        $inquiryQuery = http_build_query($inquiryParams, '', '&', PHP_QUERY_RFC3986);
+
         return array(
             'resource_kind' => $slot['resource_kind'],
             'label' => $sectionLabel,
             'window' => implode(' · ', $windowParts),
             'start' => $start->format(DATE_ATOM),
             'end' => $end->format(DATE_ATOM),
+            'start_date' => $arrivalDate,
+            'end_date' => $departureDate,
             'available_rooms' => $slot['available_rooms'],
             'total_rooms' => $slot['total_rooms'],
             'profile_code' => $profile['resource_code'],
@@ -1059,6 +1096,8 @@ class HotelReservationSystemStorytellingPresenter
             'section_key' => $sectionKey,
             'section_anchor' => $sectionAnchor,
             'section_intro' => $sectionIntro,
+            'inquiry_params' => $inquiryParams,
+            'inquiry_query' => $inquiryQuery,
         );
     }
 
@@ -1417,6 +1456,82 @@ class HotelReservationSystemStorytellingPresenter
         $this->storeAvailabilityCache($cacheKey, $payload);
 
         return $payload;
+    }
+
+    /**
+     * @param array<string, mixed> $availability
+     * @param array<string, string> $baseParameters
+     *
+     * @return array<string, mixed>
+     */
+    protected function applyInquiryUrls(array $availability, array $baseParameters = array())
+    {
+        if (!$availability) {
+            return $availability;
+        }
+
+        $link = $this->context && $this->context->link ? $this->context->link : null;
+        if (!$link) {
+            return $availability;
+        }
+
+        if (isset($availability['slots']) && is_array($availability['slots'])) {
+            $availability['slots'] = $this->decorateSlotsWithInquiryUrl($availability['slots'], $baseParameters, $link);
+        }
+
+        if (isset($availability['groups']) && is_array($availability['groups'])) {
+            foreach ($availability['groups'] as $groupKey => $group) {
+                if (isset($group['slot']) && is_array($group['slot'])) {
+                    $group['slot'] = $this->decorateSlotWithInquiryUrl($group['slot'], $baseParameters, $link);
+                }
+                if (isset($group['slots']) && is_array($group['slots'])) {
+                    $group['slots'] = $this->decorateSlotsWithInquiryUrl($group['slots'], $baseParameters, $link);
+                }
+                $availability['groups'][$groupKey] = $group;
+            }
+        }
+
+        return $availability;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $slots
+     * @param array<string, string> $baseParameters
+     * @param Link $link
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function decorateSlotsWithInquiryUrl(array $slots, array $baseParameters, Link $link)
+    {
+        foreach ($slots as $index => $slot) {
+            if (!is_array($slot)) {
+                continue;
+            }
+
+            $slots[$index] = $this->decorateSlotWithInquiryUrl($slot, $baseParameters, $link);
+        }
+
+        return $slots;
+    }
+
+    /**
+     * @param array<string, mixed> $slot
+     * @param array<string, string> $baseParameters
+     * @param Link $link
+     *
+     * @return array<string, mixed>
+     */
+    protected function decorateSlotWithInquiryUrl(array $slot, array $baseParameters, Link $link)
+    {
+        if (!isset($slot['inquiry_params']) || !is_array($slot['inquiry_params'])) {
+            return $slot;
+        }
+
+        $parameters = array_merge($baseParameters, $slot['inquiry_params']);
+        $slot['inquiry_url'] = $link->getPageLink('inquiry', true, null, $parameters);
+        $slot['inquiry_query'] = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
+
+        return $slot;
     }
 
     /**

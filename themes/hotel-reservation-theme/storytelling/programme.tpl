@@ -76,10 +76,15 @@
                   {/if}
                 </header>
                 {if $group.slot}
-                  <p>
-                    <strong>{l s='Next opening:' d='Shop.Theme.Kunstort'}</strong>
-                    <span class="text-muted">{$group.slot.window|escape:'html':'UTF-8'}</span>
-                  </p>
+                  <div class="kl-storytelling__availability-slot">
+                    <div class="kl-storytelling__availability-slot-meta">
+                      <strong>{l s='Next opening:' d='Shop.Theme.Kunstort'}</strong>
+                      <span class="text-muted">{$group.slot.window|escape:'html':'UTF-8'}</span>
+                    </div>
+                    {if isset($group.slot.inquiry_url) && $group.slot.inquiry_url}
+                      <a class="btn btn-primary btn-sm" href="{$group.slot.inquiry_url|escape:'html':'UTF-8'}">{l s='Plan this stay' d='Shop.Theme.Kunstort'}</a>
+                    {/if}
+                  </div>
                 {else}
                   <p class="text-muted">{l s='We are still mapping live availability for this space type.' d='Shop.Theme.Kunstort'}</p>
                 {/if}
@@ -89,9 +94,14 @@
         {elseif isset($storytelling.availability.slots) && $storytelling.availability.slots}
           <ul class="list-unstyled kl-storytelling__availability-slots">
             {foreach from=$storytelling.availability.slots item=slot}
-              <li>
-                <strong>{$slot.label|escape:'html':'UTF-8'}</strong>
-                <span class="text-muted">{$slot.window|escape:'html':'UTF-8'}</span>
+              <li class="kl-storytelling__availability-slot">
+                <div class="kl-storytelling__availability-slot-meta">
+                  <strong>{$slot.label|escape:'html':'UTF-8'}</strong>
+                  <span class="text-muted">{$slot.window|escape:'html':'UTF-8'}</span>
+                </div>
+                {if isset($slot.inquiry_url) && $slot.inquiry_url}
+                  <a class="btn btn-primary btn-sm" href="{$slot.inquiry_url|escape:'html':'UTF-8'}">{l s='Plan this stay' d='Shop.Theme.Kunstort'}</a>
+                {/if}
               </li>
             {/foreach}
           </ul>
