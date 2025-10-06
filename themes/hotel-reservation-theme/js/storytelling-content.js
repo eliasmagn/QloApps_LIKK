@@ -13,6 +13,16 @@
     }
   }
 
+  var hasOwn = Object.prototype.hasOwnProperty;
+
+  function normaliseKey(value) {
+    if (!value || typeof value !== 'string') {
+      return '';
+    }
+
+    return value.trim().toLowerCase();
+  }
+
   function fetchJson(url, onSuccess) {
     if (!url || typeof url !== 'string') {
       return;
@@ -53,6 +63,62 @@
     target.innerHTML = payload.content;
   }
 
+  function resolveSlotPayload(data, slotName, resourceKey) {
+    if (!data || typeof data !== 'object' || !slotName) {
+      return null;
+    }
+
+    var slotGroup = data[slotName];
+    if (!slotGroup || typeof slotGroup !== 'object') {
+      return null;
+    }
+
+    var normalisedResource = resourceKey ? normaliseKey(resourceKey) : '';
+
+    if (normalisedResource) {
+      if (hasOwn.call(slotGroup, normalisedResource) && slotGroup[normalisedResource]) {
+        return slotGroup[normalisedResource];
+      }
+
+      for (var candidate in slotGroup) {
+        if (!hasOwn.call(slotGroup, candidate)) {
+          continue;
+        }
+
+        if (typeof candidate === 'string' && candidate.toLowerCase() === normalisedResource) {
+          if (slotGroup[candidate]) {
+            return slotGroup[candidate];
+          }
+        }
+      }
+    }
+
+    if (Array.isArray(data.resource_groups)) {
+      for (var i = 0; i < data.resource_groups.length; i += 1) {
+        var groupKey = data.resource_groups[i];
+        if (!groupKey || typeof groupKey !== 'string') {
+          continue;
+        }
+
+        if (hasOwn.call(slotGroup, groupKey) && slotGroup[groupKey]) {
+          return slotGroup[groupKey];
+        }
+      }
+    }
+
+    for (var fallbackKey in slotGroup) {
+      if (!hasOwn.call(slotGroup, fallbackKey)) {
+        continue;
+      }
+
+      if (slotGroup[fallbackKey]) {
+        return slotGroup[fallbackKey];
+      }
+    }
+
+    return null;
+  }
+
   ready(function () {
     var containers = document.querySelectorAll('[data-kl-storytelling-resource]');
     if (!containers || !containers.length) {
@@ -61,7 +127,8 @@
 
     for (var i = 0; i < containers.length; i += 1) {
       (function (container) {
-        var resource = container.getAttribute('data-kl-storytelling-resource');
+        var resourceAttr = container.getAttribute('data-kl-storytelling-resource');
+        var resource = normaliseKey(resourceAttr);
         if (!resource) {
           return;
         }
@@ -74,7 +141,7 @@
               return;
             }
 
-            var slotPayload = data.testimonials[resource];
+            var slotPayload = resolveSlotPayload(data, 'testimonials', resource);
             if (!slotPayload) {
               return;
             }
@@ -91,7 +158,7 @@
               return;
             }
 
-            var slotPayload = data.faq[resource];
+            var slotPayload = resolveSlotPayload(data, 'faq', resource);
             if (!slotPayload) {
               return;
             }

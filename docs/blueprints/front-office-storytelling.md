@@ -54,6 +54,23 @@ Each major resource type (Residencies, Ateliers & Studios, Gastronomy & Catering
 - Cache availability snippets in `Cache::store()` for 15 minutes to balance freshness with performance.
 - ✅ Create JSON endpoints for testimonials and FAQ groups to support potential headless reuse. Implemented via the inquiry lookup controller’s `testimonials`/`faq` actions with caching, HTTPS enforcement and throttling.
 
+### JSON Content API Payload
+
+`index.php?fc=module&module=hotelreservationsystem&controller=inquirylookup&action=testimonials&resource=residencies` returns:
+
+```json
+{
+  "testimonials": {
+    "residencies": { "id_cms": 123, "title": "Resident voices", "content": "<p>…</p>" }
+  },
+  "resource": "residencies",
+  "resource_groups": ["residencies"],
+  "generated_at": "2024-05-20T12:34:56+02:00"
+}
+```
+
+The FAQ action mirrors the structure with the `faq` key. Clients should treat `resource_groups` as the canonical ordering for fallback copy and rely on `generated_at` for freshness messaging or client-side caching. Null payloads signal unpublished CMS slots; templates should retain server-rendered fallbacks in those cases.
+
 ## Performance & Accessibility Guardrails
 - Optimise hero and gallery images via the theme’s build pipeline (WebP + responsive `srcset`).
 - Inline critical CSS for hero typography and primary layout grid; defer non-critical assets.

@@ -34,6 +34,8 @@ The module front controller `InquiryLookupModuleFrontController` responds with J
 - **Testimonials** – cached CMS payloads keyed by storytelling resource type so headless consumers can reuse editorial copy without direct database reads.
 - **FAQ** – cached accordion markup sourced from the storytelling CMS keys, filtered by resource type.
 
+Each CMS response includes the requested `resource`, an ordered `resource_groups` array detailing which storytelling groups were evaluated, and a `generated_at` timestamp so clients can display freshness metadata or coordinate client-side caching.
+
 All endpoints require HTTPS and reuse PrestaShop’s `ModuleFrontController` stack so authentication/CSRF behaviour is consistent with other AJAX controllers.
 
 ## Next Steps

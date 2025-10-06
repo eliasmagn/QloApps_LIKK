@@ -40,6 +40,7 @@
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
   - [x] Wired `KLStoryAvailabilityCache` so storytelling availability snapshots purge when bookings, inquiries or room disable ranges mutate, with cron-safe rebuilds validated by unit tests.
 - [x] Added PHPUnit coverage and Panther smoke tests that exercise storytelling presenter payloads, residencies template rendering and Lighthouse-aligned navigation timings.
+- [x] Finalised the storytelling content API payload (resource/resource_groups metadata) and hardened the front-end hydration helper so templates consume the cached testimonials/FAQ endpoints consistently.
 
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.
