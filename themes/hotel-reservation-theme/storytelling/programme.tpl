@@ -192,6 +192,24 @@
                     {if $package.tagline}
                       <p class="text-muted">{$package.tagline|escape:'html':'UTF-8'}</p>
                     {/if}
+                    {if isset($package.highlight)}
+                      {if $package.highlight.status == 'ready'}
+                        <div class="kl-storytelling__package-highlight">
+                          <p class="kl-storytelling__package-price h5">{$package.highlight.headline|escape:'html':'UTF-8'}</p>
+                          {if $package.highlight.sample_label}
+                            <p class="text-muted kl-storytelling__package-sample">{$package.highlight.sample_label|escape:'html':'UTF-8'}</p>
+                          {/if}
+                          {if $package.highlight.inclusions_label}
+                            <p class="text-muted kl-storytelling__package-inclusions">{$package.highlight.inclusions_label|escape:'html':'UTF-8'}</p>
+                          {/if}
+                          {if $package.highlight.warning_label}
+                            <p class="kl-storytelling__package-warning">{$package.highlight.warning_label|escape:'html':'UTF-8'}</p>
+                          {/if}
+                        </div>
+                      {elseif $package.highlight.message}
+                        <p class="text-muted kl-storytelling__package-message">{$package.highlight.message|escape:'html':'UTF-8'}</p>
+                      {/if}
+                    {/if}
                     {if $package.description}
                       <div class="kl-storytelling__package-description text-muted">
                         {$package.description nofilter}
