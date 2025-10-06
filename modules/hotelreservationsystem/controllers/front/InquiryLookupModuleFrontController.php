@@ -199,6 +199,8 @@ class HotelReservationSystemInquiryLookupModuleFrontController extends ModuleFro
 
         $payload = array(
             $slot => $results,
+            'resource' => $resource ?: null,
+            'resource_groups' => array_keys($results),
             'generated_at' => date(DATE_ATOM),
         );
 
