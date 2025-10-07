@@ -24,5 +24,6 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Storytelling content API](storytelling-content-api.task.md) | ✅ Complete | Expose cached testimonials/FAQ JSON endpoints and hydrate storytelling slots via JS. |
 | [Storytelling availability cache invalidation](storytelling-cache-invalidation.task.md) | ✅ Complete | Purge storytelling availability caches whenever availability inputs change. |
 | [Storytelling presenter test hardening](storytelling-presenter-tests.task.md) | ✅ Complete | Expand presenter unit coverage and Panther UI checks for storytelling landings. |
+| [Resource profile API](resource-profile-api.task.md) | ✅ Complete | Ship authenticated JSON endpoints for resource profile listings and detail views. |
 
 Update this table whenever task briefs change status or new tasks are added.

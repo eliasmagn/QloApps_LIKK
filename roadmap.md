@@ -34,6 +34,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Featured packages now display as scope-aware groups with inquiry CTA buttons and a campus-wide fallback when scope metadata is missing.
   - ✅ Storytelling package cards now surface cached pricing highlights generated from canonical sample stays via `KLQuotePricingEngine::generateQuote()`.
   - ✅ Storytelling testimonials and FAQ slots are available through cached JSON actions on the inquiry lookup controller, now returning explicit `resource` and ordered `resource_groups` metadata alongside ISO `generated_at` stamps, with HTTPS enforcement, throttle protection and front-end hydration handled by the normalised lookups in `storytelling-content.js`.
+  - ✅ Resource profile API endpoints expose authenticated JSON listings/detail payloads (capacity, amenities, storytelling copy, next-availability snippets) for internal tools, guarded by `_KUNSTORT_RESOURCE_API_TOKEN_` and documented for downstream consumers.
   - ✅ Storytelling presenter payloads are now covered by PHPUnit tests while Panther smoke tests verify residencies template rendering and Lighthouse navigation timing targets.
 
 ## Phase 3 – Operations Automation (🚧 In progress)

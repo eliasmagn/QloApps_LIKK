@@ -23,6 +23,7 @@ Key characteristics of the fork:
 - 🧮 **Room-type seeding helper** – install/upgrade flows and `modules/hotelreservationsystem/tools/seed_resource_profiles.php` backfill taxonomy profiles and capacities for existing room types so legacy data is represented immediately.
 - 🧶 **Storytelling scaffolding** – feature-flagged residencies (`index.php?controller=residencies`), ateliers (`index.php?controller=ateliers`), gastronomy (`index.php?controller=gastronomy`) and programme (`index.php?controller=programme`) landings now pull taxonomy-driven sections, scope-aware featured package groups, grouped availability snapshots, amenity callouts, slot-level inquiry CTAs and CMS-managed hero/highlight/practical/FAQ/testimonial slots when `_KUNSTORT_STORYTELLING_LAUNCH_` is enabled.
 - 🗂️ **Storytelling content API** – the inquiry lookup controller now exposes cached `testimonials` and `faq` JSON actions (`index.php?fc=module&module=hotelreservationsystem&controller=inquirylookup&action=…`) keyed by storytelling resource type, including the requested `resource`, ordered `resource_groups` metadata and ISO 8601 `generated_at` stamps while HTTPS/active-module checks and lightweight throttling guard access.
+- 🔐 **Resource profile API** – `/index.php?controller=resourceprofileapi` now serves authenticated JSON listings and detail payloads with capacity metrics, amenity catalogues, storytelling copy and next-availability snippets, guarded by the `_KUNSTORT_RESOURCE_API_TOKEN_` bearer token.
 - 💡 **Storytelling pricing highlights** – featured packages now display cached starting rates, sample stay context and inclusion summaries generated via canonical calls to `KLQuotePricingEngine::generateQuote()`.
 - 🖼️ **Hero media pipeline** – taxonomy stories expose hero media references and alt text; the theme ships `npm run build:hero-media` to emit responsive WebP/JPEG variants while storytelling templates render lazy-loaded `<picture>` elements with accessible captions.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
@@ -114,6 +115,17 @@ If the move is valid you can confirm the change directly from the drop action. C
 ### Availability API
 
 `index.php?controller=AdminHotelRoomsBooking&ajax=1&action=lookupAvailability` accepts `id_hotel`, `id_room_type`, `date_from` and `date_to` to return JSON payloads of available, booked and disabled rooms for the requested window. The timeline UI consumes the same endpoint.
+
+### Resource profile API
+
+Authenticated consumers can call `index.php?controller=resourceprofileapi` to retrieve published resource profiles as JSON. Supply the `_KUNSTORT_RESOURCE_API_TOKEN_` value via an `Authorization: Bearer` header (or `?token=` query parameter for cron jobs). Optional parameters:
+
+- `action=list|detail` – defaults to `list`.
+- `resource_kinds` – comma-separated list (`room,atelier,…`) to filter listings.
+- `id_lang` / `id_shop` – override the language/shop context.
+- `resource_code` or `id_kl_resource_profile` – required when `action=detail`.
+
+List responses include `profiles` with capacity metrics, amenity assignments, storytelling copy and `next_availability` snippets, plus an `availability` object mirroring the storytelling presenter snapshot. Detail responses return the matching profile alongside an availability snapshot scoped to its resource kind. Missing or invalid tokens yield JSON errors with `401`, `403` or `503` codes depending on configuration. See [docs/blueprints/resource-profile-api.md](docs/blueprints/resource-profile-api.md) for full payload samples and integration guidance.
 
 ## Inquiry Board
 Navigate to **Hotel Reservation System → Inquiries** to triage, assign and progress residency requests. Each column represents a stage (Inbox, Qualifying, Awaiting reply, Scheduled, Archived) and cards expose:
