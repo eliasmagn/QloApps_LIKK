@@ -5,3 +5,4 @@ The following tasks require attention:
 
 -- 
 Kunstort Lehnin Operations Automation
+Manage your preferences via Back Office -> Operations -> Notification Preferences.

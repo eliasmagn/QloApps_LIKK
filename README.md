@@ -28,7 +28,7 @@ Key characteristics of the fork:
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
-- 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for manual task authoring, assignment workflows and mobile checklists.
+- 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, ships subscription-aware daily digests/overdue reminders with quiet-hour deferrals, and exposes **Operations → Tasks** and **Operations → Notification Preferences** consoles for manual task authoring, assignment workflows, mobile checklists and employee notification management.
 - 🔁 **Inquiry ↔ Operations bridge** – the inquiry Kanban inspector surfaces linked follow-ups, lets staff raise housekeeping or maintenance tasks in-place, converts note submissions into follow-ups when needed and deep-links into the Operations console with context preserved.
 - 📊 **Timeline operations widget** – the admin booking timeline now surfaces a summary widget that groups overdue, today and tomorrow workloads per resource kind with quick links into the Operations console for follow-up.
 - 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
@@ -245,7 +245,7 @@ Operations automation now ships inside `modules/kloperations`:
 - Assign tasks to employees or named teams, capture acknowledgement/completion timestamps and manage statuses inline without leaving the console.
 - A lightweight mobile view is available at `index.php?controller=AdminKlOperationTasks&mobile_view=1&token=…`, letting logged-in staff review their queue, update statuses, release tasks and claim unassigned work from housekeeping devices.
 - Toolbar buttons export pending tasks for the next seven days to CSV or iCalendar so schedules (now including assignment summaries) can be shared with external partners.
-- Daily cron runs also deliver an HTML/text digest and overdue reminders to the addresses listed in `KLOPERATIONS_DIGEST_RECIPIENTS` (comma/space separated emails via the `Configuration` table or module upgrade script).
+- Daily cron runs deliver HTML/text digests and overdue reminders using the subscription-aware preferences managed under **Operations → Notification Preferences** (quiet hours, channel opt-ins, queued retries). Legacy fallback addresses can still be provided via `KLOPERATIONS_DIGEST_RECIPIENTS` (comma/space separated) when needed.
 - Configure reusable teams by storing JSON or newline-delimited entries in `KLOPERATIONS_TEAMS`; each entry provides a `id`/`label` pair surfaced in the assignment form for quick selection.
 
 To run the generator on demand you can trigger the cron hook:
