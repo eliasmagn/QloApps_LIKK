@@ -23,6 +23,7 @@
 
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelInquiryOperationsBridge.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/QuotePdfGenerator.php';
+require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/KLQuoteMailDispatcher.php';
 
 class AdminHotelInquiriesController extends ModuleAdminController
 {
@@ -33,6 +34,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
     protected $boardDataset = array();
     protected $quoteSummariesByInquiry = array();
     protected $quoteSummariesInitialized = false;
+    protected $quoteMailSettings = array();
 
     public function __construct()
     {
@@ -59,6 +61,10 @@ class AdminHotelInquiriesController extends ModuleAdminController
             $this->quoteSummariesByInquiry = $this->collectQuotesForDataset($this->boardDataset);
             $this->quoteSummariesInitialized = true;
         }
+
+        if (empty($this->quoteMailSettings)) {
+            $this->quoteMailSettings = $this->getQuoteMailSettings();
+        }
     }
 
     public function initContent()
@@ -75,6 +81,8 @@ class AdminHotelInquiriesController extends ModuleAdminController
             'inquiry_quotes' => $this->quoteSummariesByInquiry,
             'quote_status_labels' => $this->quoteStatusLabels,
             'operations_enabled' => HotelInquiryOperationsBridge::isAvailable(),
+            'quote_mail_settings' => $this->quoteMailSettings,
+            'can_manage_quote_mail_settings' => (bool) $this->access('edit'),
         ));
 
         $this->setTemplate('inquiries/kanban.tpl');
@@ -122,14 +130,16 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     'quotesEmpty' => $this->l('No quotes have been generated yet.'),
                     'quoteValidUntil' => $this->l('Valid until %s'),
                     'quoteDownload' => $this->l('Download PDF'),
-                    'quoteEmail' => $this->l('Email to guest'),
+                    'quoteEmail' => $this->l('Send to guest'),
                     'quoteDownloadFailed' => $this->l('Unable to download the quote PDF.'),
-                    'quoteEmailSuccess' => $this->l('Quote emailed to the guest successfully.'),
-                    'quoteEmailFailed' => $this->l('Unable to send the quote email.'),
+                    'quoteEmailSuccess' => $this->l('Quote sent to the guest successfully.'),
+                    'quoteEmailFailed' => $this->l('Unable to send the quote to the guest.'),
                     'quoteApproveSuccess' => $this->l('Quote marked as approved.'),
                     'quoteApproveFailed' => $this->l('Unable to approve the quote.'),
                     'quoteDeclineSuccess' => $this->l('Quote marked as declined.'),
                     'quoteDeclineFailed' => $this->l('Unable to decline the quote.'),
+                    'quoteMailSettingsSaved' => $this->l('Quote email settings saved.'),
+                    'quoteMailSettingsError' => $this->l('Unable to save the quote email settings.'),
                 ),
                 'stageStatuses' => array_map(function ($definition) {
                     return isset($definition['default_status']) ? $definition['default_status'] : null;
@@ -143,6 +153,8 @@ class AdminHotelInquiriesController extends ModuleAdminController
                 'operationsConsoleUrl' => $this->context->link->getAdminLink('AdminKlOperationTasks'),
                 'focusInquiryId' => (int) Tools::getValue('focus_inquiry'),
                 'quotesByInquiry' => $this->quoteSummariesByInquiry,
+                'quoteMailSettings' => $this->quoteMailSettings,
+                'canManageQuoteMailSettings' => (bool) $this->access('edit'),
             ),
         ));
     }
@@ -539,63 +551,53 @@ class AdminHotelInquiriesController extends ModuleAdminController
             return $this->ajaxDie(json_encode($response));
         }
 
-        $email = isset($inquiry['requester_email']) ? trim($inquiry['requester_email']) : '';
-        if (!$email || !Validate::isEmail($email)) {
-            $response['message'] = $this->l('The inquiry is missing a valid guest email address.');
+        $dispatcher = new KLQuoteMailDispatcher($this->context);
+
+        try {
+            $sent = $dispatcher->sendQuoteToGuest(
+                $quote,
+                $inquiry,
+                array(
+                    'id_lang' => $this->context && $this->context->language ? (int) $this->context->language->id : null,
+                )
+            );
+        } catch (PrestaShopException $exception) {
+            $response['message'] = $exception->getMessage();
+
             return $this->ajaxDie(json_encode($response));
         }
 
-        $generator = new QuotePdfGenerator();
-        $pdf = $generator->generate($quote, array('inquiry' => $inquiry));
-        $filename = $generator->buildFilename($quote, array('inquiry' => $inquiry));
-
-        $statusLabels = $this->quoteStatusLabels;
-        $quoteStatus = isset($statusLabels[$quote->status]) ? $statusLabels[$quote->status] : $quote->status;
-        $langId = $this->context && $this->context->language ? (int) $this->context->language->id : null;
-
-        $templateVars = array(
-            '{guest_name}' => isset($inquiry['requester_name']) && $inquiry['requester_name'] !== '' ? $inquiry['requester_name'] : $this->l('there'),
-            '{inquiry_reference}' => isset($inquiry['reference']) ? $inquiry['reference'] : '',
-            '{inquiry_subject}' => isset($inquiry['subject']) ? $inquiry['subject'] : '',
-            '{quote_status}' => $quoteStatus,
-            '{quote_valid_until}' => $quote->valid_until ? Tools::displayDate($quote->valid_until, $langId, true) : $this->l('Until further notice'),
-            '{quote_total}' => $this->formatQuoteMoney($quote->gross_total_minor, $quote->currency_iso_code),
-            '{contact_email}' => Configuration::get('PS_SHOP_EMAIL'),
-            '{contact_phone}' => Configuration::get('PS_SHOP_PHONE') ?: '',
-            '{brand_name}' => Configuration::get('PS_SHOP_NAME') ?: 'Kunstort Lehnin',
-        );
-
-        $subject = sprintf($this->l('Residency quote %s'), isset($inquiry['reference']) ? $inquiry['reference'] : '#'.$quote->id_kl_quote);
-
-        $sent = Mail::Send(
-            $langId ?: (int) Configuration::get('PS_LANG_DEFAULT'),
-            'kl_quote_guest',
-            $subject,
-            $templateVars,
-            $email,
-            isset($inquiry['requester_name']) && $inquiry['requester_name'] !== '' ? $inquiry['requester_name'] : null,
-            null,
-            null,
-            array(array('content' => $pdf, 'name' => $filename, 'mime' => 'application/pdf')),
-            null,
-            _PS_MODULE_DIR_.'hotelreservationsystem/mails/'
-        );
-
-        if ($sent && $quote->status === KLQuote::STATUS_DRAFT) {
-            $quote->status = KLQuote::STATUS_SENT;
-            $quote->update();
-        }
-
+        $note = false;
         if ($sent) {
+            $statusChanged = false;
+            if ($quote->status === KLQuote::STATUS_DRAFT) {
+                $quote->status = KLQuote::STATUS_SENT;
+                if (!$quote->update()) {
+                    $response['message'] = $this->l('Unable to update the quote status.');
+
+                    return $this->ajaxDie(json_encode($response));
+                }
+                $statusChanged = true;
+            }
+
+            if ($statusChanged) {
+                $note = $this->logQuoteStatusTransition($quote, $inquiry, KLQuote::STATUS_SENT);
+            }
+
             $response['success'] = true;
-            $response['message'] = $this->l('Quote emailed to the guest successfully.');
+            $response['message'] = $this->l('Quote sent to the guest successfully.');
         } else {
-            $response['message'] = $this->l('Unable to send the quote email.');
+            $response['message'] = $this->l('Unable to send the quote to the guest.');
         }
 
         $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry((int) $quote->id_inquiry), $inquiry);
         $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
         $this->quoteSummariesByInquiry[(int) $quote->id_inquiry] = $response['quotes'];
+        $response['inquiry'] = $inquiry;
+
+        if ($note) {
+            $response['notes'] = HotelInquiryNote::getInquiryNotes((int) $quote->id_inquiry);
+        }
 
         return $this->ajaxDie(json_encode($response));
     }
@@ -614,6 +616,43 @@ class AdminHotelInquiriesController extends ModuleAdminController
         return $this->ajaxDie(json_encode($response));
     }
 
+    public function ajaxProcessSaveQuoteMailSettings()
+    {
+        $response = array('success' => false);
+
+        if (!$this->access('edit')) {
+            $response['message'] = $this->l('You do not have permission to update quote email settings.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $fromAddress = trim((string) Tools::getValue('from_address'));
+        $replyToAddress = trim((string) Tools::getValue('reply_to_address'));
+
+        if ($fromAddress !== '' && !Validate::isEmail($fromAddress)) {
+            $response['message'] = $this->l('Enter a valid sender email address.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if ($replyToAddress !== '' && !Validate::isEmail($replyToAddress)) {
+            $response['message'] = $this->l('Enter a valid reply-to email address.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        Configuration::updateValue('KL_QUOTE_MAIL_FROM_ADDRESS', $fromAddress);
+        Configuration::updateValue('KL_QUOTE_MAIL_REPLY_TO_ADDRESS', $replyToAddress);
+
+        $this->quoteMailSettings = $this->getQuoteMailSettings();
+
+        $response['success'] = true;
+        $response['message'] = $this->l('Quote email settings saved.');
+        $response['settings'] = $this->quoteMailSettings;
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
     /**
      * @param array<string, mixed> $inquiry
      *
@@ -626,6 +665,37 @@ class AdminHotelInquiriesController extends ModuleAdminController
         return array(
             'can_download' => (bool) $this->access('view'),
             'can_email' => (bool) $this->access('edit') && $email !== '' && Validate::isEmail($email),
+        );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getQuoteMailSettings()
+    {
+        $fromAddress = trim((string) Configuration::get('KL_QUOTE_MAIL_FROM_ADDRESS'));
+        $replyToAddress = trim((string) Configuration::get('KL_QUOTE_MAIL_REPLY_TO_ADDRESS'));
+
+        $resolvedFrom = $fromAddress;
+        if ($resolvedFrom === '') {
+            $shopEmail = trim((string) Configuration::get('PS_SHOP_EMAIL'));
+            if ($shopEmail !== '') {
+                $resolvedFrom = $shopEmail;
+            } elseif ($this->context && $this->context->shop && $this->context->shop->email) {
+                $resolvedFrom = $this->context->shop->email;
+            }
+        }
+
+        $resolvedReply = $replyToAddress !== '' ? $replyToAddress : $resolvedFrom;
+        if ($resolvedReply === '') {
+            $resolvedReply = trim((string) Configuration::get('PS_SHOP_EMAIL'));
+        }
+
+        return array(
+            'from_address' => $fromAddress,
+            'reply_to_address' => $replyToAddress,
+            'resolved_from_address' => $resolvedFrom,
+            'resolved_reply_to_address' => $resolvedReply,
         );
     }
 

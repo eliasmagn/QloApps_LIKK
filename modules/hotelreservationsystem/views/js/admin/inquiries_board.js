@@ -76,6 +76,7 @@
         var focusInquiryId = parseInt(config.focusInquiryId, 10) || null;
         var quoteStatusLabels = config.quoteStatusLabels || {};
         var quotesByInquiry = config.quotesByInquiry || {};
+        var quoteMailSettings = config.quoteMailSettings || {};
 
         var $board = $('#hotel-inquiry-board');
         var $createModal = $('#inquiry-create-modal');
@@ -108,9 +109,99 @@
         var $quotesList = $sidebar.find('[data-role="quotes-list"]');
         var $quotesEmpty = $sidebar.find('[data-role="quotes-empty"]');
         var quoteTemplateHtml = $.trim($('#inquiry-quote-item-template').html() || '');
+        var $quoteMailSettingsButton = $('#inquiry-open-quote-mail-settings');
+        var $quoteMailSettingsModal = $('#inquiry-quote-mail-settings-modal');
+        var $quoteMailSettingsForm = $('#inquiry-quote-mail-settings-form');
+        var canManageQuoteMailSettings = !!config.canManageQuoteMailSettings;
 
         if (!operationsEnabled && $operationsSection.length) {
             $operationsSection.hide();
+        }
+
+        function updateQuoteMailSettingsHints(settings) {
+            if (!$quoteMailSettingsForm.length) {
+                return;
+            }
+
+            var resolvedFrom = settings && settings.resolved_from_address ? settings.resolved_from_address : '';
+            var resolvedReply = settings && settings.resolved_reply_to_address ? settings.resolved_reply_to_address : resolvedFrom;
+
+            $quoteMailSettingsForm.find('[data-role="quote-mail-from-resolved"]').text(resolvedFrom || '');
+            $quoteMailSettingsForm.find('[data-role="quote-mail-reply-resolved"]').text(resolvedReply || '');
+            $quoteMailSettingsForm.find('input[name="from_address"]').attr('placeholder', resolvedFrom || '');
+            $quoteMailSettingsForm.find('input[name="reply_to_address"]').attr('placeholder', resolvedReply || '');
+        }
+
+        updateQuoteMailSettingsHints(quoteMailSettings);
+
+        if ($quoteMailSettingsButton.length) {
+            if (!canManageQuoteMailSettings) {
+                $quoteMailSettingsButton.prop('disabled', true);
+            }
+
+            $quoteMailSettingsButton.on('click', function (event) {
+                event.preventDefault();
+                if (!canManageQuoteMailSettings) {
+                    return;
+                }
+
+                quoteMailSettings = config.quoteMailSettings || {};
+                var fromValue = quoteMailSettings.from_address || '';
+                var replyValue = quoteMailSettings.reply_to_address || '';
+
+                if ($quoteMailSettingsForm.length) {
+                    $quoteMailSettingsForm.find('input[name="from_address"]').val(fromValue);
+                    $quoteMailSettingsForm.find('input[name="reply_to_address"]').val(replyValue);
+                }
+
+                updateQuoteMailSettingsHints(quoteMailSettings);
+                if ($quoteMailSettingsModal.length) {
+                    $quoteMailSettingsModal.modal('show');
+                }
+            });
+        }
+
+        if ($quoteMailSettingsForm.length) {
+            $quoteMailSettingsForm.on('submit', function (event) {
+                event.preventDefault();
+                if (!canManageQuoteMailSettings) {
+                    return;
+                }
+
+                var formData = {
+                    ajax: true,
+                    action: 'saveQuoteMailSettings',
+                    from_address: $.trim($quoteMailSettingsForm.find('input[name="from_address"]').val()),
+                    reply_to_address: $.trim($quoteMailSettingsForm.find('input[name="reply_to_address"]').val())
+                };
+
+                $.ajax({
+                    url: ajaxUrl,
+                    method: 'POST',
+                    dataType: 'json',
+                    data: formData
+                }).done(function (response) {
+                    if (response && response.success) {
+                        notifySuccess(response.message || (config.messages && config.messages.quoteMailSettingsSaved));
+                        if (response.settings) {
+                            config.quoteMailSettings = response.settings;
+                            quoteMailSettings = response.settings;
+                            updateQuoteMailSettingsHints(response.settings);
+                        }
+                        if ($quoteMailSettingsModal.length) {
+                            $quoteMailSettingsModal.modal('hide');
+                        }
+                    } else {
+                        notifyError(response && response.message ? response.message : (config.messages && config.messages.quoteMailSettingsError));
+                    }
+                }).fail(function () {
+                    notifyError(config.messages && config.messages.quoteMailSettingsError);
+                });
+            });
+
+            $quoteMailSettingsModal.on('hidden.bs.modal', function () {
+                $quoteMailSettingsForm[0].reset();
+            });
         }
 
         function highlightSelectedCard(id) {
@@ -528,6 +619,9 @@
             }).done(function (response) {
                 if (response && response.success) {
                     notifySuccess(response.message || (config.messages && config.messages.quoteEmailSuccess));
+                    if (response.inquiry && parseInt(response.inquiry.id_inquiry, 10) === selectedInquiryId) {
+                        selectedInquiryData = response.inquiry;
+                    }
                 } else {
                     notifyError(response && response.message ? response.message : (config.messages && config.messages.quoteEmailFailed));
                 }
@@ -544,6 +638,10 @@
                         };
                     }
                     renderQuotesList();
+                }
+
+                if (response && response.notes && $noteModal.is(':visible') && selectedInquiryId === parseInt($noteForm.find('input[name="id_inquiry"]').val(), 10)) {
+                    renderNoteHistory(response.notes);
                 }
             }).fail(function () {
                 notifyError(config.messages && config.messages.quoteEmailFailed);

@@ -1,0 +1,14 @@
+Hi {guest_name},
+
+Your residency quote for {inquiry_subject} is ready. We attached the PDF and you can also download it here:
+{quote_download_link}
+
+Reference: {inquiry_reference}
+Status: {quote_status}
+Total: {quote_total}
+Valid until: {quote_valid_until}
+
+If you have any questions, reply to this email or contact us at {contact_email}{contact_phone_formatted}.
+
+We look forward to hosting you.
+— {brand_name}

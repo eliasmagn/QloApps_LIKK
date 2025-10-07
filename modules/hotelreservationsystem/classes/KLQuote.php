@@ -197,4 +197,54 @@ class KLQuote extends ObjectModel
 
         return $rows;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getShareToken()
+    {
+        $id = $this->id ? (int) $this->id : (int) $this->id_kl_quote;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $timestamp = $this->date_add ? (string) $this->date_add : '0';
+        $secret = self::resolveShareSecret();
+
+        return hash('sha256', $id.'|'.$timestamp.'|'.$secret);
+    }
+
+    /**
+     * @param KLQuote $quote
+     * @param string $token
+     *
+     * @return bool
+     */
+    public static function verifyShareToken(KLQuote $quote, $token)
+    {
+        $expected = $quote->getShareToken();
+        if (!$expected || !$token) {
+            return false;
+        }
+
+        if (function_exists('hash_equals')) {
+            return hash_equals($expected, (string) $token);
+        }
+
+        return $expected === (string) $token;
+    }
+
+    /**
+     * @return string
+     */
+    protected static function resolveShareSecret()
+    {
+        $secret = (string) Configuration::get('KL_QUOTE_MAIL_SECRET');
+        if ($secret === '') {
+            $secret = Tools::passwdGen(32);
+            Configuration::updateValue('KL_QUOTE_MAIL_SECRET', $secret);
+        }
+
+        return $secret;
+    }
 }
