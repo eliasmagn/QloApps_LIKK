@@ -170,6 +170,50 @@
     margin-left: 8px;
 }
 
+.inquiry-sidebar-section.inquiry-sidebar-quotes {
+    border-top: 1px solid #e5e5e5;
+    padding-top: 12px;
+}
+
+.inquiry-quote-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.inquiry-quote-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+}
+
+.inquiry-quote-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.inquiry-quote-total {
+    font-size: 13px;
+}
+
+.inquiry-quote-meta {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.inquiry-quote-actions .btn {
+    margin-right: 4px;
+}
+
+.inquiry-quote-actions .btn:last-child {
+    margin-right: 0;
+}
+
 .inquiry-operations-list {
     margin-bottom: 10px;
 }

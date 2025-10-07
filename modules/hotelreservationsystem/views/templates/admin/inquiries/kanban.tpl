@@ -64,6 +64,11 @@
                             <i class="icon-bell"></i> {l s='Set reminder' mod='hotelreservationsystem'}
                         </button>
                     </section>
+                    <section class="inquiry-sidebar-section inquiry-sidebar-quotes" data-role="quotes-section">
+                        <h5>{l s='Quotes' mod='hotelreservationsystem'}</h5>
+                        <p class="text-muted" data-role="quotes-empty">{l s='No quotes have been generated yet.' mod='hotelreservationsystem'}</p>
+                        <div class="inquiry-quote-list" data-role="quotes-list"></div>
+                    </section>
                     <section class="inquiry-sidebar-section inquiry-sidebar-operations" data-role="operations-section">
                         <h5>{l s='Operations follow-ups' mod='hotelreservationsystem'}</h5>
                         <div class="inquiry-operations-list" data-role="operations-list"></div>

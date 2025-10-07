@@ -11,6 +11,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Operations notification preferences](operations-notification-preferences.task.md) | ✅ Complete | Layer per-employee notification subscriptions, quiet hours and delivery logging into operations dispatch. |
 | [Operations timeline widget](operations-timeline-widget.task.md) | ⏳ Planned | Embed the operations summary widget on the booking timeline with console shortcuts. |
 | [Inquiry → Operations bridge](inquiry-to-operations.task.md) | ✅ Complete | Allow inquiry follow-ups and note submissions to raise operations tasks with bidirectional context links. |
+| [Inquiry quote PDF export](quote-pdf-export.task.md) | ✅ Complete | Generate branded PDFs from KLQuote payloads with download/email tooling in the inquiry board. |
 | [Ateliers storytelling landing](storytelling-ateliers.task.md) | 🚧 In progress | Launch the atelier-focused storytelling page with taxonomy sections, CMS copy and navigation links. |
 | [Gastronomy storytelling landing](storytelling-gastronomy.task.md) | 🚧 In progress | Publish the dining-focused storytelling page with amenity callouts, CMS slots and inquiry CTAs. |
 | [Programme storytelling landing](storytelling-programme.task.md) | ✅ Complete | Ship the programme-focused storytelling page with grouped availability, CMS highlights and inquiry pathways. |

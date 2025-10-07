@@ -99,6 +99,12 @@
 
         var selectedInquiryId = null;
         var selectedInquiryData = null;
+        var selectedInquiryQuotes = [];
+        var quotePermissions = { can_download: false, can_email: false };
+
+        var $quotesSection = $sidebar.find('[data-role="quotes-section"]');
+        var $quotesList = $sidebar.find('[data-role="quotes-list"]');
+        var $quotesEmpty = $sidebar.find('[data-role="quotes-empty"]');
 
         if (!operationsEnabled && $operationsSection.length) {
             $operationsSection.hide();
@@ -165,7 +171,7 @@
             }
         }
 
-        function renderSidebarDetails(inquiry, operations) {
+        function renderSidebarDetails(inquiry, operations, quotes, permissions) {
             if (!$sidebar.length) {
                 return;
             }
@@ -173,15 +179,28 @@
             if (!inquiry) {
                 selectedInquiryId = null;
                 selectedInquiryData = null;
+                selectedInquiryQuotes = [];
+                quotePermissions = { can_download: false, can_email: false };
                 highlightSelectedCard(null);
                 $sidebarContent.addClass('hidden');
                 $sidebarEmpty.removeClass('hidden');
+                renderQuotesList();
 
                 return;
             }
 
             selectedInquiryId = parseInt(inquiry.id_inquiry, 10) || null;
             selectedInquiryData = inquiry;
+            if (Array.isArray(quotes)) {
+                selectedInquiryQuotes = quotes;
+            }
+            if (permissions) {
+                quotePermissions = {
+                    can_download: !!permissions.can_download,
+                    can_email: !!permissions.can_email
+                };
+            }
+
             highlightSelectedCard(selectedInquiryId);
             $sidebarEmpty.addClass('hidden');
             $sidebarContent.removeClass('hidden');
@@ -226,6 +245,199 @@
             if (operationsEnabled) {
                 renderOperationsList(operations);
             }
+
+            renderQuotesList();
+        }
+
+        function renderQuotesList() {
+            if (!$quotesSection.length) {
+                return;
+            }
+
+            $quotesList.empty();
+
+            if (!selectedInquiryQuotes || !selectedInquiryQuotes.length) {
+                var emptyMessage = (config.messages && config.messages.quotesEmpty) || 'No quotes yet.';
+                if ($quotesEmpty.length) {
+                    $quotesEmpty.text(emptyMessage).removeClass('hidden');
+                }
+                return;
+            }
+
+            if ($quotesEmpty.length) {
+                $quotesEmpty.addClass('hidden');
+            }
+
+            selectedInquiryQuotes.forEach(function (quote) {
+                var $item = $('<div class="inquiry-quote-item"/>');
+                var $header = $('<div class="inquiry-quote-item-header"/>');
+
+                var statusLabel = quote.status_label || quote.status || '';
+                if (statusLabel) {
+                    $header.append($('<span class="label label-default"/>').text(statusLabel));
+                }
+                if (quote.total_display) {
+                    $header.append($('<strong class="inquiry-quote-total"/>').text(quote.total_display));
+                }
+
+                var metaParts = [];
+                if (quote.date_add_display) {
+                    metaParts.push(quote.date_add_display);
+                }
+                if (quote.valid_until_display) {
+                    var validText = (config.messages && config.messages.quoteValidUntil)
+                        ? config.messages.quoteValidUntil.replace('%s', quote.valid_until_display)
+                        : quote.valid_until_display;
+                    metaParts.push(validText);
+                }
+                if (quote.author_name) {
+                    metaParts.push(quote.author_name);
+                }
+
+                var $body = $('<div class="inquiry-quote-item-body"/>');
+                if (metaParts.length) {
+                    $body.append($('<div class="inquiry-quote-meta"/>').text(metaParts.join(' · ')));
+                }
+
+                var $actions = $('<div class="inquiry-quote-actions"/>');
+                if (quotePermissions.can_download) {
+                    var downloadLabel = (config.messages && config.messages.quoteDownload) || 'Download PDF';
+                    var $downloadBtn = $('<button type="button" class="btn btn-default btn-xs" data-action="download-quote"/>')
+                        .attr('data-quote-id', quote.id_kl_quote)
+                        .text(downloadLabel);
+                    $downloadBtn.prepend('<i class="icon-download"></i> ');
+                    $actions.append($downloadBtn);
+                }
+                if (quotePermissions.can_email) {
+                    var emailLabel = (config.messages && config.messages.quoteEmail) || 'Email to guest';
+                    var $emailBtn = $('<button type="button" class="btn btn-default btn-xs" data-action="email-quote"/>')
+                        .attr('data-quote-id', quote.id_kl_quote)
+                        .text(emailLabel);
+                    $emailBtn.prepend('<i class="icon-envelope"></i> ');
+                    $actions.append($emailBtn);
+                }
+
+                if ($actions.children().length) {
+                    $body.append($actions);
+                }
+
+                $item.append($header).append($body);
+                $quotesList.append($item);
+            });
+
+            bindQuoteActions();
+        }
+
+        function bindQuoteActions() {
+            if (!$quotesSection.length) {
+                return;
+            }
+
+            $quotesSection.find('[data-action="download-quote"]').off('click').on('click', function (event) {
+                event.preventDefault();
+                var quoteId = parseInt($(this).attr('data-quote-id'), 10);
+                if (!quoteId) {
+                    return;
+                }
+                requestQuoteDownload(quoteId);
+            });
+
+            $quotesSection.find('[data-action="email-quote"]').off('click').on('click', function (event) {
+                event.preventDefault();
+                var quoteId = parseInt($(this).attr('data-quote-id'), 10);
+                if (!quoteId) {
+                    return;
+                }
+                requestQuoteEmail(quoteId);
+            });
+        }
+
+        function requestQuoteDownload(quoteId) {
+            $.ajax({
+                url: ajaxUrl,
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    ajax: true,
+                    action: 'downloadQuotePdf',
+                    id_quote: quoteId
+                }
+            }).done(function (response) {
+                if (response && response.success && response.content_base64) {
+                    handleQuoteDownload(response);
+                    if (response.quotes) {
+                        selectedInquiryQuotes = response.quotes;
+                        if (response.quote_permissions) {
+                            quotePermissions = {
+                                can_download: !!response.quote_permissions.can_download,
+                                can_email: !!response.quote_permissions.can_email
+                            };
+                        }
+                        renderQuotesList();
+                    }
+                } else {
+                    notifyError(response && response.message ? response.message : (config.messages && config.messages.quoteDownloadFailed));
+                }
+            }).fail(function () {
+                notifyError(config.messages && config.messages.quoteDownloadFailed);
+            });
+        }
+
+        function handleQuoteDownload(response) {
+            try {
+                var base64 = response.content_base64;
+                var binary = window.atob(base64);
+                var len = binary.length;
+                var bytes = new Uint8Array(len);
+                for (var i = 0; i < len; i += 1) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+
+                var blob = new Blob([bytes], { type: response.mime || 'application/pdf' });
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = response.filename || 'quote.pdf';
+                document.body.appendChild(link);
+                link.click();
+                window.setTimeout(function () {
+                    window.URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                }, 0);
+            } catch (error) {
+                notifyError(config.messages && config.messages.quoteDownloadFailed);
+            }
+        }
+
+        function requestQuoteEmail(quoteId) {
+            $.ajax({
+                url: ajaxUrl,
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    ajax: true,
+                    action: 'emailQuotePdf',
+                    id_quote: quoteId
+                }
+            }).done(function (response) {
+                if (response && response.success) {
+                    notifySuccess(response.message || (config.messages && config.messages.quoteEmailSuccess));
+                } else {
+                    notifyError(response && response.message ? response.message : (config.messages && config.messages.quoteEmailFailed));
+                }
+
+                if (response && response.quotes) {
+                    selectedInquiryQuotes = response.quotes;
+                    if (response.quote_permissions) {
+                        quotePermissions = {
+                            can_download: !!response.quote_permissions.can_download,
+                            can_email: !!response.quote_permissions.can_email
+                        };
+                    }
+                    renderQuotesList();
+                }
+            }).fail(function () {
+                notifyError(config.messages && config.messages.quoteEmailFailed);
+            });
         }
 
         function updateCounts() {
@@ -242,7 +454,7 @@
             bindCard($newCard);
             updateCounts();
             if (response && response.inquiry && selectedInquiryId === parseInt(response.inquiry.id_inquiry, 10)) {
-                renderSidebarDetails(response.inquiry, response.operations);
+                renderSidebarDetails(response.inquiry, response.operations, response.quotes, response.quote_permissions);
             }
         }
 
@@ -349,7 +561,7 @@
                 if (response && response.success) {
                     refreshCard(id, function (resp) {
                         if (resp && resp.inquiry && selectedInquiryId === parseInt(id, 10)) {
-                            renderSidebarDetails(resp.inquiry, resp.operations);
+                            renderSidebarDetails(resp.inquiry, resp.operations, resp.quotes || selectedInquiryQuotes, resp.quote_permissions || quotePermissions);
                         }
                         if (!value) {
                             notifySuccess(config.messages && config.messages.reminderCleared);
@@ -386,7 +598,7 @@
                 if (response && response.success) {
                     renderNoteHistory(response.notes || []);
                     if (response.inquiry) {
-                        renderSidebarDetails(response.inquiry, response.operations);
+                        renderSidebarDetails(response.inquiry, response.operations, response.quotes || selectedInquiryQuotes, response.quote_permissions || quotePermissions);
                     }
                     $noteModal.modal('show');
                 } else {
@@ -431,7 +643,7 @@
                             replaceCard($card, response.card_html, response);
                         }
                     } else if (response.inquiry && selectedInquiryId === parseInt(id, 10)) {
-                        renderSidebarDetails(response.inquiry, response.operations);
+                        renderSidebarDetails(response.inquiry, response.operations, response.quotes || selectedInquiryQuotes, response.quote_permissions || quotePermissions);
                     }
                     if (typeof callback === 'function') {
                         callback(response);
@@ -446,7 +658,7 @@
             }
             refreshCard(id, function (response) {
                 if (response && response.inquiry) {
-                    renderSidebarDetails(response.inquiry, response.operations);
+                    renderSidebarDetails(response.inquiry, response.operations, response.quotes || selectedInquiryQuotes, response.quote_permissions || quotePermissions);
                 }
             });
         }
@@ -676,7 +888,7 @@
                     }
                     refreshCard(id, function (resp) {
                         if (resp && resp.inquiry && selectedInquiryId === parseInt(id, 10)) {
-                            renderSidebarDetails(resp.inquiry, resp.operations);
+                            renderSidebarDetails(resp.inquiry, resp.operations, resp.quotes || selectedInquiryQuotes, resp.quote_permissions || quotePermissions);
                         }
                     });
                     notifySuccess(config.messages && config.messages.noteSaved);
@@ -787,9 +999,14 @@
                     refreshCard(selectedInquiryId, function (resp) {
                         var operations = resp && resp.operations ? resp.operations : response.operations;
                         if (resp && resp.inquiry) {
-                            renderSidebarDetails(resp.inquiry, operations);
+                            renderSidebarDetails(
+                                resp.inquiry,
+                                operations,
+                                resp.quotes || selectedInquiryQuotes,
+                                resp.quote_permissions || quotePermissions
+                            );
                         } else if (operations) {
-                            renderSidebarDetails(selectedInquiryData, operations);
+                            renderSidebarDetails(selectedInquiryData, operations, selectedInquiryQuotes, quotePermissions);
                         }
                     });
                 } else {

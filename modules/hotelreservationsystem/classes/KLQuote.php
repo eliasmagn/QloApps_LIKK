@@ -159,4 +159,42 @@ class KLQuote extends ObjectModel
 
         $this->payload = json_encode($payload);
     }
+
+    /**
+     * Fetch quote summaries for a specific inquiry ordered by creation date.
+     *
+     * @param int $idInquiry
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getSummariesForInquiry($idInquiry)
+    {
+        $query = new DbQuery();
+        $query->select('q.*, e.firstname, e.lastname');
+        $query->from('kl_quote', 'q');
+        $query->leftJoin('employee', 'e', 'e.id_employee = q.id_employee_author');
+        $query->where('q.id_inquiry='.(int) $idInquiry);
+        $query->orderBy('q.date_add DESC');
+
+        $rows = Db::getInstance()->executeS($query);
+        if (!$rows) {
+            return array();
+        }
+
+        foreach ($rows as &$row) {
+            $row['id_kl_quote'] = (int) $row['id_kl_quote'];
+            $row['id_inquiry'] = (int) $row['id_inquiry'];
+            $row['id_employee_author'] = $row['id_employee_author'] ? (int) $row['id_employee_author'] : null;
+            $row['net_total_minor'] = isset($row['net_total_minor']) ? (int) $row['net_total_minor'] : 0;
+            $row['tax_total_minor'] = isset($row['tax_total_minor']) ? (int) $row['tax_total_minor'] : 0;
+            $row['gross_total_minor'] = isset($row['gross_total_minor']) ? (int) $row['gross_total_minor'] : 0;
+            $row['author_name'] = trim(($row['firstname'] ? $row['firstname'] : '').' '.($row['lastname'] ? $row['lastname'] : ''));
+            $row['payload'] = !empty($row['payload']) ? json_decode($row['payload'], true) : array();
+            if (!is_array($row['payload'])) {
+                $row['payload'] = array();
+            }
+        }
+
+        return $rows;
+    }
 }

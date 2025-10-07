@@ -22,17 +22,20 @@
  */
 
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelInquiryOperationsBridge.php';
+require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/QuotePdfGenerator.php';
 
 class AdminHotelInquiriesController extends ModuleAdminController
 {
     protected $boardEmployees = array();
     protected $statusDefinitions = array();
     protected $stageDefinitions = array();
+    protected $quoteStatusLabels = array();
 
     public function __construct()
     {
         $this->bootstrap = true;
         parent::__construct();
+        $this->quoteStatusLabels = KLQuote::getStatusLabels();
     }
 
     public function initContent()
@@ -99,6 +102,13 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     'operationsNoteDates' => $this->l('Stay window: %s → %s'),
                     'operationsNoteResources' => $this->l('Requested: %s'),
                     'operationsViewTask' => $this->l('View task'),
+                    'quotesEmpty' => $this->l('No quotes have been generated yet.'),
+                    'quoteValidUntil' => $this->l('Valid until %s'),
+                    'quoteDownload' => $this->l('Download PDF'),
+                    'quoteEmail' => $this->l('Email to guest'),
+                    'quoteDownloadFailed' => $this->l('Unable to download the quote PDF.'),
+                    'quoteEmailSuccess' => $this->l('Quote emailed to the guest successfully.'),
+                    'quoteEmailFailed' => $this->l('Unable to send the quote email.'),
                 ),
                 'stageStatuses' => array_map(function ($definition) {
                     return isset($definition['default_status']) ? $definition['default_status'] : null;
@@ -429,11 +439,260 @@ class AdminHotelInquiriesController extends ModuleAdminController
                 'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
                 'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
             );
+            $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry($idInquiry), $row);
+            $response['quote_permissions'] = $this->buildQuotePermissions($row);
         } else {
             $response['message'] = $this->l('Inquiry not found.');
         }
 
         return $this->ajaxDie(json_encode($response));
+    }
+
+    public function ajaxProcessDownloadQuotePdf()
+    {
+        $response = array('success' => false);
+        if (!$this->access('view')) {
+            $response['message'] = $this->l('You do not have permission to download quotes.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $idQuote = (int) Tools::getValue('id_quote');
+        if (!$idQuote) {
+            $response['message'] = $this->l('Missing quote identifier.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $quote = new KLQuote($idQuote);
+        if (!Validate::isLoadedObject($quote)) {
+            $response['message'] = $this->l('Quote not found.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $inquiry = HotelInquiry::findById((int) $quote->id_inquiry);
+        if (!$inquiry) {
+            $response['message'] = $this->l('Inquiry not found for this quote.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $generator = new QuotePdfGenerator();
+        $pdf = $generator->generate($quote, array('inquiry' => $inquiry));
+        $filename = $generator->buildFilename($quote, array('inquiry' => $inquiry));
+
+        $response['success'] = true;
+        $response['filename'] = $filename;
+        $response['mime'] = 'application/pdf';
+        $response['content_base64'] = base64_encode($pdf);
+        $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry((int) $quote->id_inquiry), $inquiry);
+        $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
+    public function ajaxProcessEmailQuotePdf()
+    {
+        $response = array('success' => false);
+        if (!$this->access('edit')) {
+            $response['message'] = $this->l('You do not have permission to email quotes.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $idQuote = (int) Tools::getValue('id_quote');
+        if (!$idQuote) {
+            $response['message'] = $this->l('Missing quote identifier.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $quote = new KLQuote($idQuote);
+        if (!Validate::isLoadedObject($quote)) {
+            $response['message'] = $this->l('Quote not found.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $inquiry = HotelInquiry::findById((int) $quote->id_inquiry);
+        if (!$inquiry) {
+            $response['message'] = $this->l('Inquiry not found for this quote.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $email = isset($inquiry['requester_email']) ? trim($inquiry['requester_email']) : '';
+        if (!$email || !Validate::isEmail($email)) {
+            $response['message'] = $this->l('The inquiry is missing a valid guest email address.');
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $generator = new QuotePdfGenerator();
+        $pdf = $generator->generate($quote, array('inquiry' => $inquiry));
+        $filename = $generator->buildFilename($quote, array('inquiry' => $inquiry));
+
+        $statusLabels = $this->quoteStatusLabels;
+        $quoteStatus = isset($statusLabels[$quote->status]) ? $statusLabels[$quote->status] : $quote->status;
+        $langId = $this->context && $this->context->language ? (int) $this->context->language->id : null;
+
+        $templateVars = array(
+            '{guest_name}' => isset($inquiry['requester_name']) && $inquiry['requester_name'] !== '' ? $inquiry['requester_name'] : $this->l('there'),
+            '{inquiry_reference}' => isset($inquiry['reference']) ? $inquiry['reference'] : '',
+            '{inquiry_subject}' => isset($inquiry['subject']) ? $inquiry['subject'] : '',
+            '{quote_status}' => $quoteStatus,
+            '{quote_valid_until}' => $quote->valid_until ? Tools::displayDate($quote->valid_until, $langId, true) : $this->l('Until further notice'),
+            '{quote_total}' => $this->formatQuoteMoney($quote->gross_total_minor, $quote->currency_iso_code),
+            '{contact_email}' => Configuration::get('PS_SHOP_EMAIL'),
+            '{contact_phone}' => Configuration::get('PS_SHOP_PHONE') ?: '',
+            '{brand_name}' => Configuration::get('PS_SHOP_NAME') ?: 'Kunstort Lehnin',
+        );
+
+        $subject = sprintf($this->l('Residency quote %s'), isset($inquiry['reference']) ? $inquiry['reference'] : '#'.$quote->id_kl_quote);
+
+        $sent = Mail::Send(
+            $langId ?: (int) Configuration::get('PS_LANG_DEFAULT'),
+            'kl_quote_guest',
+            $subject,
+            $templateVars,
+            $email,
+            isset($inquiry['requester_name']) && $inquiry['requester_name'] !== '' ? $inquiry['requester_name'] : null,
+            null,
+            null,
+            array(array('content' => $pdf, 'name' => $filename, 'mime' => 'application/pdf')),
+            null,
+            _PS_MODULE_DIR_.'hotelreservationsystem/mails/'
+        );
+
+        if ($sent && $quote->status === KLQuote::STATUS_DRAFT) {
+            $quote->status = KLQuote::STATUS_SENT;
+            $quote->update();
+        }
+
+        if ($sent) {
+            $response['success'] = true;
+            $response['message'] = $this->l('Quote emailed to the guest successfully.');
+        } else {
+            $response['message'] = $this->l('Unable to send the quote email.');
+        }
+
+        $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry((int) $quote->id_inquiry), $inquiry);
+        $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
+    /**
+     * @param array<string, mixed> $inquiry
+     *
+     * @return array<string, bool>
+     */
+    protected function buildQuotePermissions(array $inquiry)
+    {
+        $email = isset($inquiry['requester_email']) ? trim((string) $inquiry['requester_email']) : '';
+
+        return array(
+            'can_download' => (bool) $this->access('view'),
+            'can_email' => (bool) $this->access('edit') && $email !== '' && Validate::isEmail($email),
+        );
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     * @param array<string, mixed> $inquiry
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function formatQuoteSummaries(array $rows, array $inquiry)
+    {
+        if (empty($rows)) {
+            return array();
+        }
+
+        $formatted = array();
+        foreach ($rows as $row) {
+            $formatted[] = $this->formatQuoteSummaryFromModel(
+                $this->hydrateQuoteFromRow($row),
+                $inquiry,
+                array('author_name' => isset($row['author_name']) ? $row['author_name'] : '')
+            );
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return KLQuote
+     */
+    protected function hydrateQuoteFromRow(array $row)
+    {
+        $quote = new KLQuote();
+        $quote->id = isset($row['id_kl_quote']) ? (int) $row['id_kl_quote'] : 0;
+        $quote->id_kl_quote = $quote->id;
+        $quote->id_inquiry = isset($row['id_inquiry']) ? (int) $row['id_inquiry'] : 0;
+        $quote->id_employee_author = isset($row['id_employee_author']) ? (int) $row['id_employee_author'] : null;
+        $quote->status = isset($row['status']) ? (string) $row['status'] : KLQuote::STATUS_DRAFT;
+        $quote->currency_iso_code = isset($row['currency_iso_code']) ? (string) $row['currency_iso_code'] : '';
+        $quote->net_total_minor = isset($row['net_total_minor']) ? (int) $row['net_total_minor'] : 0;
+        $quote->tax_total_minor = isset($row['tax_total_minor']) ? (int) $row['tax_total_minor'] : 0;
+        $quote->gross_total_minor = isset($row['gross_total_minor']) ? (int) $row['gross_total_minor'] : 0;
+        $quote->valid_from = isset($row['valid_from']) ? $row['valid_from'] : null;
+        $quote->valid_until = isset($row['valid_until']) ? $row['valid_until'] : null;
+        $quote->date_add = isset($row['date_add']) ? $row['date_add'] : null;
+        $quote->date_upd = isset($row['date_upd']) ? $row['date_upd'] : null;
+        if (isset($row['payload']) && is_array($row['payload'])) {
+            $quote->setPayload($row['payload']);
+        }
+
+        return $quote;
+    }
+
+    /**
+     * @param KLQuote $quote
+     * @param array<string, mixed> $inquiry
+     * @param array<string, mixed> $extra
+     *
+     * @return array<string, mixed>
+     */
+    protected function formatQuoteSummaryFromModel(KLQuote $quote, array $inquiry, array $extra = array())
+    {
+        $langId = $this->context && $this->context->language ? (int) $this->context->language->id : null;
+        $status = isset($this->quoteStatusLabels[$quote->status]) ? $this->quoteStatusLabels[$quote->status] : $quote->status;
+
+        return array(
+            'id_kl_quote' => (int) ($quote->id ? $quote->id : $quote->id_kl_quote),
+            'status' => $quote->status,
+            'status_label' => $status,
+            'gross_total_minor' => (int) $quote->gross_total_minor,
+            'currency_iso_code' => $quote->currency_iso_code,
+            'total_display' => $this->formatQuoteMoney($quote->gross_total_minor, $quote->currency_iso_code),
+            'valid_until' => $quote->valid_until,
+            'valid_until_display' => $quote->valid_until ? Tools::displayDate($quote->valid_until, $langId, true) : '',
+            'date_add' => $quote->date_add,
+            'date_add_display' => $quote->date_add ? Tools::displayDate($quote->date_add, $langId, true) : '',
+            'author_name' => isset($extra['author_name']) ? (string) $extra['author_name'] : '',
+            'filename' => $this->buildQuoteFilenameForDisplay($quote, $inquiry),
+        );
+    }
+
+    /**
+     * @param KLQuote $quote
+     * @param array<string, mixed> $inquiry
+     *
+     * @return string
+     */
+    protected function buildQuoteFilenameForDisplay(KLQuote $quote, array $inquiry)
+    {
+        $generator = new QuotePdfGenerator();
+
+        return $generator->buildFilename($quote, array('inquiry' => $inquiry));
+    }
+
+    /**
+     * @param int $amountMinor
+     * @param string $currencyIso
+     *
+     * @return string
+     */
+    protected function formatQuoteMoney($amountMinor, $currencyIso)
+    {
+        $value = ((int) $amountMinor) / 100;
+
+        return $currencyIso.' '.number_format($value, 2, '.', ',');
     }
 
     protected function handleOperationsFollowUpFromNote(array &$response, array $inquiry, $idInquiry, $note)
