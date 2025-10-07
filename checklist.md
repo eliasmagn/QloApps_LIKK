@@ -21,6 +21,7 @@
   - [x] Built the package assembly UI for bundled offers.
   - [x] Implemented a pricing engine that produces inquiry quotes with seasonal adjustments and optional components.
 - [x] Added branded quote PDF export via `QuotePdfGenerator`, surfacing inquiry sidebar listings with permission-aware download/email actions and regression tests for generated documents.
+- [x] Delivered the inquiry quote review workflow so sidebar cards surface status badges, approval/decline actions, audit-note logging and the existing PDF/email tooling without leaving the board.
 - [x] Hardened resource taxonomy admin tools with amenity assignment, front-office previews, change history summaries and capacity guardrails.
 - [x] Draft resource taxonomy for rooms, ateliers, gastronomy areas.
   - [x] Scaffolded database tables and `ObjectModel` classes for profiles, capacities, amenities, storytelling and history logs.
