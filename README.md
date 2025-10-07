@@ -37,7 +37,12 @@ Key characteristics of the fork:
 - 📤 **Operations exports** – admins can export filtered slices of tasks (date window, status, resource kind, configured teams) to CSV or ICS directly from the console, with filenames and event metadata spelling out the chosen scope for downstream schedulers.
 - ✅ **Storytelling test harness** – dedicated PHPUnit and Panther suites guard the presenter payloads, residency template rendering and Lighthouse-aligned navigation timings.
 
-The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
+The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), task briefs in [`devtasks/`](devtasks/), and storytelling editorial guidance in [`docs/storytelling-styleguide.md`](docs/storytelling-styleguide.md).
+
+### Documentation
+
+- [`docs/README.md`](docs/README.md) – canonical index for concepts, blueprints, issues and editorial resources.
+- [`docs/storytelling-styleguide.md`](docs/storytelling-styleguide.md) – tone, imagery, localisation and layout guidance for storytelling templates.
 
 ### Inquiry Landing
 
