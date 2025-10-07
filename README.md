@@ -26,6 +26,7 @@ Key characteristics of the fork:
 - 💡 **Storytelling pricing highlights** – featured packages now display cached starting rates, sample stay context and inclusion summaries generated via canonical calls to `KLQuotePricingEngine::generateQuote()`.
 - 🖼️ **Hero media pipeline** – taxonomy stories expose hero media references and alt text; the theme ships `npm run build:hero-media` to emit responsive WebP/JPEG variants while storytelling templates render lazy-loaded `<picture>` elements with accessible captions.
 - 💼 **Rate plan & quote engine** – the module now ships database tables and `ObjectModel` classes for rate plans, seasonal modifiers, bundled packages and inquiry-linked quotes, and the `KLQuotePricingEngine` turns those definitions into inquiry-ready pricing breakdowns.
+- 📄 **Quote PDFs** – inquiry quotes persisted via `KLQuotePricingEngine::persistQuote()` can now be exported as branded PDFs through `QuotePdfGenerator`, with the Kanban sidebar listing saved quotes and offering permission-aware download/email actions. PHPUnit coverage asserts deterministic hashes for sample PDFs so layout regressions surface quickly.
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 - 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, ships subscription-aware daily digests/overdue reminders with quiet-hour deferrals, and exposes **Operations → Tasks** and **Operations → Notification Preferences** consoles for manual task authoring, assignment workflows, mobile checklists and employee notification management.
@@ -231,6 +232,8 @@ Head to **Hotel Reservation System → Packages** to craft bundled offers:
 ### Quote generation service
 
 With plans and packages configured, the `KLQuotePricingEngine` orchestrates stay pricing. Call `KLQuotePricingEngine::generateQuote()` with the rate plan, resource profile, stay window and optional package selections to receive a currency-safe payload of line items, seasonal adjustments and totals. Persist the result alongside an inquiry via `KLQuotePricingEngine::persistQuote()` to keep an auditable history of drafts, sent quotes and approvals inside the Kanban board.
+
+Persisted quotes can now be rendered as branded PDFs via `QuotePdfGenerator`. The inquiry inspector automatically lists saved quotes with download and email buttons (guarded by the employee’s view/edit permissions); the email action attaches the generated PDF using the module mail template `kl_quote_guest.*`. Deterministic hashes in `QuotePdfGeneratorTest` flag layout regressions whenever the PDF structure changes.
 
 ### Operations automation module
 
