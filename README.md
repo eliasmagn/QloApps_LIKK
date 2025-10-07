@@ -29,6 +29,7 @@ Key characteristics of the fork:
 - 🗓️ **Rate plan console** – manage plan metadata, eligibility scopes and seasonal adjustments directly from the back office.
 - 🎁 **Package builder** – assemble bundled offers by combining lodging, atelier, catering and experience components without touching SQL tables.
 - 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, emails daily digests plus overdue reminders, and exposes an **Operations → Tasks** console for manual task authoring, assignment workflows and mobile checklists.
+- 🔁 **Inquiry ↔ Operations bridge** – the inquiry Kanban inspector surfaces linked follow-ups, lets staff raise housekeeping or maintenance tasks in-place, converts note submissions into follow-ups when needed and deep-links into the Operations console with context preserved.
 - 📊 **Timeline operations widget** – the admin booking timeline now surfaces a summary widget that groups overdue, today and tomorrow workloads per resource kind with quick links into the Operations console for follow-up.
 - 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
 - ✅ **Storytelling test harness** – dedicated PHPUnit and Panther suites guard the presenter payloads, residency template rendering and Lighthouse-aligned navigation timings.
@@ -118,6 +119,7 @@ Navigate to **Hotel Reservation System → Inquiries** to triage, assign and pro
 - Assignee dropdowns that fire async updates.
 - Reminder shortcuts (stored on the inquiry record) for follow-up scheduling.
 - Note capture with an optional “mail note” flag that emails the requester and logs the correspondence for the team.
+- A contextual sidebar inspector that appears when selecting a card, showing requester details, reminders, internal notes and operations follow-ups. When the `kloperations` module is enabled the inspector lists linked tasks (status, schedule, priority) and offers one-click buttons to raise housekeeping or maintenance follow-ups. Staff can also toggle an 'operations follow-up' section on the note dialog to spawn a task with prefilled reference, schedule and context; the server reuses the note body for payloads, logs an audit entry automatically and refreshes the sidebar in-place.
 
 Dragging a card to another column automatically updates its stage (and default status), with conflict messaging if a move is not allowed.
 
@@ -238,7 +240,7 @@ Operations automation now ships inside `modules/kloperations`:
 - `KlOperationTaskGenerator` hooks into `actionCronJob` to create arrival and checkout housekeeping tasks each day based on `HotelBookingDetail` rows while skipping cancelled/refunded stays.
 - Room disable ranges spawn paired maintenance tasks: a morning "maintenance_start" checklist when the block begins and an afternoon "maintenance_release" follow-up on the day the block ends so spaces are reopened deliberately.
 - Booking lifecycle hooks keep generated tasks in sync—arrivals flip to `in_progress` when guests check in, checkouts mark completed when stays close.
-- The back office exposes **Operations → Tasks** for listings, bulk completion, payload/notes inspection and assignment management.
+- The back office exposes **Operations → Tasks** for listings, bulk completion, payload/notes inspection and assignment management, tagging inquiry-sourced rows with deep links back to the originating card.
 - Manual task authoring is available from the same console, capturing structured payloads and optional kickoff notes while generating unique keys and audit trails automatically.
 - Assign tasks to employees or named teams, capture acknowledgement/completion timestamps and manage statuses inline without leaving the console.
 - A lightweight mobile view is available at `index.php?controller=AdminKlOperationTasks&mobile_view=1&token=…`, letting logged-in staff review their queue, update statuses, release tasks and claim unassigned work from housekeeping devices.

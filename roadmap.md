@@ -40,6 +40,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
 - ✅ **ICS/CSV exports** – the Operations console can now export pending tasks for the upcoming week in CSV and ICS formats for downstream scheduling.
 - ✅ **Assignments & mobile checklists** – the Operations console now pairs manual task authoring with employee/team assignments, acknowledgement tracking, CSV/ICS exports enriched with assignee summaries and a mobile-friendly view so housekeeping devices can claim and complete work on the go. Team presets can be stored in `KLOPERATIONS_TEAMS`.
 - ✅ **Timeline summary widget** – the admin booking timeline now embeds an operations summary card that aggregates pending and in-progress tasks into overdue, today and tomorrow buckets per resource kind and links directly to filtered views inside the Operations console.
+- ✅ **Inquiry → Operations bridge** – the inquiry Kanban inspector lists linked follow-ups, raises new `KlOperationTask` entries with inquiry context, lets staff convert note submissions into follow-ups on the fly and exposes deep links back to the originating inquiry inside both the Operations console view and list.
 
 ## Phase 4 – Reporting & Integrations (⏳ Planned)
 - ⏳ **Utilisation dashboards** – surface occupancy, length-of-stay, residency programme metrics with filters by resource type.

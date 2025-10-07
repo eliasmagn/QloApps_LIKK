@@ -23,7 +23,22 @@
       <dt>{l s='Resource' mod='kloperations'}</dt>
       <dd>{$task->resource_type|escape:'htmlall':'UTF-8'} #{$task->id_resource|escape:'htmlall':'UTF-8'}</dd>
       <dt>{l s='Context' mod='kloperations'}</dt>
-      <dd>{$task->context_type|escape:'htmlall':'UTF-8'} #{$task->context_id|escape:'htmlall':'UTF-8'}</dd>
+      <dd>
+        {if isset($inquiry_context) && $inquiry_context}
+          {if isset($inquiry_context.link)}
+            <a href="{$inquiry_context.link|escape:'htmlall':'UTF-8'}" target="_blank" rel="noopener">
+              {if isset($inquiry_context.reference)}{$inquiry_context.reference|escape:'htmlall':'UTF-8'}{/if}
+              {if isset($inquiry_context.subject) && $inquiry_context.subject}&nbsp;&ndash;&nbsp;{$inquiry_context.subject|escape:'htmlall':'UTF-8'}{/if}
+            </a>
+          {elseif isset($inquiry_context.id)}
+            {l s='Inquiry' mod='kloperations'} #{$inquiry_context.id|intval}
+          {else}
+            {$task->context_type|escape:'htmlall':'UTF-8'} #{$task->context_id|escape:'htmlall':'UTF-8'}
+          {/if}
+        {else}
+          {$task->context_type|escape:'htmlall':'UTF-8'} #{$task->context_id|escape:'htmlall':'UTF-8'}
+        {/if}
+      </dd>
       <dt>{l s='Priority' mod='kloperations'}</dt>
       <dd>{$task->priority|escape:'htmlall':'UTF-8'}</dd>
     </dl>

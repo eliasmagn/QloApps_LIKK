@@ -19,6 +19,7 @@ require_once dirname(__DIR__, 2) . '/classes/KlOperationTask.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationRun.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationTaskNote.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationTaskAssignment.php';
+require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelInquiry.php';
 
 class AdminKlOperationTasksController extends ModuleAdminController
 {
@@ -70,6 +71,12 @@ class AdminKlOperationTasksController extends ModuleAdminController
             'due_end' => array(
                 'title' => $this->l('Due end'),
                 'type' => 'datetime',
+            ),
+            'inquiry_context' => array(
+                'title' => $this->l('Inquiry'),
+                'orderby' => false,
+                'search' => false,
+                'callback' => 'renderInquiryContextColumn',
             ),
             'last_reminded_at' => array(
                 'title' => $this->l('Last reminder'),
@@ -146,18 +153,67 @@ class AdminKlOperationTasksController extends ModuleAdminController
         }
 
         $taskIds = array();
+        $inquiryIds = array();
         foreach ($this->_list as $row) {
             if (isset($row['id_kl_operation_task'])) {
                 $taskIds[] = (int) $row['id_kl_operation_task'];
             }
+            if (isset($row['context_type'], $row['context_id']) && $row['context_type'] === 'inquiry' && (int) $row['context_id']) {
+                $inquiryIds[] = (int) $row['context_id'];
+            }
         }
 
         $assignments = $this->fetchAssignmentsIndexed($taskIds);
+        $inquiries = $this->fetchInquiriesIndexed($inquiryIds);
 
         foreach ($this->_list as &$row) {
             $taskId = isset($row['id_kl_operation_task']) ? (int) $row['id_kl_operation_task'] : 0;
             $row['assignment_summary'] = $this->formatAssignmentSummaryForList($assignments, $taskId);
+
+            if (isset($row['context_type'], $row['context_id']) && $row['context_type'] === 'inquiry' && (int) $row['context_id']) {
+                $contextId = (int) $row['context_id'];
+                if (isset($inquiries[$contextId])) {
+                    $row['inquiry_reference'] = $inquiries[$contextId]['reference'];
+                    $row['inquiry_subject'] = $inquiries[$contextId]['subject'];
+                    $row['inquiry_link'] = $this->context->link->getAdminLink(
+                        'AdminHotelInquiries',
+                        true,
+                        array(),
+                        array('focus_inquiry' => $contextId)
+                    );
+                }
+            }
         }
+    }
+
+    public function renderInquiryContextColumn($value, $row)
+    {
+        if (!isset($row['context_type']) || $row['context_type'] !== 'inquiry') {
+            return '';
+        }
+
+        $labelParts = array();
+        if (!empty($row['inquiry_reference'])) {
+            $labelParts[] = Tools::safeOutput($row['inquiry_reference']);
+        }
+        if (!empty($row['inquiry_subject'])) {
+            $labelParts[] = Tools::safeOutput($row['inquiry_subject']);
+        }
+
+        $label = trim(implode(' — ', $labelParts));
+        if ($label === '' && isset($row['context_id'])) {
+            $label = $this->l('Inquiry') . ' #' . (int) $row['context_id'];
+        }
+
+        if (!empty($row['inquiry_link'])) {
+            return sprintf(
+                '<a href="%s" target="_blank" rel="noopener">%s</a>',
+                Tools::safeOutput($row['inquiry_link']),
+                $label
+            );
+        }
+
+        return $label;
     }
 
     public function processCompleteTasks()
@@ -447,6 +503,28 @@ class AdminKlOperationTasksController extends ModuleAdminController
             }
         }
 
+        $inquiryContext = null;
+        if ($task->context_type === 'inquiry' && $task->context_id) {
+            $inquiryRow = HotelInquiry::findById((int) $task->context_id);
+            if ($inquiryRow) {
+                $inquiryContext = array(
+                    'id' => (int) $task->context_id,
+                    'reference' => $inquiryRow['reference'],
+                    'subject' => $inquiryRow['subject'],
+                    'link' => $this->context->link->getAdminLink(
+                        'AdminHotelInquiries',
+                        true,
+                        array(),
+                        array('focus_inquiry' => (int) $task->context_id)
+                    ),
+                );
+            } else {
+                $inquiryContext = array(
+                    'id' => (int) $task->context_id,
+                );
+            }
+        }
+
         $assignments = $this->getTaskAssignments((int) $task->id);
 
         $this->tpl_view_vars = array(
@@ -462,6 +540,7 @@ class AdminKlOperationTasksController extends ModuleAdminController
             'form_action' => $this->buildLink(array('token' => $this->token)),
             'mobile_view_link' => $this->buildLink(array('token' => $this->token, 'mobile_view' => 1)),
             'current_employee_id' => (int) $this->context->employee->id,
+            'inquiry_context' => $inquiryContext,
         );
 
         return parent::renderView();
@@ -822,6 +901,34 @@ class AdminKlOperationTasksController extends ModuleAdminController
         return $indexed;
     }
 
+    private function fetchInquiriesIndexed(array $ids)
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (!$ids) {
+            return array();
+        }
+
+        $query = new DbQuery();
+        $query->select('`id_inquiry`, `reference`, `subject`');
+        $query->from(HotelInquiry::$definition['table']);
+        $query->where('`id_inquiry` IN (' . implode(',', $ids) . ')');
+
+        $rows = Db::getInstance()->executeS($query);
+        if (!$rows) {
+            return array();
+        }
+
+        $indexed = array();
+        foreach ($rows as $row) {
+            $indexed[(int) $row['id_inquiry']] = array(
+                'reference' => $row['reference'],
+                'subject' => $row['subject'],
+            );
+        }
+
+        return $indexed;
+    }
+
     private function normaliseAssignmentRow(array $row)
     {
         $displayName = '';
@@ -1136,9 +1243,11 @@ class AdminKlOperationTasksController extends ModuleAdminController
         return array(
             array('id' => 'housekeeping_arrival', 'name' => $this->l('Housekeeping – arrival')),
             array('id' => 'housekeeping_checkout', 'name' => $this->l('Housekeeping – checkout')),
+            array('id' => 'housekeeping_followup', 'name' => $this->l('Housekeeping – follow-up')),
             array('id' => 'maintenance_start', 'name' => $this->l('Maintenance – start block')),
             array('id' => 'maintenance_release', 'name' => $this->l('Maintenance – release space')),
-            array('id' => 'custom', 'name' => $this->l('Custom / other')), 
+            array('id' => 'maintenance_followup', 'name' => $this->l('Maintenance – follow-up')),
+            array('id' => 'custom', 'name' => $this->l('Custom / other')),
         );
     }
 
