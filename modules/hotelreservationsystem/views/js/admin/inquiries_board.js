@@ -74,6 +74,8 @@
         var operationsEnabled = !!config.operationsEnabled;
         var operationsConsoleUrl = config.operationsConsoleUrl || '';
         var focusInquiryId = parseInt(config.focusInquiryId, 10) || null;
+        var quoteStatusLabels = config.quoteStatusLabels || {};
+        var quotesByInquiry = config.quotesByInquiry || {};
 
         var $board = $('#hotel-inquiry-board');
         var $createModal = $('#inquiry-create-modal');
@@ -105,6 +107,7 @@
         var $quotesSection = $sidebar.find('[data-role="quotes-section"]');
         var $quotesList = $sidebar.find('[data-role="quotes-list"]');
         var $quotesEmpty = $sidebar.find('[data-role="quotes-empty"]');
+        var quoteTemplateHtml = $.trim($('#inquiry-quote-item-template').html() || '');
 
         if (!operationsEnabled && $operationsSection.length) {
             $operationsSection.hide();
@@ -193,6 +196,13 @@
             selectedInquiryData = inquiry;
             if (Array.isArray(quotes)) {
                 selectedInquiryQuotes = quotes;
+                if (selectedInquiryId) {
+                    quotesByInquiry[selectedInquiryId] = quotes;
+                }
+            } else if (selectedInquiryId && quotesByInquiry[selectedInquiryId]) {
+                selectedInquiryQuotes = quotesByInquiry[selectedInquiryId];
+            } else {
+                selectedInquiryQuotes = [];
             }
             if (permissions) {
                 quotePermissions = {
@@ -249,6 +259,25 @@
             renderQuotesList();
         }
 
+        function createQuoteElement() {
+            if (!quoteTemplateHtml) {
+                return $('<div class="inquiry-quote-item"/>');
+            }
+
+            return $('<div/>').html(quoteTemplateHtml).children().first();
+        }
+
+        function formatQuoteValidUntil(quote) {
+            if (!quote || !quote.valid_until_display) {
+                return '';
+            }
+            if (config.messages && config.messages.quoteValidUntil) {
+                return config.messages.quoteValidUntil.replace('%s', quote.valid_until_display);
+            }
+
+            return quote.valid_until_display;
+        }
+
         function renderQuotesList() {
             if (!$quotesSection.length) {
                 return;
@@ -269,61 +298,118 @@
             }
 
             selectedInquiryQuotes.forEach(function (quote) {
-                var $item = $('<div class="inquiry-quote-item"/>');
-                var $header = $('<div class="inquiry-quote-item-header"/>');
-
-                var statusLabel = quote.status_label || quote.status || '';
-                if (statusLabel) {
-                    $header.append($('<span class="label label-default"/>').text(statusLabel));
+                var $item = createQuoteElement();
+                if (!$item || !$item.length) {
+                    return;
                 }
-                if (quote.total_display) {
-                    $header.append($('<strong class="inquiry-quote-total"/>').text(quote.total_display));
+
+                $item.attr('data-quote-id', quote.id_kl_quote);
+
+                var $statusBadge = $item.find('[data-field="status-label"]');
+                if ($statusBadge.length) {
+                    var statusText = quote.status_label || quoteStatusLabels[quote.status] || quote.status || '';
+                    if (statusText) {
+                        var badgeClass = quote.status_badge_class || 'label-default';
+                        $statusBadge.attr('class', 'label ' + badgeClass);
+                        $statusBadge.text(statusText);
+                    } else {
+                        $statusBadge.remove();
+                    }
+                }
+
+                var $total = $item.find('[data-field="total-display"]');
+                if ($total.length) {
+                    if (quote.total_display) {
+                        $total.text(quote.total_display);
+                    } else {
+                        $total.remove();
+                    }
                 }
 
                 var metaParts = [];
                 if (quote.date_add_display) {
                     metaParts.push(quote.date_add_display);
                 }
-                if (quote.valid_until_display) {
-                    var validText = (config.messages && config.messages.quoteValidUntil)
-                        ? config.messages.quoteValidUntil.replace('%s', quote.valid_until_display)
-                        : quote.valid_until_display;
+                var validText = formatQuoteValidUntil(quote);
+                if (validText) {
                     metaParts.push(validText);
                 }
                 if (quote.author_name) {
                     metaParts.push(quote.author_name);
                 }
 
-                var $body = $('<div class="inquiry-quote-item-body"/>');
-                if (metaParts.length) {
-                    $body.append($('<div class="inquiry-quote-meta"/>').text(metaParts.join(' · ')));
+                var $meta = $item.find('[data-field="meta"]');
+                if ($meta.length) {
+                    if (metaParts.length) {
+                        $meta.text(metaParts.join(' · '));
+                    } else {
+                        $meta.remove();
+                    }
                 }
 
-                var $actions = $('<div class="inquiry-quote-actions"/>');
-                if (quotePermissions.can_download) {
-                    var downloadLabel = (config.messages && config.messages.quoteDownload) || 'Download PDF';
-                    var $downloadBtn = $('<button type="button" class="btn btn-default btn-xs" data-action="download-quote"/>')
-                        .attr('data-quote-id', quote.id_kl_quote)
-                        .text(downloadLabel);
-                    $downloadBtn.prepend('<i class="icon-download"></i> ');
-                    $actions.append($downloadBtn);
-                }
-                if (quotePermissions.can_email) {
-                    var emailLabel = (config.messages && config.messages.quoteEmail) || 'Email to guest';
-                    var $emailBtn = $('<button type="button" class="btn btn-default btn-xs" data-action="email-quote"/>')
-                        .attr('data-quote-id', quote.id_kl_quote)
-                        .text(emailLabel);
-                    $emailBtn.prepend('<i class="icon-envelope"></i> ');
-                    $actions.append($emailBtn);
+                var $statusActions = $item.find('[data-role="status-actions"]');
+                if ($statusActions.length) {
+                    var transitions = quote.transitions || {};
+                    var $approveBtn = $statusActions.find('[data-action="approve-quote"]');
+                    var $declineBtn = $statusActions.find('[data-action="decline-quote"]');
+                    var showApprove = transitions.approve !== false;
+                    var showDecline = transitions.decline !== false;
+
+                    if ($approveBtn.length) {
+                        if (showApprove) {
+                            $approveBtn.attr('data-quote-id', quote.id_kl_quote).removeClass('hidden').prop('disabled', false);
+                        } else {
+                            $approveBtn.addClass('hidden');
+                        }
+                    }
+
+                    if ($declineBtn.length) {
+                        if (showDecline) {
+                            $declineBtn.attr('data-quote-id', quote.id_kl_quote).removeClass('hidden').prop('disabled', false);
+                        } else {
+                            $declineBtn.addClass('hidden');
+                        }
+                    }
+
+                    if ((!showApprove || !$approveBtn.length) && (!showDecline || !$declineBtn.length)) {
+                        $statusActions.remove();
+                    }
                 }
 
-                if ($actions.children().length) {
-                    $body.append($actions);
+                var $delivery = $item.find('[data-role="delivery-actions"]');
+                if ($delivery.length) {
+                    var deliveryVisible = 0;
+                    var $downloadBtn = $delivery.find('[data-action="download-quote"]');
+                    if ($downloadBtn.length) {
+                        if (quotePermissions.can_download) {
+                            $downloadBtn.attr('data-quote-id', quote.id_kl_quote).removeClass('hidden').prop('disabled', false);
+                            deliveryVisible += 1;
+                        } else {
+                            $downloadBtn.addClass('hidden');
+                        }
+                    }
+
+                    var $emailBtn = $delivery.find('[data-action="email-quote"]');
+                    if ($emailBtn.length) {
+                        if (quotePermissions.can_email) {
+                            $emailBtn.attr('data-quote-id', quote.id_kl_quote).removeClass('hidden').prop('disabled', false);
+                            deliveryVisible += 1;
+                        } else {
+                            $emailBtn.addClass('hidden');
+                        }
+                    }
+
+                    if (!deliveryVisible) {
+                        $delivery.remove();
+                    }
                 }
 
-                $item.append($header).append($body);
                 $quotesList.append($item);
             });
+
+            if (selectedInquiryId) {
+                quotesByInquiry[selectedInquiryId] = selectedInquiryQuotes.slice();
+            }
 
             bindQuoteActions();
         }
@@ -350,6 +436,24 @@
                 }
                 requestQuoteEmail(quoteId);
             });
+
+            $quotesSection.find('[data-action="approve-quote"]').off('click').on('click', function (event) {
+                event.preventDefault();
+                var quoteId = parseInt($(this).attr('data-quote-id'), 10);
+                if (!quoteId) {
+                    return;
+                }
+                requestQuoteStatusChange(quoteId, 'approve');
+            });
+
+            $quotesSection.find('[data-action="decline-quote"]').off('click').on('click', function (event) {
+                event.preventDefault();
+                var quoteId = parseInt($(this).attr('data-quote-id'), 10);
+                if (!quoteId) {
+                    return;
+                }
+                requestQuoteStatusChange(quoteId, 'decline');
+            });
         }
 
         function requestQuoteDownload(quoteId) {
@@ -367,6 +471,9 @@
                     handleQuoteDownload(response);
                     if (response.quotes) {
                         selectedInquiryQuotes = response.quotes;
+                        if (selectedInquiryId) {
+                            quotesByInquiry[selectedInquiryId] = response.quotes;
+                        }
                         if (response.quote_permissions) {
                             quotePermissions = {
                                 can_download: !!response.quote_permissions.can_download,
@@ -427,6 +534,9 @@
 
                 if (response && response.quotes) {
                     selectedInquiryQuotes = response.quotes;
+                    if (selectedInquiryId) {
+                        quotesByInquiry[selectedInquiryId] = response.quotes;
+                    }
                     if (response.quote_permissions) {
                         quotePermissions = {
                             can_download: !!response.quote_permissions.can_download,
@@ -437,6 +547,59 @@
                 }
             }).fail(function () {
                 notifyError(config.messages && config.messages.quoteEmailFailed);
+            });
+        }
+
+        function requestQuoteStatusChange(quoteId, action) {
+            var ajaxAction = action === 'approve' ? 'approveQuote' : 'declineQuote';
+            $.ajax({
+                url: ajaxUrl,
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    ajax: true,
+                    action: ajaxAction,
+                    id_quote: quoteId
+                }
+            }).done(function (response) {
+                var successMessage = action === 'approve'
+                    ? (config.messages && config.messages.quoteApproveSuccess)
+                    : (config.messages && config.messages.quoteDeclineSuccess);
+                var failureMessage = action === 'approve'
+                    ? (config.messages && config.messages.quoteApproveFailed)
+                    : (config.messages && config.messages.quoteDeclineFailed);
+
+                if (response && response.success) {
+                    notifySuccess(response.message || successMessage);
+                    if (response.inquiry && parseInt(response.inquiry.id_inquiry, 10) === selectedInquiryId) {
+                        selectedInquiryData = response.inquiry;
+                    }
+                } else {
+                    notifyError(response && response.message ? response.message : failureMessage);
+                }
+
+                if (response && response.quotes) {
+                    selectedInquiryQuotes = response.quotes;
+                    if (selectedInquiryId) {
+                        quotesByInquiry[selectedInquiryId] = response.quotes;
+                    }
+                    if (response.quote_permissions) {
+                        quotePermissions = {
+                            can_download: !!response.quote_permissions.can_download,
+                            can_email: !!response.quote_permissions.can_email
+                        };
+                    }
+                    renderQuotesList();
+                }
+
+                if (response && response.notes && $noteModal.is(':visible') && selectedInquiryId === parseInt($noteForm.find('input[name="id_inquiry"]').val(), 10)) {
+                    renderNoteHistory(response.notes);
+                }
+            }).fail(function () {
+                var failureMessage = action === 'approve'
+                    ? (config.messages && config.messages.quoteApproveFailed)
+                    : (config.messages && config.messages.quoteDeclineFailed);
+                notifyError(failureMessage);
             });
         }
 

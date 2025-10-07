@@ -207,11 +207,30 @@
 }
 
 .inquiry-quote-actions .btn {
-    margin-right: 4px;
+    margin-right: 0;
 }
 
-.inquiry-quote-actions .btn:last-child {
+.inquiry-quote-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inquiry-quote-status-actions,
+.inquiry-quote-delivery-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.inquiry-quote-status-actions .btn,
+.inquiry-quote-delivery-actions .btn {
     margin-right: 0;
+}
+
+.inquiry-quote-status-actions .btn + .btn,
+.inquiry-quote-delivery-actions .btn + .btn {
+    margin-left: 4px;
 }
 
 .inquiry-operations-list {

@@ -68,6 +68,9 @@
                         <h5>{l s='Quotes' mod='hotelreservationsystem'}</h5>
                         <p class="text-muted" data-role="quotes-empty">{l s='No quotes have been generated yet.' mod='hotelreservationsystem'}</p>
                         <div class="inquiry-quote-list" data-role="quotes-list"></div>
+                        <script type="text/template" id="inquiry-quote-item-template">
+                            {include file="modules/hotelreservationsystem/views/templates/admin/inquiries/_partials/quote_card.tpl"}
+                        </script>
                     </section>
                     <section class="inquiry-sidebar-section inquiry-sidebar-operations" data-role="operations-section">
                         <h5>{l s='Operations follow-ups' mod='hotelreservationsystem'}</h5>

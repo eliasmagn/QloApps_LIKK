@@ -30,6 +30,9 @@ class AdminHotelInquiriesController extends ModuleAdminController
     protected $statusDefinitions = array();
     protected $stageDefinitions = array();
     protected $quoteStatusLabels = array();
+    protected $boardDataset = array();
+    protected $quoteSummariesByInquiry = array();
+    protected $quoteSummariesInitialized = false;
 
     public function __construct()
     {
@@ -38,20 +41,39 @@ class AdminHotelInquiriesController extends ModuleAdminController
         $this->quoteStatusLabels = KLQuote::getStatusLabels();
     }
 
+    protected function loadBoardContext()
+    {
+        if (empty($this->stageDefinitions)) {
+            $this->stageDefinitions = HotelInquiry::getStageDefinitions();
+        }
+        if (empty($this->statusDefinitions)) {
+            $this->statusDefinitions = HotelInquiry::getStatusDefinitions();
+        }
+        if (empty($this->boardEmployees)) {
+            $this->boardEmployees = $this->getEmployeesForBoard();
+        }
+        if (empty($this->boardDataset)) {
+            $this->boardDataset = HotelInquiry::getBoardDataset(array_keys($this->stageDefinitions));
+        }
+        if (!$this->quoteSummariesInitialized) {
+            $this->quoteSummariesByInquiry = $this->collectQuotesForDataset($this->boardDataset);
+            $this->quoteSummariesInitialized = true;
+        }
+    }
+
     public function initContent()
     {
         parent::initContent();
 
-        $this->stageDefinitions = HotelInquiry::getStageDefinitions();
-        $this->statusDefinitions = HotelInquiry::getStatusDefinitions();
-        $this->boardEmployees = $this->getEmployeesForBoard();
-        $dataset = HotelInquiry::getBoardDataset(array_keys($this->stageDefinitions));
+        $this->loadBoardContext();
 
         $this->context->smarty->assign(array(
             'stage_definitions' => $this->stageDefinitions,
             'status_definitions' => $this->statusDefinitions,
-            'inquiry_dataset' => $dataset,
+            'inquiry_dataset' => $this->boardDataset,
             'board_employees' => $this->boardEmployees,
+            'inquiry_quotes' => $this->quoteSummariesByInquiry,
+            'quote_status_labels' => $this->quoteStatusLabels,
             'operations_enabled' => HotelInquiryOperationsBridge::isAvailable(),
         ));
 
@@ -68,12 +90,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
         $this->addJS($this->module->getPathUri().'views/js/admin/inquiries_board.js');
         $this->addCSS($this->module->getPathUri().'views/css/admin/inquiries_board.css');
 
-        if (!$this->stageDefinitions) {
-            $this->stageDefinitions = HotelInquiry::getStageDefinitions();
-        }
-        if (!$this->statusDefinitions) {
-            $this->statusDefinitions = HotelInquiry::getStatusDefinitions();
-        }
+        $this->loadBoardContext();
 
         Media::addJsDef(array(
             'hotelInquiryBoardConfig' => array(
@@ -109,6 +126,10 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     'quoteDownloadFailed' => $this->l('Unable to download the quote PDF.'),
                     'quoteEmailSuccess' => $this->l('Quote emailed to the guest successfully.'),
                     'quoteEmailFailed' => $this->l('Unable to send the quote email.'),
+                    'quoteApproveSuccess' => $this->l('Quote marked as approved.'),
+                    'quoteApproveFailed' => $this->l('Unable to approve the quote.'),
+                    'quoteDeclineSuccess' => $this->l('Quote marked as declined.'),
+                    'quoteDeclineFailed' => $this->l('Unable to decline the quote.'),
                 ),
                 'stageStatuses' => array_map(function ($definition) {
                     return isset($definition['default_status']) ? $definition['default_status'] : null;
@@ -117,9 +138,11 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     return isset($definition['label']) ? $definition['label'] : null;
                 }, $this->stageDefinitions),
                 'statusLabels' => $this->statusDefinitions,
+                'quoteStatusLabels' => $this->quoteStatusLabels,
                 'operationsEnabled' => HotelInquiryOperationsBridge::isAvailable(),
                 'operationsConsoleUrl' => $this->context->link->getAdminLink('AdminKlOperationTasks'),
                 'focusInquiryId' => (int) Tools::getValue('focus_inquiry'),
+                'quotesByInquiry' => $this->quoteSummariesByInquiry,
             ),
         ));
     }
@@ -441,6 +464,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
             );
             $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry($idInquiry), $row);
             $response['quote_permissions'] = $this->buildQuotePermissions($row);
+            $this->quoteSummariesByInquiry[$idInquiry] = $response['quotes'];
         } else {
             $response['message'] = $this->l('Inquiry not found.');
         }
@@ -484,6 +508,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
         $response['content_base64'] = base64_encode($pdf);
         $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry((int) $quote->id_inquiry), $inquiry);
         $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
+        $this->quoteSummariesByInquiry[(int) $quote->id_inquiry] = $response['quotes'];
 
         return $this->ajaxDie(json_encode($response));
     }
@@ -570,6 +595,21 @@ class AdminHotelInquiriesController extends ModuleAdminController
 
         $response['quotes'] = $this->formatQuoteSummaries(KLQuote::getSummariesForInquiry((int) $quote->id_inquiry), $inquiry);
         $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
+        $this->quoteSummariesByInquiry[(int) $quote->id_inquiry] = $response['quotes'];
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
+    public function ajaxProcessApproveQuote()
+    {
+        $response = $this->handleQuoteStatusTransition(KLQuote::STATUS_APPROVED);
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
+    public function ajaxProcessDeclineQuote()
+    {
+        $response = $this->handleQuoteStatusTransition(KLQuote::STATUS_DECLINED);
 
         return $this->ajaxDie(json_encode($response));
     }
@@ -587,6 +627,175 @@ class AdminHotelInquiriesController extends ModuleAdminController
             'can_download' => (bool) $this->access('view'),
             'can_email' => (bool) $this->access('edit') && $email !== '' && Validate::isEmail($email),
         );
+    }
+
+    /**
+     * @param array<string, array<int, array<string, mixed>>> $dataset
+     *
+     * @return array<int, array<int, array<string, mixed>>>
+     */
+    protected function collectQuotesForDataset(array $dataset)
+    {
+        $map = array();
+
+        foreach ($dataset as $rows) {
+            if (empty($rows)) {
+                continue;
+            }
+
+            foreach ($rows as $row) {
+                if (!isset($row['id_inquiry'])) {
+                    continue;
+                }
+                $idInquiry = (int) $row['id_inquiry'];
+                if (!$idInquiry) {
+                    continue;
+                }
+
+                $map[$idInquiry] = $this->formatQuoteSummaries(
+                    KLQuote::getSummariesForInquiry($idInquiry),
+                    $row
+                );
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param string $targetStatus
+     *
+     * @return array<string, mixed>
+     */
+    protected function handleQuoteStatusTransition($targetStatus)
+    {
+        $response = array('success' => false);
+
+        if (!$this->access('edit')) {
+            $response['message'] = $this->l('You do not have permission to update quote statuses.');
+
+            return $response;
+        }
+
+        $idQuote = (int) Tools::getValue('id_quote');
+        if (!$idQuote) {
+            $response['message'] = $this->l('Missing quote identifier.');
+
+            return $response;
+        }
+
+        $quote = new KLQuote($idQuote);
+        if (!Validate::isLoadedObject($quote)) {
+            $response['message'] = $this->l('Quote not found.');
+
+            return $response;
+        }
+
+        $inquiry = HotelInquiry::findById((int) $quote->id_inquiry);
+        if (!$inquiry) {
+            $response['message'] = $this->l('Inquiry not found for this quote.');
+
+            return $response;
+        }
+
+        $statusChanged = false;
+        if ($quote->status !== $targetStatus) {
+            $quote->status = $targetStatus;
+            if (!$quote->update()) {
+                $response['message'] = $this->l('Unable to update the quote status.');
+
+                return $response;
+            }
+            $statusChanged = true;
+        }
+
+        $note = false;
+        if ($statusChanged) {
+            $note = $this->logQuoteStatusTransition($quote, $inquiry, $targetStatus);
+        }
+
+        $response['success'] = true;
+        $response['message'] = $this->buildQuoteStatusSuccessMessage($targetStatus);
+        $response['inquiry'] = $inquiry;
+        $response['quotes'] = $this->formatQuoteSummaries(
+            KLQuote::getSummariesForInquiry((int) $quote->id_inquiry),
+            $inquiry
+        );
+        $response['quote_permissions'] = $this->buildQuotePermissions($inquiry);
+
+        if ($statusChanged && $note) {
+            $response['notes'] = HotelInquiryNote::getInquiryNotes((int) $quote->id_inquiry);
+        }
+
+        $this->quoteSummariesByInquiry[(int) $quote->id_inquiry] = $response['quotes'];
+
+        return $response;
+    }
+
+    protected function buildQuoteStatusSuccessMessage($status)
+    {
+        switch ($status) {
+            case KLQuote::STATUS_APPROVED:
+                return $this->l('Quote marked as approved.');
+            case KLQuote::STATUS_DECLINED:
+                return $this->l('Quote marked as declined.');
+        }
+
+        return $this->l('Quote status updated.');
+    }
+
+    protected function logQuoteStatusTransition(KLQuote $quote, array $inquiry, $targetStatus)
+    {
+        $statusLabel = isset($this->quoteStatusLabels[$targetStatus]) ? $this->quoteStatusLabels[$targetStatus] : $targetStatus;
+        $employeeName = '';
+        if ($this->context->employee) {
+            $employeeName = trim($this->context->employee->firstname.' '.$this->context->employee->lastname);
+        }
+        if ($employeeName === '') {
+            $employeeName = $this->l('Residency team');
+        }
+
+        $filename = $this->buildQuoteFilenameForDisplay($quote, $inquiry);
+        $message = sprintf(
+            $this->l('Quote %s marked as "%s" by %s.'),
+            $filename,
+            $statusLabel,
+            $employeeName
+        );
+
+        return HotelInquiryNote::addNote(
+            (int) $quote->id_inquiry,
+            $message,
+            $this->context->employee ? (int) $this->context->employee->id : null,
+            false
+        );
+    }
+
+    protected function determineQuoteStatusBadgeClass($status)
+    {
+        switch ($status) {
+            case KLQuote::STATUS_APPROVED:
+                return 'label-success';
+            case KLQuote::STATUS_DECLINED:
+                return 'label-danger';
+            case KLQuote::STATUS_SENT:
+                return 'label-info';
+            default:
+                return 'label-default';
+        }
+    }
+
+    protected function buildQuoteTransitions(KLQuote $quote)
+    {
+        return array(
+            'approve' => $quote->status !== KLQuote::STATUS_APPROVED,
+            'decline' => $quote->status !== KLQuote::STATUS_DECLINED,
+        );
+    }
+
+    protected function isQuoteStatusFinal($status)
+    {
+        return in_array($status, array(KLQuote::STATUS_APPROVED, KLQuote::STATUS_DECLINED), true);
     }
 
     /**
@@ -657,6 +866,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
             'id_kl_quote' => (int) ($quote->id ? $quote->id : $quote->id_kl_quote),
             'status' => $quote->status,
             'status_label' => $status,
+            'status_badge_class' => $this->determineQuoteStatusBadgeClass($quote->status),
             'gross_total_minor' => (int) $quote->gross_total_minor,
             'currency_iso_code' => $quote->currency_iso_code,
             'total_display' => $this->formatQuoteMoney($quote->gross_total_minor, $quote->currency_iso_code),
@@ -665,6 +875,10 @@ class AdminHotelInquiriesController extends ModuleAdminController
             'date_add' => $quote->date_add,
             'date_add_display' => $quote->date_add ? Tools::displayDate($quote->date_add, $langId, true) : '',
             'author_name' => isset($extra['author_name']) ? (string) $extra['author_name'] : '',
+            'is_approved' => $quote->status === KLQuote::STATUS_APPROVED,
+            'is_declined' => $quote->status === KLQuote::STATUS_DECLINED,
+            'status_is_final' => $this->isQuoteStatusFinal($quote->status),
+            'transitions' => $this->buildQuoteTransitions($quote),
             'filename' => $this->buildQuoteFilenameForDisplay($quote, $inquiry),
         );
     }
