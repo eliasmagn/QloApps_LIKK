@@ -53,6 +53,7 @@
 - [x] Added PHPUnit coverage and Panther smoke tests that exercise storytelling presenter payloads, residencies template rendering and Lighthouse-aligned navigation timings.
 - [x] Finalised the storytelling content API payload (resource/resource_groups metadata) and hardened the front-end hydration helper so templates consume the cached testimonials/FAQ endpoints consistently.
 - [x] Exposed an authenticated resource profile API that surfaces list/detail JSON with capacity, amenity, storytelling and next-availability data for internal consumers.
+- [x] Published a storytelling editorial & localisation styleguide (`docs/storytelling-styleguide.md`) covering tone, imagery specs, translation workflow and sample layouts for all storytelling templates.
 
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.

@@ -98,4 +98,4 @@ The FAQ action mirrors the structure with the `faq` key. Clients should treat `r
 ## Documentation & Communication
 - Maintain this blueprint alongside implementation notes in `docs/blueprints/front-office-storytelling.md`.
 - Track execution tasks in `devtasks/front-office-storytelling.task.md` and reference checklist/roadmap updates.
-- Add screenshots and copywriting guidelines to `docs/storytelling-styleguide.md` (new file to be created during implementation).
+- Keep editorial tone, imagery and localisation guidance aligned with [`docs/storytelling-styleguide.md`](../storytelling-styleguide.md), updating the guide as components evolve.
