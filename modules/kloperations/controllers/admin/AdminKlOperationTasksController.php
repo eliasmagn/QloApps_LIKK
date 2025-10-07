@@ -19,12 +19,19 @@ require_once dirname(__DIR__, 2) . '/classes/KlOperationTask.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationRun.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationTaskNote.php';
 require_once dirname(__DIR__, 2) . '/classes/KlOperationTaskAssignment.php';
+require_once dirname(__DIR__, 2) . '/services/KlOperationExportService.php';
 require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelInquiry.php';
 
 class AdminKlOperationTasksController extends ModuleAdminController
 {
     /** @var bool */
     private $mobileView = false;
+
+    /** @var array|null */
+    private $exportFilters = null;
+
+    /** @var array|null */
+    private $resourceFilterOptions = null;
 
     public function __construct()
     {
@@ -144,6 +151,21 @@ class AdminKlOperationTasksController extends ModuleAdminController
         parent::initProcess();
     }
 
+    public function initContent()
+    {
+        parent::initContent();
+
+        if ($this->ajax) {
+            return;
+        }
+
+        if ($this->display && $this->display !== 'list') {
+            return;
+        }
+
+        $this->content = $this->renderExportFiltersPanel() . $this->content;
+    }
+
     public function getList($idLang, $orderBy = null, $orderWay = null, $start = 0, $limit = null, $idLangShop = false)
     {
         parent::getList($idLang, $orderBy, $orderWay, $start, $limit, $idLangShop);
@@ -184,6 +206,32 @@ class AdminKlOperationTasksController extends ModuleAdminController
                 }
             }
         }
+    }
+
+    private function renderExportFiltersPanel()
+    {
+        $filters = $this->getExportFilters();
+        $statusOptions = $this->getStatusOptions();
+        $resourceOptions = $this->getResourceFilterOptions();
+        $teamOptions = $this->getTeamOptions();
+
+        $this->context->smarty->assign(array(
+            'kloperations_export_filters' => array(
+                'action' => $this->buildLink(array('token' => $this->token)),
+                'from' => $filters['from']->format('Y-m-d'),
+                'to' => $filters['to']->format('Y-m-d'),
+                'status_options' => $statusOptions,
+                'selected_statuses' => $filters['statuses'],
+                'resource_type_options' => $resourceOptions,
+                'selected_resource_types' => $filters['resource_types'],
+                'team_options' => $teamOptions,
+                'selected_teams' => $filters['team_references'],
+                'summary' => $this->module->getExportService()->summariseFilters($filters),
+                'has_team_options' => !empty($teamOptions),
+            ),
+        ));
+
+        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/export_filters.tpl');
     }
 
     public function renderInquiryContextColumn($value, $row)
@@ -747,15 +795,11 @@ class AdminKlOperationTasksController extends ModuleAdminController
 
     public function processExportCsv()
     {
-        $rangeDays = max(1, (int) Tools::getValue('range_days', 7));
-        $timezone = $this->resolveTimezone();
-        $from = new DateTimeImmutable('today', $timezone);
-        $to = $from->add(new DateInterval('P' . $rangeDays . 'D'));
+        $filters = $this->getExportFilters();
+        $tasks = $this->module->getExportService()->fetchTasks($filters['from'], $filters['to'], $filters);
+        $csv = $this->module->getExportService()->generateCsv($tasks, $filters);
 
-        $tasks = $this->module->getExportService()->fetchTasks($from, $to, array('pending', 'in_progress'));
-        $csv = $this->module->getExportService()->generateCsv($tasks);
-
-        $filename = sprintf('kloperations-tasks-%s-%s.csv', $from->format('Ymd'), $to->format('Ymd'));
+        $filename = $this->module->getExportService()->buildExportFilename('csv', $filters['from'], $filters['to'], $filters);
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . Tools::strlen($csv));
@@ -765,15 +809,13 @@ class AdminKlOperationTasksController extends ModuleAdminController
 
     public function processExportIcs()
     {
-        $rangeDays = max(1, (int) Tools::getValue('range_days', 7));
-        $timezone = $this->resolveTimezone();
-        $from = new DateTimeImmutable('today', $timezone);
-        $to = $from->add(new DateInterval('P' . $rangeDays . 'D'));
+        $filters = $this->getExportFilters();
+        $timezone = $filters['timezone'] instanceof DateTimeZone ? $filters['timezone'] : $this->resolveTimezone();
 
-        $tasks = $this->module->getExportService()->fetchTasks($from, $to, array('pending', 'in_progress'));
-        $ics = $this->module->getExportService()->generateIcs($tasks, $timezone);
+        $tasks = $this->module->getExportService()->fetchTasks($filters['from'], $filters['to'], $filters);
+        $ics = $this->module->getExportService()->generateIcs($tasks, $timezone, $filters);
 
-        $filename = sprintf('kloperations-tasks-%s-%s.ics', $from->format('Ymd'), $to->format('Ymd'));
+        $filename = $this->module->getExportService()->buildExportFilename('ics', $filters['from'], $filters['to'], $filters);
         header('Content-Type: text/calendar; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . Tools::strlen($ics));
@@ -1151,7 +1193,7 @@ class AdminKlOperationTasksController extends ModuleAdminController
         $start = new DateTimeImmutable('today', $timezone)->sub(new DateInterval('P1D'));
         $end = $start->add(new DateInterval('P' . ($rangeDays + 1) . 'D'));
 
-        $tasks = $this->module->getExportService()->fetchTasks($start, $end, array('pending', 'in_progress'));
+        $tasks = $this->module->getExportService()->fetchTasks($start, $end, array('statuses' => array('pending', 'in_progress')));
         $taskIds = array();
         foreach ($tasks as $task) {
             if (isset($task['id_kl_operation_task'])) {
@@ -1212,6 +1254,138 @@ class AdminKlOperationTasksController extends ModuleAdminController
         ));
 
         return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/task_mobile.tpl');
+    }
+
+    private function getExportFilters()
+    {
+        if ($this->exportFilters !== null) {
+            return $this->exportFilters;
+        }
+
+        $timezone = $this->resolveTimezone();
+        $defaultFrom = (new DateTimeImmutable('today', $timezone))->setTime(0, 0, 0);
+        $defaultTo = $defaultFrom->add(new DateInterval('P7D'))->setTime(23, 59, 59);
+
+        $statusOptions = $this->getStatusOptions();
+        $statusLabels = array();
+        foreach ($statusOptions as $option) {
+            $statusLabels[$option['id']] = $option['name'];
+        }
+
+        $resourceOptions = $this->getResourceFilterOptions();
+        $resourceLabels = array();
+        foreach ($resourceOptions as $option) {
+            $resourceLabels[$option['id']] = $option['name'];
+        }
+
+        $teamOptions = $this->getTeamOptions();
+        $teamLabels = array();
+        foreach ($teamOptions as $option) {
+            $teamLabels[$option['id']] = $option['label'];
+        }
+
+        $selectedStatuses = $this->filterSelection(Tools::getValue('export_statuses'), array_keys($statusLabels));
+        if (empty($selectedStatuses)) {
+            $selectedStatuses = array('pending', 'in_progress');
+        }
+
+        $selectedResourceTypes = $this->filterSelection(Tools::getValue('export_resource_types'), array_keys($resourceLabels));
+        $selectedTeams = $this->filterSelection(Tools::getValue('export_teams'), array_keys($teamLabels));
+
+        $from = $this->parseExportDate(Tools::getValue('export_from'), $defaultFrom, $timezone, true);
+        $to = $this->parseExportDate(Tools::getValue('export_to'), $defaultTo, $timezone, false);
+
+        if ($from > $to) {
+            $to = $from->setTime(23, 59, 59);
+        }
+
+        $this->exportFilters = array(
+            'from' => $from->setTime(0, 0, 0),
+            'to' => $to->setTime(23, 59, 59),
+            'timezone' => $timezone,
+            'statuses' => $selectedStatuses,
+            'status_labels' => $statusLabels,
+            'resource_types' => $selectedResourceTypes,
+            'resource_type_labels' => $resourceLabels,
+            'team_references' => $selectedTeams,
+            'team_labels' => $teamLabels,
+        );
+
+        return $this->exportFilters;
+    }
+
+    private function getResourceFilterOptions()
+    {
+        if ($this->resourceFilterOptions !== null) {
+            return $this->resourceFilterOptions;
+        }
+
+        $options = array(
+            array(
+                'id' => KlOperationExportService::RESOURCE_TYPE_NONE,
+                'name' => $this->l('General (no resource)'),
+            ),
+        );
+
+        $query = new DbQuery();
+        $query->select('DISTINCT `resource_type`');
+        $query->from(KlOperationTask::$definition['table']);
+        $query->orderBy('`resource_type` ASC');
+
+        $rows = Db::getInstance()->executeS($query) ?: array();
+        $seen = array();
+
+        foreach ($rows as $row) {
+            $value = trim((string) $row['resource_type']);
+            if ($value === '' || isset($seen[$value])) {
+                continue;
+            }
+            $seen[$value] = true;
+            $options[] = array(
+                'id' => $value,
+                'name' => Tools::ucfirst(str_replace('_', ' ', $value)),
+            );
+        }
+
+        $this->resourceFilterOptions = $options;
+
+        return $this->resourceFilterOptions;
+    }
+
+    private function filterSelection($values, array $allowed)
+    {
+        if ($values === null) {
+            $values = array();
+        }
+
+        if (!is_array($values)) {
+            $values = array($values);
+        }
+
+        $allowedMap = array_flip($allowed);
+        $selected = array();
+        foreach ($values as $value) {
+            $value = trim((string) $value);
+            if ($value === '' || !isset($allowedMap[$value])) {
+                continue;
+            }
+            $selected[$value] = true;
+        }
+
+        return array_keys($selected);
+    }
+
+    private function parseExportDate($value, DateTimeImmutable $fallback, DateTimeZone $timezone, $isStart)
+    {
+        $value = trim((string) $value);
+        if ($value !== '') {
+            $date = DateTimeImmutable::createFromFormat('Y-m-d', $value, $timezone);
+            if ($date instanceof DateTimeImmutable) {
+                return $isStart ? $date->setTime(0, 0, 0) : $date->setTime(23, 59, 59);
+            }
+        }
+
+        return $fallback;
     }
 
     private function getStatusLabelMap()

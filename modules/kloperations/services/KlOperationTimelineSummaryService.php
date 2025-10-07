@@ -50,8 +50,9 @@ class KlOperationTimelineSummaryService
         $statuses = array('pending', 'in_progress');
 
         $exportService = $this->module->getExportService();
-        $todayTasks = $exportService->fetchTasks($startOfDay, $endOfDay, $statuses);
-        $tomorrowTasks = $exportService->fetchTasks($startOfTomorrow, $endOfTomorrow, $statuses);
+        $filter = array('statuses' => $statuses);
+        $todayTasks = $exportService->fetchTasks($startOfDay, $endOfDay, $filter);
+        $tomorrowTasks = $exportService->fetchTasks($startOfTomorrow, $endOfTomorrow, $filter);
         $overdueTasks = $this->fetchOverdueTasks($startOfDay, $statuses);
 
         $resources = array();

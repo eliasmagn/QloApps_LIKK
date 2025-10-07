@@ -7,6 +7,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Front-office storytelling templates](front-office-storytelling.task.md) | ⏳ Planned | Replace legacy product grids with narrative-driven offer pages tied to inquiries. |
 | [Inquiry submission pipeline](inquiry-submission.task.md) | ✅ Complete | Deliver the dedicated front-office inquiry flow and supporting APIs. |
 | [Housekeeping & maintenance automation](operations-automation.task.md) | 🚧 In progress | Bootstrap task generation, notifications and exports for daily operations. |
+| [Operations export filters](operations-export-filters.task.md) | ✅ Complete | Add filterable CSV/ICS exports with metadata that reflects the selected scope. |
 | [Operations notification preferences](operations-notification-preferences.task.md) | ✅ Complete | Layer per-employee notification subscriptions, quiet hours and delivery logging into operations dispatch. |
 | [Operations timeline widget](operations-timeline-widget.task.md) | ⏳ Planned | Embed the operations summary widget on the booking timeline with console shortcuts. |
 | [Inquiry → Operations bridge](inquiry-to-operations.task.md) | ✅ Complete | Allow inquiry follow-ups and note submissions to raise operations tasks with bidirectional context links. |

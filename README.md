@@ -31,7 +31,7 @@ Key characteristics of the fork:
 - 🧹 **Operations automation** – the `kloperations` module seeds housekeeping runs, spawns maintenance start/release tasks from room disable ranges, ships subscription-aware daily digests/overdue reminders with quiet-hour deferrals, and exposes **Operations → Tasks** and **Operations → Notification Preferences** consoles for manual task authoring, assignment workflows, mobile checklists and employee notification management.
 - 🔁 **Inquiry ↔ Operations bridge** – the inquiry Kanban inspector surfaces linked follow-ups, lets staff raise housekeeping or maintenance tasks in-place, converts note submissions into follow-ups when needed and deep-links into the Operations console with context preserved.
 - 📊 **Timeline operations widget** – the admin booking timeline now surfaces a summary widget that groups overdue, today and tomorrow workloads per resource kind with quick links into the Operations console for follow-up.
-- 📤 **Operations exports** – admins can export pending tasks to CSV or ICS directly from the console for external scheduling tools.
+- 📤 **Operations exports** – admins can export filtered slices of tasks (date window, status, resource kind, configured teams) to CSV or ICS directly from the console, with filenames and event metadata spelling out the chosen scope for downstream schedulers.
 - ✅ **Storytelling test harness** – dedicated PHPUnit and Panther suites guard the presenter payloads, residency template rendering and Lighthouse-aligned navigation timings.
 
 The high-level concept lives in [`concept.md`](concept.md), the multi-phase plan in [`roadmap.md`](roadmap.md), tactical progress in [`checklist.md`](checklist.md), and task briefs in [`devtasks/`](devtasks/).
