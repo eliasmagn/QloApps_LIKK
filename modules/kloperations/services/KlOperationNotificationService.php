@@ -73,7 +73,7 @@ class KlOperationNotificationService
         $startOfDay = $targetDate->setTime(0, 0, 0);
         $endOfDay = $targetDate->setTime(23, 59, 59);
 
-        $upcoming = $this->exportService->fetchTasks($startOfDay, $endOfDay, array('pending', 'in_progress'));
+        $upcoming = $this->exportService->fetchTasks($startOfDay, $endOfDay, array('statuses' => array('pending', 'in_progress')));
         $overdue = $this->getOverdueTasks($targetDate, false);
 
         if (empty($upcoming) && empty($overdue)) {

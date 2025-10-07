@@ -35,6 +35,7 @@
   - [x] Generate maintenance start/release tasks from room disable ranges.
   - [x] Deliver daily digest emails and overdue reminders to configurable recipients.
   - [x] Provide CSV/ICS exports from the operations console and throttle reminder delivery with `last_reminded_at` tracking.
+  - [x] Allow CSV/ICS exports to be filtered by date window, status, resource kind and team, embedding the active scope in filenames and metadata.
 - [x] Added manual operations task authoring, assignment workflows and mobile-friendly checklists building on the new automation hooks.
   - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
