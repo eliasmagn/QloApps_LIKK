@@ -43,6 +43,10 @@
 - [x] Embedded an operations summary widget on the booking timeline.
   - [x] Aggregate pending and in-progress tasks into overdue, today and tomorrow buckets per resource kind via a dedicated timeline summary service.
   - [x] Inject the widget through `displayAdminRoomsBookingCalendarAfter` with console quick links and Panther acceptance coverage ensuring it renders when `kloperations` is enabled.
+- [x] Layered subscription-aware notification preferences for operations messaging.
+  - [x] Added notification subscription/event/delivery tables with ObjectModels and upgrade coverage.
+  - [x] Reworked digest and reminder dispatch to respect quiet hours, channel opt-ins and queued retries.
+  - [x] Added an **Operations → Notification Preferences** admin screen for managing employee subscriptions.
 - [x] Added PHPUnit coverage and Panther smoke tests that exercise storytelling presenter payloads, residencies template rendering and Lighthouse-aligned navigation timings.
 - [x] Finalised the storytelling content API payload (resource/resource_groups metadata) and hardened the front-end hydration helper so templates consume the cached testimonials/FAQ endpoints consistently.
 

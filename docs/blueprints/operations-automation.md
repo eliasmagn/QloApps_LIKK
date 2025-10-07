@@ -26,8 +26,8 @@ Tasks are generated via a cron job (`hookActionCronJob`) and operations staff ca
 **Operations → Tasks** console; future increments may surface shortcuts from the timeline or inquiry board.
 
 ## Internal Notifications
-- Daily cron runs compile a digest of housekeeping and maintenance workload (HTML + plain text) and email it to the comma/space separated recipients configured in `KLOPERATIONS_DIGEST_RECIPIENTS`.
-- Overdue tasks trigger reminder emails when `due_end` has passed and `last_reminded_at` is older than 12 hours so teams are nudged without being spammed.
+- Daily cron runs compile a digest of housekeeping and maintenance workload (HTML + plain text) and email it to subscribed employees. Preferences live in `kl_notification_subscription` where staff can opt into channels (digest email, future feeds) and specify quiet hours/timezones; the legacy `KLOPERATIONS_DIGEST_RECIPIENTS` config remains as a fallback distribution list.
+- Overdue tasks trigger reminder emails when `due_end` has passed and `last_reminded_at` is older than 12 hours so teams are nudged without being spammed. Reminders respect the same subscription table, queuing deliveries that fall inside quiet hours until the window clears.
 - Future increments can layer in-app inboxes, push delivery and per-employee quiet hours once subscription tables are introduced.
 
 ### Data Model

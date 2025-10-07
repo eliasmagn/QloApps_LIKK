@@ -25,6 +25,9 @@ require_once __DIR__ . '/classes/KlOperationRun.php';
 require_once __DIR__ . '/classes/KlOperationTask.php';
 require_once __DIR__ . '/classes/KlOperationTaskAssignment.php';
 require_once __DIR__ . '/classes/KlOperationTaskNote.php';
+require_once __DIR__ . '/classes/KlNotificationSubscription.php';
+require_once __DIR__ . '/classes/KlNotificationEvent.php';
+require_once __DIR__ . '/classes/KlNotificationDelivery.php';
 require_once __DIR__ . '/services/KlOperationTaskGenerator.php';
 require_once __DIR__ . '/services/KlOperationNotificationService.php';
 require_once __DIR__ . '/services/KlOperationExportService.php';
@@ -35,12 +38,13 @@ require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/KLStoryAvailabili
 class Kloperations extends Module
 {
     const ADMIN_TAB_CLASS = 'AdminKlOperationTasks';
+    const ADMIN_NOTIFICATION_TAB_CLASS = 'AdminKlNotificationSubscriptions';
 
     public function __construct()
     {
         $this->name = 'kloperations';
         $this->tab = 'administration';
-        $this->version = '1.2.0';
+        $this->version = '1.3.0';
         $this->author = 'Kunstort Lehnin';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -65,6 +69,10 @@ class Kloperations extends Module
             return false;
         }
 
+        if (!$this->installTab(self::ADMIN_NOTIFICATION_TAB_CLASS, 'Notification Preferences', self::ADMIN_TAB_CLASS)) {
+            return false;
+        }
+
         if (!$this->installDatabase()) {
             return false;
         }
@@ -77,6 +85,10 @@ class Kloperations extends Module
 
     public function uninstall()
     {
+        if (!$this->uninstallTab(self::ADMIN_NOTIFICATION_TAB_CLASS)) {
+            return false;
+        }
+
         if (!$this->uninstallTab(self::ADMIN_TAB_CLASS)) {
             return false;
         }
@@ -173,6 +185,59 @@ class Kloperations extends Module
                 `date_upd` DATETIME NOT NULL,
                 PRIMARY KEY (`id_kl_operation_task_note`),
                 KEY `idx_operation_note_task` (`id_kl_operation_task`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'kl_notification_subscription` (
+                `id_kl_notification_subscription` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_employee` INT UNSIGNED NOT NULL,
+                `event_type` VARCHAR(128) NOT NULL,
+                `channel_email` TINYINT(1) NOT NULL DEFAULT 1,
+                `channel_digest` TINYINT(1) NOT NULL DEFAULT 1,
+                `channel_calendar` TINYINT(1) NOT NULL DEFAULT 0,
+                `quiet_hours_start` CHAR(5) DEFAULT NULL,
+                `quiet_hours_end` CHAR(5) DEFAULT NULL,
+                `timezone` VARCHAR(64) DEFAULT NULL,
+                `metadata` LONGTEXT NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_kl_notification_subscription`),
+                UNIQUE KEY `uniq_notification_subscription` (`id_employee`, `event_type`),
+                KEY `idx_notification_subscription_event` (`event_type`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'kl_notification_event` (
+                `id_kl_notification_event` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `event_type` VARCHAR(128) NOT NULL,
+                `subject` VARCHAR(255) NOT NULL,
+                `payload` LONGTEXT NULL,
+                `context_type` VARCHAR(64) DEFAULT NULL,
+                `context_id` INT UNSIGNED DEFAULT NULL,
+                `scheduled_for` DATETIME DEFAULT NULL,
+                `dispatched_at` DATETIME DEFAULT NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_kl_notification_event`),
+                KEY `idx_notification_event_type` (`event_type`),
+                KEY `idx_notification_event_context` (`context_type`, `context_id`)
+            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'kl_notification_delivery` (
+                `id_kl_notification_delivery` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_kl_notification_event` INT UNSIGNED NOT NULL,
+                `id_kl_notification_subscription` INT UNSIGNED DEFAULT NULL,
+                `id_employee` INT UNSIGNED DEFAULT NULL,
+                `id_lang` INT UNSIGNED DEFAULT NULL,
+                `channel` VARCHAR(64) NOT NULL,
+                `recipient` VARCHAR(255) DEFAULT NULL,
+                `status` VARCHAR(32) NOT NULL DEFAULT "pending",
+                `quiet_until` DATETIME DEFAULT NULL,
+                `metadata` LONGTEXT NULL,
+                `sent_at` DATETIME DEFAULT NULL,
+                `acknowledged_at` DATETIME DEFAULT NULL,
+                `date_add` DATETIME NOT NULL,
+                `date_upd` DATETIME NOT NULL,
+                PRIMARY KEY (`id_kl_notification_delivery`),
+                KEY `idx_notification_delivery_event` (`id_kl_notification_event`),
+                KEY `idx_notification_delivery_subscription` (`id_kl_notification_subscription`),
+                KEY `idx_notification_delivery_employee` (`id_employee`),
+                KEY `idx_notification_delivery_status` (`status`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         );
 
@@ -181,6 +246,12 @@ class Kloperations extends Module
                 return false;
             }
         }
+
+        $this->addIndexIfMissing('kl_notification_delivery', 'idx_notification_delivery_event', '`id_kl_notification_event`');
+        $this->addIndexIfMissing('kl_notification_delivery', 'idx_notification_delivery_subscription', '`id_kl_notification_subscription`');
+        $this->addIndexIfMissing('kl_notification_delivery', 'idx_notification_delivery_employee', '`id_employee`');
+        $this->addIndexIfMissing('kl_notification_delivery', 'idx_notification_delivery_status', '`status`');
+        $this->addIndexIfMissing('kl_notification_subscription', 'idx_notification_subscription_event', '`event_type`');
 
         $this->addColumnIfMissing('kl_operation_task', 'last_reminded_at', '`last_reminded_at` DATETIME DEFAULT NULL AFTER `completed_at`');
         $this->addColumnIfMissing('kl_operation_task_assignment', 'assignee_reference', '`assignee_reference` VARCHAR(64) DEFAULT NULL AFTER `assignee_type`');

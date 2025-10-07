@@ -17,6 +17,12 @@ if (!defined('_PS_VERSION_')) {
 
 class KlOperationNotificationService
 {
+    const EVENT_DAILY_DIGEST = 'operations.daily_digest';
+    const EVENT_OVERDUE_REMINDER = 'operations.overdue_reminder';
+    const CHANNEL_EMAIL = 'email';
+    const CHANNEL_EMAIL_DIGEST = 'email_digest';
+    const CHANNEL_LEGACY_EMAIL = 'legacy_email';
+
     /**
      * @var Module
      */
@@ -32,11 +38,17 @@ class KlOperationNotificationService
      */
     private $langId;
 
+    /**
+     * @var DateTimeZone
+     */
+    private $defaultTimezone;
+
     public function __construct(Module $module)
     {
         $this->module = $module;
         $this->exportService = new KlOperationExportService($module);
         $this->langId = (int) Configuration::get('PS_LANG_DEFAULT');
+        $this->defaultTimezone = $this->resolveTimezone((string) Configuration::get('PS_TIMEZONE'));
     }
 
     /**
@@ -49,8 +61,12 @@ class KlOperationNotificationService
      */
     public function sendDailyDigest(DateTimeImmutable $targetDate, array $runMetadata = array())
     {
-        $recipients = $this->getRecipients();
-        if (!$recipients) {
+        $now = new DateTimeImmutable('now', $this->defaultTimezone);
+        $this->processQueuedDeliveries($now);
+
+        $subscriptions = $this->fetchSubscriptions(self::EVENT_DAILY_DIGEST);
+        $legacyRecipients = $this->getLegacyRecipients();
+        if (empty($subscriptions) && empty($legacyRecipients)) {
             return 0;
         }
 
@@ -88,14 +104,38 @@ class KlOperationNotificationService
             $targetDate->format('Y-m-d')
         );
 
-        $sent = 0;
-        foreach ($recipients as $email) {
-            if ($this->sendMail('kloperations_daily_digest', $subject, $templateVars, $email)) {
-                $sent++;
-            }
+        $event = $this->createEvent(
+            self::EVENT_DAILY_DIGEST,
+            $subject,
+            'kloperations_daily_digest',
+            $templateVars,
+            array('context_type' => 'operations')
+        );
+
+        $subscriptionResult = $this->dispatchToSubscriptions(
+            $event,
+            self::CHANNEL_EMAIL_DIGEST,
+            'kloperations_daily_digest',
+            $templateVars,
+            $subject,
+            $now,
+            $subscriptions
+        );
+        $legacyResult = $this->dispatchToLegacyRecipients(
+            $event,
+            'kloperations_daily_digest',
+            $templateVars,
+            $subject,
+            $legacyRecipients
+        );
+
+        if ($subscriptionResult['sent'] > 0 || $legacyResult['sent'] > 0) {
+            $this->markEventDispatched($event->id);
+        } elseif ($subscriptionResult['queued'] > 0) {
+            $this->touchEvent($event->id);
         }
 
-        return $sent;
+        return (int) ($subscriptionResult['sent'] + $legacyResult['sent']);
     }
 
     /**
@@ -107,8 +147,11 @@ class KlOperationNotificationService
      */
     public function sendOverdueReminders(DateTimeImmutable $now)
     {
-        $recipients = $this->getRecipients();
-        if (!$recipients) {
+        $this->processQueuedDeliveries($now);
+
+        $subscriptions = $this->fetchSubscriptions(self::EVENT_OVERDUE_REMINDER);
+        $legacyRecipients = $this->getLegacyRecipients();
+        if (empty($subscriptions) && empty($legacyRecipients)) {
             return 0;
         }
 
@@ -125,14 +168,38 @@ class KlOperationNotificationService
 
         $subject = $this->module->l('Overdue operations reminder', 'KlOperationNotificationService');
 
-        $sent = 0;
-        foreach ($recipients as $email) {
-            if ($this->sendMail('kloperations_overdue_reminder', $subject, $templateVars, $email)) {
-                $sent++;
-            }
+        $event = $this->createEvent(
+            self::EVENT_OVERDUE_REMINDER,
+            $subject,
+            'kloperations_overdue_reminder',
+            $templateVars,
+            array('context_type' => 'operations')
+        );
+
+        $subscriptionResult = $this->dispatchToSubscriptions(
+            $event,
+            self::CHANNEL_EMAIL,
+            'kloperations_overdue_reminder',
+            $templateVars,
+            $subject,
+            $now,
+            $subscriptions
+        );
+        $legacyResult = $this->dispatchToLegacyRecipients(
+            $event,
+            'kloperations_overdue_reminder',
+            $templateVars,
+            $subject,
+            $legacyRecipients
+        );
+
+        if ($subscriptionResult['sent'] > 0 || $legacyResult['sent'] > 0) {
+            $this->markEventDispatched($event->id);
+        } elseif ($subscriptionResult['queued'] > 0) {
+            $this->touchEvent($event->id);
         }
 
-        if ($sent > 0) {
+        if (($subscriptionResult['sent'] + $subscriptionResult['queued'] + $legacyResult['sent']) > 0) {
             $ids = array();
             foreach ($overdue as $task) {
                 $ids[] = (int) $task['id_kl_operation_task'];
@@ -150,26 +217,178 @@ class KlOperationNotificationService
             }
         }
 
-        return $sent;
+        return (int) ($subscriptionResult['sent'] + $legacyResult['sent']);
     }
 
-    private function getRecipients()
-    {
-        $raw = trim((string) Configuration::get('KLOPERATIONS_DIGEST_RECIPIENTS'));
-        if ($raw === '') {
-            return array();
+    private function dispatchToSubscriptions(
+        KlNotificationEvent $event,
+        $channel,
+        $template,
+        array $templateVars,
+        $subject,
+        DateTimeImmutable $now,
+        array $subscriptions
+    ) {
+        $result = array('sent' => 0, 'queued' => 0, 'failed' => 0);
+
+        foreach ($subscriptions as $subscription) {
+            if (!$this->isChannelEnabled($subscription, $channel)) {
+                continue;
+            }
+
+            $delivery = new KlNotificationDelivery();
+            $delivery->id_kl_notification_event = (int) $event->id;
+            $delivery->id_kl_notification_subscription = (int) $subscription['id_kl_notification_subscription'];
+            $delivery->id_employee = (int) $subscription['id_employee'];
+            $delivery->id_lang = (int) $subscription['id_lang'];
+            $delivery->channel = $channel;
+            $delivery->recipient = $subscription['email'];
+            $delivery->status = 'pending';
+
+            $quietUntil = $this->calculateQuietUntil($subscription, $now);
+            if ($quietUntil instanceof DateTimeImmutable) {
+                $delivery->status = 'queued';
+                $delivery->quiet_until = $quietUntil->format('Y-m-d H:i:s');
+                $delivery->metadata = $this->appendMetadata($delivery->metadata, array(
+                    'quiet_hours' => array(
+                        'start' => $subscription['quiet_hours_start'],
+                        'end' => $subscription['quiet_hours_end'],
+                        'timezone' => $subscription['timezone'] ? $subscription['timezone'] : $now->getTimezone()->getName(),
+                    ),
+                ));
+                $delivery->add();
+                $result['queued']++;
+                continue;
+            }
+
+            $recipientName = $this->formatRecipientName($subscription);
+            $langId = (int) $subscription['id_lang'] ?: $this->langId;
+            if ($this->sendMail($template, $subject, $templateVars, $subscription['email'], $recipientName, $langId)) {
+                $delivery->status = 'sent';
+                $delivery->sent_at = date('Y-m-d H:i:s');
+                $result['sent']++;
+            } else {
+                $delivery->status = 'failed';
+                $result['failed']++;
+            }
+
+            $delivery->add();
         }
 
-        $parts = preg_split('/[\s,;]+/', $raw);
-        $emails = array();
-        foreach ($parts as $part) {
-            $part = trim($part);
-            if ($part && Validate::isEmail($part)) {
-                $emails[$part] = $part;
+        return $result;
+    }
+
+    private function dispatchToLegacyRecipients(
+        KlNotificationEvent $event,
+        $template,
+        array $templateVars,
+        $subject,
+        array $recipients
+    ) {
+        $result = array('sent' => 0, 'queued' => 0, 'failed' => 0);
+
+        foreach ($recipients as $email) {
+            $delivery = new KlNotificationDelivery();
+            $delivery->id_kl_notification_event = (int) $event->id;
+            $delivery->channel = self::CHANNEL_LEGACY_EMAIL;
+            $delivery->recipient = $email;
+            $delivery->status = 'pending';
+
+            if ($this->sendMail($template, $subject, $templateVars, $email)) {
+                $delivery->status = 'sent';
+                $delivery->sent_at = date('Y-m-d H:i:s');
+                $result['sent']++;
+            } else {
+                $delivery->status = 'failed';
+                $result['failed']++;
+            }
+
+            $delivery->add();
+        }
+
+        return $result;
+    }
+
+    private function processQueuedDeliveries(DateTimeImmutable $now)
+    {
+        $query = new DbQuery();
+        $query->select('d.*, e.`subject`, e.`payload`, s.`channel_email`, s.`channel_digest`, s.`channel_calendar`, s.`quiet_hours_start`, s.`quiet_hours_end`, s.`timezone`, emp.`email` AS `employee_email`, emp.`firstname`, emp.`lastname`, emp.`id_lang` AS `employee_lang`, emp.`active` AS `employee_active`');
+        $query->from(KlNotificationDelivery::$definition['table'], 'd');
+        $query->innerJoin(KlNotificationEvent::$definition['table'], 'e', 'e.`id_kl_notification_event` = d.`id_kl_notification_event`');
+        $query->leftJoin(KlNotificationSubscription::$definition['table'], 's', 's.`id_kl_notification_subscription` = d.`id_kl_notification_subscription`');
+        $query->leftJoin('employee', 'emp', 'emp.`id_employee` = d.`id_employee`');
+        $query->where('d.`status` = "queued"');
+        $query->where('d.`quiet_until` IS NOT NULL');
+        $query->where('d.`quiet_until` <= "' . pSQL($now->format('Y-m-d H:i:s')) . '"');
+
+        $rows = Db::getInstance()->executeS($query) ?: array();
+        if (!$rows) {
+            return 0;
+        }
+
+        $sent = 0;
+        foreach ($rows as $row) {
+            $delivery = new KlNotificationDelivery((int) $row['id_kl_notification_delivery']);
+            if (!Validate::isLoadedObject($delivery)) {
+                continue;
+            }
+
+            if ((int) $row['id_kl_notification_subscription']) {
+                if (!(int) $row['employee_active']) {
+                    $delivery->status = 'cancelled';
+                    $delivery->metadata = $this->appendMetadata($delivery->metadata, array('reason' => 'employee_inactive'));
+                    $delivery->quiet_until = null;
+                    $delivery->date_upd = date('Y-m-d H:i:s');
+                    $delivery->update();
+                    continue;
+                }
+
+                if (!$this->isChannelEnabled($row, $row['channel'])) {
+                    $delivery->status = 'cancelled';
+                    $delivery->metadata = $this->appendMetadata($delivery->metadata, array('reason' => 'channel_opt_out'));
+                    $delivery->quiet_until = null;
+                    $delivery->date_upd = date('Y-m-d H:i:s');
+                    $delivery->update();
+                    continue;
+                }
+            }
+
+            $payload = $this->decodeEventPayload($row['payload']);
+            if (empty($payload['template']) || !isset($payload['vars']) || !is_array($payload['vars'])) {
+                $delivery->status = 'failed';
+                $delivery->metadata = $this->appendMetadata($delivery->metadata, array('reason' => 'invalid_payload'));
+                $delivery->quiet_until = null;
+                $delivery->date_upd = date('Y-m-d H:i:s');
+                $delivery->update();
+                continue;
+            }
+
+            $recipientEmail = $row['employee_email'] ? $row['employee_email'] : $delivery->recipient;
+            $recipientName = trim(($row['firstname'] ? $row['firstname'] : '') . ' ' . ($row['lastname'] ? $row['lastname'] : ''));
+            $langId = (int) $row['employee_lang'];
+            if (!$langId) {
+                $langId = (int) $delivery->id_lang ?: $this->langId;
+            }
+
+            if ($this->sendMail($payload['template'], $row['subject'], $payload['vars'], $recipientEmail, $recipientName ?: null, $langId)) {
+                $delivery->status = 'sent';
+                $delivery->sent_at = date('Y-m-d H:i:s');
+                $delivery->recipient = $recipientEmail;
+                $delivery->quiet_until = null;
+                $delivery->date_upd = date('Y-m-d H:i:s');
+                $delivery->update();
+                $this->markEventDispatched($delivery->id_kl_notification_event);
+                $sent++;
+            } else {
+                $delivery->status = 'failed';
+                $delivery->recipient = $recipientEmail;
+                $delivery->quiet_until = null;
+                $delivery->date_upd = date('Y-m-d H:i:s');
+                $delivery->update();
             }
         }
 
-        return array_values($emails);
+        return $sent;
     }
 
     private function countByType(array $tasks)
@@ -254,15 +473,17 @@ class KlOperationNotificationService
         );
     }
 
-    private function sendMail($template, $subject, array $templateVars, $recipient)
+    private function sendMail($template, $subject, array $templateVars, $recipient, $recipientName = null, $langId = null)
     {
+        $langId = $langId ? (int) $langId : $this->langId;
+
         return Mail::Send(
-            $this->langId,
+            $langId,
             $template,
             $subject,
             $templateVars,
             $recipient,
-            null,
+            $recipientName,
             null,
             null,
             null,
@@ -271,6 +492,225 @@ class KlOperationNotificationService
             false,
             (int) $this->module->id
         );
+    }
+
+    private function getLegacyRecipients()
+    {
+        $raw = trim((string) Configuration::get('KLOPERATIONS_DIGEST_RECIPIENTS'));
+        if ($raw === '') {
+            return array();
+        }
+
+        $parts = preg_split('/[\s,;]+/', $raw);
+        $emails = array();
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if ($part && Validate::isEmail($part)) {
+                $emails[$part] = $part;
+            }
+        }
+
+        return array_values($emails);
+    }
+
+    private function fetchSubscriptions($eventType)
+    {
+        $query = new DbQuery();
+        $query->select('s.*, e.`email`, e.`firstname`, e.`lastname`, e.`id_lang`');
+        $query->from(KlNotificationSubscription::$definition['table'], 's');
+        $query->innerJoin('employee', 'e', 'e.`id_employee` = s.`id_employee`');
+        $query->where('s.`event_type` = "' . pSQL($eventType) . '"');
+        $query->where('e.`active` = 1');
+
+        $rows = Db::getInstance()->executeS($query) ?: array();
+
+        $filtered = array();
+        foreach ($rows as $row) {
+            if (!Validate::isEmail($row['email'])) {
+                continue;
+            }
+            $filtered[] = $row;
+        }
+
+        return $filtered;
+    }
+
+    private function isChannelEnabled(array $subscription, $channel)
+    {
+        $column = $this->channelColumn($channel);
+        if (!$column) {
+            return false;
+        }
+
+        return !empty($subscription[$column]);
+    }
+
+    private function channelColumn($channel)
+    {
+        switch ($channel) {
+            case self::CHANNEL_EMAIL:
+                return 'channel_email';
+            case self::CHANNEL_EMAIL_DIGEST:
+                return 'channel_digest';
+            default:
+                return null;
+        }
+    }
+
+    private function calculateQuietUntil(array $subscription, DateTimeImmutable $now)
+    {
+        $start = isset($subscription['quiet_hours_start']) ? trim($subscription['quiet_hours_start']) : '';
+        $end = isset($subscription['quiet_hours_end']) ? trim($subscription['quiet_hours_end']) : '';
+        if ($start === '' || $end === '') {
+            return null;
+        }
+
+        if (!preg_match('/^\d{2}:\d{2}$/', $start) || !preg_match('/^\d{2}:\d{2}$/', $end)) {
+            return null;
+        }
+
+        if ($start === $end) {
+            return null;
+        }
+
+        $timezone = $this->resolveTimezone(isset($subscription['timezone']) ? $subscription['timezone'] : '');
+        $localNow = $now->setTimezone($timezone);
+
+        list($startHour, $startMinute) = array_map('intval', explode(':', $start));
+        list($endHour, $endMinute) = array_map('intval', explode(':', $end));
+
+        $currentMinutes = (int) $localNow->format('H') * 60 + (int) $localNow->format('i');
+        $startMinutes = ($startHour * 60) + $startMinute;
+        $endMinutes = ($endHour * 60) + $endMinute;
+
+        $inQuiet = false;
+        if ($startMinutes < $endMinutes) {
+            $inQuiet = ($currentMinutes >= $startMinutes && $currentMinutes < $endMinutes);
+        } else {
+            $inQuiet = ($currentMinutes >= $startMinutes || $currentMinutes < $endMinutes);
+        }
+
+        if (!$inQuiet) {
+            return null;
+        }
+
+        $quietEnd = $localNow->setTime($endHour, $endMinute, 0);
+        if ($startMinutes > $endMinutes) {
+            if ($currentMinutes >= $startMinutes) {
+                $quietEnd = $quietEnd->modify('+1 day');
+            }
+        } elseif ($currentMinutes >= $endMinutes) {
+            $quietEnd = $quietEnd->modify('+1 day');
+        }
+
+        return $quietEnd->setTimezone($now->getTimezone());
+    }
+
+    private function createEvent($eventType, $subject, $template, array $templateVars, array $context = array())
+    {
+        $event = new KlNotificationEvent();
+        $event->event_type = $eventType;
+        $event->subject = $subject;
+        $event->payload = $this->encodePayload(array(
+            'template' => $template,
+            'vars' => $templateVars,
+        ));
+        $event->context_type = isset($context['context_type']) ? $context['context_type'] : null;
+        $event->context_id = isset($context['context_id']) ? (int) $context['context_id'] : null;
+        $timestamp = date('Y-m-d H:i:s');
+        $event->scheduled_for = $timestamp;
+        $event->dispatched_at = null;
+        $event->date_add = $timestamp;
+        $event->date_upd = $timestamp;
+        $event->add();
+
+        return $event;
+    }
+
+    private function markEventDispatched($eventId)
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        Db::getInstance()->update(
+            KlNotificationEvent::$definition['table'],
+            array(
+                'dispatched_at' => pSQL($timestamp),
+                'date_upd' => pSQL($timestamp),
+            ),
+            '`id_kl_notification_event` = ' . (int) $eventId
+        );
+    }
+
+    private function touchEvent($eventId)
+    {
+        Db::getInstance()->update(
+            KlNotificationEvent::$definition['table'],
+            array('date_upd' => pSQL(date('Y-m-d H:i:s'))),
+            '`id_kl_notification_event` = ' . (int) $eventId
+        );
+    }
+
+    private function encodePayload(array $payload)
+    {
+        $encoded = Tools::jsonEncode($payload);
+
+        return $encoded !== false ? $encoded : '{}';
+    }
+
+    private function decodeEventPayload($payload)
+    {
+        if (!$payload) {
+            return array();
+        }
+
+        $decoded = Tools::jsonDecode($payload, true);
+        if (!is_array($decoded)) {
+            return array();
+        }
+
+        return $decoded;
+    }
+
+    private function appendMetadata($existing, array $payload)
+    {
+        $current = array();
+        if ($existing) {
+            $decoded = Tools::jsonDecode($existing, true);
+            if (is_array($decoded)) {
+                $current = $decoded;
+            }
+        }
+
+        $merged = array_merge($current, $payload);
+
+        return $this->encodePayload($merged);
+    }
+
+    private function formatRecipientName(array $subscription)
+    {
+        $parts = array();
+        if (!empty($subscription['firstname'])) {
+            $parts[] = trim($subscription['firstname']);
+        }
+        if (!empty($subscription['lastname'])) {
+            $parts[] = trim($subscription['lastname']);
+        }
+
+        $name = trim(implode(' ', $parts));
+
+        return $name !== '' ? $name : null;
+    }
+
+    private function resolveTimezone($timezoneName)
+    {
+        if (!$timezoneName) {
+            $timezoneName = @date_default_timezone_get();
+        }
+
+        try {
+            return new DateTimeZone($timezoneName);
+        } catch (Exception $exception) {
+            return new DateTimeZone(@date_default_timezone_get());
+        }
     }
 
     private function getOverdueTasks(DateTimeImmutable $reference, $forReminder)
