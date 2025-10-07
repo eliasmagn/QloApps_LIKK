@@ -13,3 +13,7 @@ if (!defined('_QLOAPP_DISABLE_MARKETPLACE_')) {
 if (!defined('_KUNSTORT_STORYTELLING_LAUNCH_')) {
     define('_KUNSTORT_STORYTELLING_LAUNCH_', false);
 }
+
+if (!defined('_KUNSTORT_RESOURCE_API_TOKEN_')) {
+    define('_KUNSTORT_RESOURCE_API_TOKEN_', '');
+}

@@ -274,6 +274,105 @@ class HotelReservationSystemStorytellingPresenter
     }
 
     /**
+     * Returns published resource profile payloads for internal API consumers.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     * @param array<int, string> $allowedResourceKinds
+     * @param bool $includeAvailability
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProfilesForApi($idLang = null, $idShop = null, array $allowedResourceKinds = array(), $includeAvailability = false)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        $profiles = $this->getPublishedProfiles($idLang, $idShop);
+        if (!$profiles) {
+            return array();
+        }
+
+        $allowed = array();
+        if ($allowedResourceKinds) {
+            foreach ($allowedResourceKinds as $kind) {
+                $allowed[$kind] = true;
+            }
+        }
+
+        if ($allowed) {
+            $filtered = array();
+            foreach ($profiles as $profile) {
+                if (isset($profile['resource_kind']) && isset($allowed[$profile['resource_kind']])) {
+                    $filtered[] = $profile;
+                }
+            }
+            $profiles = $filtered;
+        }
+
+        if (!$profiles) {
+            return array();
+        }
+
+        if ($includeAvailability) {
+            $metadata = $this->getSectionMetadata($idLang, $idShop, $allowedResourceKinds);
+            $start = new DateTimeImmutable('today');
+            $horizon = $start->add(new DateInterval('P90D'));
+
+            foreach ($profiles as &$profile) {
+                if (!isset($profile['resource_kind'])) {
+                    $profile['next_availability'] = null;
+                    continue;
+                }
+
+                if (empty($profile['is_bookable']) || empty($profile['id_product']) || empty($profile['id_room_type'])) {
+                    $profile['next_availability'] = null;
+                    continue;
+                }
+
+                $slot = $this->findNextAvailabilityForProfile($profile, $start, $horizon);
+                if (!$slot) {
+                    $profile['next_availability'] = null;
+                    continue;
+                }
+
+                $resourceKind = $profile['resource_kind'];
+                $sectionMeta = isset($metadata[$resourceKind]) ? $metadata[$resourceKind] : array(
+                    'resource_kind' => $resourceKind,
+                    'key' => Tools::strtolower($resourceKind),
+                    'anchor' => Tools::strtolower($resourceKind),
+                    'title' => $this->getResourceKindLabel($resourceKind),
+                    'intro' => '',
+                );
+
+                $profile['next_availability'] = $this->normaliseSlotForTemplate($slot, $sectionMeta);
+            }
+            unset($profile);
+        }
+
+        return array_values($profiles);
+    }
+
+    /**
+     * Returns the aggregated availability snapshot used by storytelling surfaces.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     * @param array<int, string> $allowedResourceKinds
+     *
+     * @return array<string, mixed>
+     */
+    public function getAvailabilitySnapshotForApi($idLang = null, $idShop = null, array $allowedResourceKinds = array())
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        return $this->buildAvailabilitySnapshot($idLang, $idShop, $allowedResourceKinds);
+    }
+
+    /**
      * @param int $idLang
      * @param int $idShop
      *
