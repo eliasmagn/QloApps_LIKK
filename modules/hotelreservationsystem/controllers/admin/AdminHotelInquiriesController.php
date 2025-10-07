@@ -21,6 +21,8 @@
  * @license https://opensource.org/license/osl-3-0-php Open Software License version 3.0
  */
 
+require_once _PS_MODULE_DIR_ . 'hotelreservationsystem/classes/HotelInquiryOperationsBridge.php';
+
 class AdminHotelInquiriesController extends ModuleAdminController
 {
     protected $boardEmployees = array();
@@ -47,6 +49,7 @@ class AdminHotelInquiriesController extends ModuleAdminController
             'status_definitions' => $this->statusDefinitions,
             'inquiry_dataset' => $dataset,
             'board_employees' => $this->boardEmployees,
+            'operations_enabled' => HotelInquiryOperationsBridge::isAvailable(),
         ));
 
         $this->setTemplate('inquiries/kanban.tpl');
@@ -61,6 +64,13 @@ class AdminHotelInquiriesController extends ModuleAdminController
         $this->addJqueryUI('ui.droppable');
         $this->addJS($this->module->getPathUri().'views/js/admin/inquiries_board.js');
         $this->addCSS($this->module->getPathUri().'views/css/admin/inquiries_board.css');
+
+        if (!$this->stageDefinitions) {
+            $this->stageDefinitions = HotelInquiry::getStageDefinitions();
+        }
+        if (!$this->statusDefinitions) {
+            $this->statusDefinitions = HotelInquiry::getStatusDefinitions();
+        }
 
         Media::addJsDef(array(
             'hotelInquiryBoardConfig' => array(
@@ -78,10 +88,28 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     'mailNoteFailed' => $this->l('Note saved but the email could not be sent.'),
                     'assignmentSaved' => $this->l('Assignment updated.'),
                     'noNotes' => $this->l('No notes yet.'),
+                    'operationsUnavailable' => $this->l('The operations console is not available.'),
+                    'operationsTaskCreated' => $this->l('Operations follow-up created.'),
+                    'operationsTaskFailed' => $this->l('Unable to create the operations follow-up.'),
+                    'operationsNoTasks' => $this->l('No operations follow-ups yet.'),
+                    'operationsHousekeepingReference' => $this->l('Housekeeping follow-up for %s'),
+                    'operationsMaintenanceReference' => $this->l('Maintenance follow-up for %s'),
+                    'operationsNoteHeader' => $this->l('Inquiry %s — %s'),
+                    'operationsNoteRequester' => $this->l('Requester: %s'),
+                    'operationsNoteDates' => $this->l('Stay window: %s → %s'),
+                    'operationsNoteResources' => $this->l('Requested: %s'),
+                    'operationsViewTask' => $this->l('View task'),
                 ),
                 'stageStatuses' => array_map(function ($definition) {
                     return isset($definition['default_status']) ? $definition['default_status'] : null;
                 }, $this->stageDefinitions),
+                'stageLabels' => array_map(function ($definition) {
+                    return isset($definition['label']) ? $definition['label'] : null;
+                }, $this->stageDefinitions),
+                'statusLabels' => $this->statusDefinitions,
+                'operationsEnabled' => HotelInquiryOperationsBridge::isAvailable(),
+                'operationsConsoleUrl' => $this->context->link->getAdminLink('AdminKlOperationTasks'),
+                'focusInquiryId' => (int) Tools::getValue('focus_inquiry'),
             ),
         ));
     }
@@ -151,6 +179,11 @@ class AdminHotelInquiriesController extends ModuleAdminController
             $response['success'] = true;
             $response['inquiry'] = $row;
             $response['card_html'] = $this->renderInquiryCard($row);
+            $response['operations'] = array(
+                'enabled' => HotelInquiryOperationsBridge::isAvailable(),
+                'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
+                'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
+            );
         } else {
             $response['message'] = $this->l('Unable to update the inquiry stage.');
         }
@@ -183,6 +216,11 @@ class AdminHotelInquiriesController extends ModuleAdminController
             $response['success'] = true;
             $response['inquiry'] = $row;
             $response['card_html'] = $this->renderInquiryCard($row);
+            $response['operations'] = array(
+                'enabled' => HotelInquiryOperationsBridge::isAvailable(),
+                'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
+                'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
+            );
         } else {
             $response['message'] = $this->l('Unable to update assignment.');
         }
@@ -224,9 +262,125 @@ class AdminHotelInquiriesController extends ModuleAdminController
                     $response['mail_error'] = $mailStatus['message'];
                 }
             }
+
+            if (Tools::getValue('operation_follow_up', '0') !== '0') {
+                $this->handleOperationsFollowUpFromNote($response, $inquiry, $idInquiry, $note);
+            }
         } else {
             $response['message'] = $this->l('Unable to save the note.');
         }
+
+        return $this->ajaxDie(json_encode($response));
+    }
+
+    public function ajaxProcessCreateInquiryOperationTask()
+    {
+        $response = array('success' => false);
+
+        if ($this->tabAccess['edit'] != '1') {
+            $response['message'] = $this->l('You do not have permission to create operations follow-ups.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if (!HotelInquiryOperationsBridge::isAvailable()) {
+            $response['message'] = $this->l('The operations console is not available.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $idInquiry = (int) Tools::getValue('id_inquiry');
+        $taskType = (string) Tools::getValue('task_type');
+        $reference = trim((string) Tools::getValue('reference'));
+        $priority = (int) Tools::getValue('priority', 3);
+        $scheduledFor = $this->normalizeDateTimeValue(Tools::getValue('scheduled_for'));
+        $dueEndRaw = Tools::getValue('due_end');
+        $dueEnd = $dueEndRaw !== '' ? $this->normalizeDateTimeValue($dueEndRaw) : null;
+        $note = trim((string) Tools::getValue('note'));
+        $resourceType = trim((string) Tools::getValue('resource_type'));
+        $idResource = Tools::getValue('id_resource');
+        $logNote = Tools::getValue('log_note', '1') !== '0';
+
+        if (!$idInquiry || !$taskType || $reference === '' || !$scheduledFor) {
+            $response['message'] = $this->l('Missing required information for the operations follow-up.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if (!in_array($taskType, $this->getOperationTaskTypeWhitelist(), true)) {
+            $response['message'] = $this->l('Select a valid operations follow-up type.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if ($priority < 1 || $priority > 5) {
+            $priority = 3;
+        }
+
+        if ($dueEndRaw !== '' && !$dueEnd) {
+            $response['message'] = $this->l('Invalid due date. Use YYYY-MM-DD HH:MM.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        if (!$inquiry = HotelInquiry::findById($idInquiry)) {
+            $response['message'] = $this->l('Inquiry not found.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $task = HotelInquiryOperationsBridge::createTaskForInquiry($inquiry, array(
+            'task_type' => $taskType,
+            'reference' => $reference,
+            'priority' => $priority,
+            'scheduled_for' => $scheduledFor,
+            'due_end' => $dueEnd,
+            'resource_type' => $resourceType,
+            'id_resource' => $idResource === '' ? null : (int) $idResource,
+            'note' => $note,
+        ));
+
+        if (!$task) {
+            $response['message'] = $this->l('Unable to create the operations follow-up.');
+
+            return $this->ajaxDie(json_encode($response));
+        }
+
+        $taskLink = HotelInquiryOperationsBridge::buildTaskViewLink((int) $task->id);
+        $taskSummary = array(
+            'id' => (int) $task->id,
+            'reference' => $task->reference,
+            'view_link' => $taskLink,
+            'status' => $task->status,
+            'task_type' => $task->task_type,
+        );
+
+        $response['success'] = true;
+        $response['task'] = $taskSummary;
+
+        if ($logNote) {
+            $noteLines = array(
+                sprintf($this->l('Raised operations follow-up: %s'), $task->reference),
+            );
+            if ($taskLink) {
+                $noteLines[] = sprintf($this->l('View task: %s'), $taskLink);
+            }
+            if ($note !== '') {
+                $noteLines[] = $note;
+            }
+
+            $noteBody = implode("\n", $noteLines);
+
+            if ($noteObject = HotelInquiryNote::addNote($idInquiry, $noteBody, $this->context->employee ? (int) $this->context->employee->id : null, false)) {
+                $response['notes'] = HotelInquiryNote::getInquiryNotes($idInquiry);
+            }
+        }
+
+        $operations = array(
+            'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
+            'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
+        );
+        $response['operations'] = $operations;
 
         return $this->ajaxDie(json_encode($response));
     }
@@ -270,11 +424,98 @@ class AdminHotelInquiriesController extends ModuleAdminController
             $response['inquiry'] = $row;
             $response['notes'] = HotelInquiryNote::getInquiryNotes($idInquiry);
             $response['card_html'] = $this->renderInquiryCard($row);
+            $response['operations'] = array(
+                'enabled' => HotelInquiryOperationsBridge::isAvailable(),
+                'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
+                'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
+            );
         } else {
             $response['message'] = $this->l('Inquiry not found.');
         }
 
         return $this->ajaxDie(json_encode($response));
+    }
+
+    protected function handleOperationsFollowUpFromNote(array &$response, array $inquiry, $idInquiry, $note)
+    {
+        if (!HotelInquiryOperationsBridge::isAvailable()) {
+            $response['operations_error'] = $this->l('The operations console is not available.');
+
+            return;
+        }
+
+        $taskType = (string) Tools::getValue('operation_task_type');
+        if (!$taskType) {
+            $taskType = 'housekeeping_followup';
+        }
+
+        if (!in_array($taskType, $this->getOperationTaskTypeWhitelist(), true)) {
+            $response['operations_error'] = $this->l('Select a valid operations follow-up type.');
+
+            return;
+        }
+
+        $scheduledFor = $this->normalizeDateTimeValue(Tools::getValue('operation_scheduled_for'));
+        if (!$scheduledFor) {
+            $response['operations_error'] = $this->l('Missing schedule for the operations follow-up.');
+
+            return;
+        }
+
+        $dueEndRaw = Tools::getValue('operation_due_end');
+        $dueEnd = $dueEndRaw !== '' ? $this->normalizeDateTimeValue($dueEndRaw) : null;
+        if ($dueEndRaw !== '' && !$dueEnd) {
+            $response['operations_error'] = $this->l('Invalid due date. Use YYYY-MM-DD HH:MM.');
+
+            return;
+        }
+
+        $priority = (int) Tools::getValue('operation_priority', 3);
+        if ($priority < 1 || $priority > 5) {
+            $priority = 3;
+        }
+
+        $reference = trim((string) Tools::getValue('operation_reference'));
+        if ($reference === '') {
+            $reference = $this->buildOperationReference($taskType, $inquiry);
+        }
+
+        $operationNote = trim((string) Tools::getValue('operation_note'));
+        $combinedNote = trim($operationNote !== '' ? ($operationNote . "\n\n" . trim((string) $note)) : trim((string) $note));
+
+        $task = HotelInquiryOperationsBridge::createTaskForInquiry($inquiry, array(
+            'task_type' => $taskType,
+            'reference' => $reference,
+            'priority' => $priority,
+            'scheduled_for' => $scheduledFor,
+            'due_end' => $dueEnd,
+            'note' => $combinedNote,
+        ));
+
+        if (!$task) {
+            $response['operations_error'] = $this->l('Unable to create the operations follow-up.');
+
+            return;
+        }
+
+        $taskSummary = array(
+            'id' => (int) $task->id,
+            'reference' => $task->reference,
+            'view_link' => HotelInquiryOperationsBridge::buildTaskViewLink((int) $task->id),
+            'status' => $task->status,
+            'task_type' => $task->task_type,
+        );
+
+        $response['operations_follow_up'] = $taskSummary;
+        $response['operations'] = array(
+            'tasks' => HotelInquiryOperationsBridge::fetchTasksForInquiry($idInquiry),
+            'list_link' => HotelInquiryOperationsBridge::buildTaskListLink($idInquiry),
+        );
+
+        $logBody = $this->buildOperationsLogNote($taskSummary);
+        if ($logBody !== '' && HotelInquiryNote::addNote($idInquiry, $logBody, $this->context->employee ? (int) $this->context->employee->id : null, false)) {
+            $response['notes'] = HotelInquiryNote::getInquiryNotes($idInquiry);
+        }
     }
 
     protected function getEmployeesForBoard()
@@ -302,6 +543,67 @@ class AdminHotelInquiriesController extends ModuleAdminController
         }
 
         return date('Y-m-d', $timestamp);
+    }
+
+    protected function normalizeDateTimeValue($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        $value = str_replace('T', ' ', $value);
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value)) {
+            $value .= ':00';
+        }
+
+        $timestamp = strtotime($value);
+        if (!$timestamp) {
+            return null;
+        }
+
+        return date('Y-m-d H:i:s', $timestamp);
+    }
+
+    protected function getOperationTaskTypeWhitelist()
+    {
+        return array(
+            'housekeeping_followup',
+            'maintenance_followup',
+            'housekeeping_arrival',
+            'housekeeping_checkout',
+            'maintenance_start',
+            'maintenance_release',
+            'custom',
+        );
+    }
+
+    protected function buildOperationReference($taskType, array $inquiry)
+    {
+        $reference = isset($inquiry['reference']) && $inquiry['reference'] ? $inquiry['reference'] : $this->l('Inquiry follow-up');
+
+        if ($taskType === 'housekeeping_followup') {
+            return sprintf($this->l('Housekeeping follow-up for %s'), $reference);
+        }
+        if ($taskType === 'maintenance_followup') {
+            return sprintf($this->l('Maintenance follow-up for %s'), $reference);
+        }
+
+        return trim($reference . ' ' . $taskType);
+    }
+
+    protected function buildOperationsLogNote(array $taskSummary)
+    {
+        $lines = array();
+        if (!empty($taskSummary['reference'])) {
+            $lines[] = sprintf($this->l('Raised operations follow-up: %s'), $taskSummary['reference']);
+        }
+        if (!empty($taskSummary['view_link'])) {
+            $lines[] = sprintf($this->l('View task: %s'), $taskSummary['view_link']);
+        }
+
+        return implode("\n", $lines);
     }
 
     protected function renderInquiryCard($row)

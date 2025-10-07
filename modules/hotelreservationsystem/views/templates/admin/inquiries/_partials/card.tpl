@@ -55,6 +55,9 @@
             <button type="button" class="btn btn-link btn-xs inquiry-open-notes" data-role="notes">
                 <i class="icon-comments"></i>
             </button>
+            <button type="button" class="btn btn-link btn-xs inquiry-open-details" data-role="inspect">
+                <i class="icon-info-circle"></i>
+            </button>
         </div>
     </div>
 </div>

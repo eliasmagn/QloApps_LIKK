@@ -2,6 +2,18 @@
     min-height: 480px;
 }
 
+
+.inquiry-board-layout {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.inquiry-board-columns {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 #hotel-inquiry-board {
     display: flex;
     flex-wrap: wrap;
@@ -38,6 +50,12 @@
     margin-bottom: 12px;
     padding: 10px;
     cursor: move;
+}
+
+.inquiry-card.is-selected {
+    border-color: #5cb85c;
+    border-left-color: #5cb85c;
+    box-shadow: 0 0 0 1px rgba(92, 184, 92, 0.3);
 }
 
 .inquiry-card.dragging {
@@ -106,6 +124,79 @@
     font-size: 14px;
 }
 
+.inquiry-sidebar {
+    flex: 0 0 320px;
+    max-width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.inquiry-sidebar-placeholder {
+    margin: auto 0;
+    text-align: center;
+}
+
+.inquiry-sidebar-content.hidden {
+    display: none;
+}
+
+.inquiry-sidebar-header {
+    margin-bottom: 15px;
+}
+
+.inquiry-sidebar-header h4 {
+    margin: 8px 0 4px;
+    font-size: 16px;
+}
+
+.inquiry-sidebar-header .label + .label {
+    margin-left: 4px;
+}
+
+.inquiry-sidebar-details li {
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.inquiry-sidebar-section {
+    margin-bottom: 15px;
+}
+
+.inquiry-sidebar-actions .btn + .btn {
+    margin-left: 8px;
+}
+
+.inquiry-operations-list {
+    margin-bottom: 10px;
+}
+
+.inquiry-operations-list .inquiry-operation-item {
+    border: 1px solid #e5e5e5;
+    border-left: 4px solid #3a87ad;
+    border-radius: 3px;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.inquiry-operations-list .inquiry-operation-item:last-child {
+    margin-bottom: 0;
+}
+
+.inquiry-operations-list .inquiry-operation-item .operation-meta {
+    font-size: 11px;
+    color: #777;
+}
+
+.inquiry-operations-list .inquiry-operation-item .operation-link {
+    display: inline-block;
+    margin-top: 6px;
+}
+
 .inquiry-column-body.highlight-drop {
     background: #f0f8ff;
 }
@@ -133,6 +224,14 @@
 }
 
 @media (max-width: 991px) {
+    .inquiry-board-layout {
+        flex-direction: column;
+    }
+
+    .inquiry-sidebar {
+        flex: 1 1 auto;
+    }
+
     .inquiry-column {
         flex: 0 0 50%;
         max-width: 50%;
@@ -143,5 +242,9 @@
     .inquiry-column {
         flex: 0 0 100%;
         max-width: 100%;
+    }
+
+    .inquiry-sidebar {
+        padding: 10px;
     }
 }

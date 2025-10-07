@@ -39,6 +39,7 @@
   - [x] Ship manual task authoring inside the Operations console with JSON payload capture and optional kickoff notes.
   - [x] Layer assignment workflows so tasks can be handed to employees or teams.
   - [x] Wired `KLStoryAvailabilityCache` so storytelling availability snapshots purge when bookings, inquiries or room disable ranges mutate, with cron-safe rebuilds validated by unit tests.
+- [x] Bridged the inquiry Kanban board with operations follow-ups so staff can raise linked `KlOperationTask` entries from the inspector sidebar, convert notes into follow-ups without leaving the modal, and follow deep links back from the Operations console and list view.
 - [x] Embedded an operations summary widget on the booking timeline.
   - [x] Aggregate pending and in-progress tasks into overdue, today and tomorrow buckets per resource kind via a dedicated timeline summary service.
   - [x] Inject the widget through `displayAdminRoomsBookingCalendarAfter` with console quick links and Panther acceptance coverage ensuring it renders when `kloperations` is enabled.
