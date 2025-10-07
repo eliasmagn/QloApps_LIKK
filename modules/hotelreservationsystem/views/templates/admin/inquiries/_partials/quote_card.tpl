@@ -19,7 +19,7 @@
                     <i class="icon-download"></i> {l s='Download PDF' mod='hotelreservationsystem'}
                 </button>
                 <button type="button" class="btn btn-default btn-xs" data-action="email-quote">
-                    <i class="icon-envelope"></i> {l s='Email to guest' mod='hotelreservationsystem'}
+                    <i class="icon-envelope"></i> {l s='Send to guest' mod='hotelreservationsystem'}
                 </button>
             </div>
         </div>

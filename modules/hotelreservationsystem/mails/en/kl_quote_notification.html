@@ -1,0 +1,31 @@
+<html>
+  <body style="font-family: Arial, sans-serif; font-size: 14px; color: #222;">
+    <p>Hi {guest_name},</p>
+    <p>Your residency quote for <strong>{inquiry_subject}</strong> is ready. The PDF is attached for your records and you can also download it using the link below:</p>
+    <p style="margin: 16px 0;"><a href="{quote_download_link}" style="color: #0a5cc2;">{quote_download_link}</a></p>
+    <table style="border-collapse: collapse; width: 100%; max-width: 480px;">
+      <tbody>
+        <tr>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea; font-weight: 600;">Reference</td>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea;">{inquiry_reference}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea; font-weight: 600;">Status</td>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea;">{quote_status}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea; font-weight: 600;">Total</td>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea;">{quote_total}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea; font-weight: 600;">Valid until</td>
+          <td style="padding: 6px 8px; border: 1px solid #e2e6ea;">{quote_valid_until}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If you have any questions, reply directly to this email or reach us at <a href="mailto:{contact_email}" style="color: #0a5cc2;">{contact_email}</a>{contact_phone_formatted}.</p>
+    <p>We look forward to hosting you.<br />
+      — {brand_name}
+    </p>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+Hallo {guest_name},
+
+Ihr Aufenthaltsangebot für {inquiry_subject} ist fertig. Die PDF ist angehängt und kann auch über diesen Link geladen werden:
+{quote_download_link}
+
+Referenz: {inquiry_reference}
+Status: {quote_status}
+Gesamtsumme: {quote_total}
+Gültig bis: {quote_valid_until}
+
+Bei Fragen können Sie auf diese Nachricht antworten oder uns unter {contact_email}{contact_phone_formatted} erreichen.
+
+Wir freuen uns auf Ihren Besuch.
+— {brand_name}

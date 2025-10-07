@@ -251,7 +251,9 @@ Head to **Hotel Reservation System → Packages** to craft bundled offers:
 
 With plans and packages configured, the `KLQuotePricingEngine` orchestrates stay pricing. Call `KLQuotePricingEngine::generateQuote()` with the rate plan, resource profile, stay window and optional package selections to receive a currency-safe payload of line items, seasonal adjustments and totals. Persist the result alongside an inquiry via `KLQuotePricingEngine::persistQuote()` to keep an auditable history of drafts, sent quotes and approvals inside the Kanban board.
 
-Persisted quotes can now be rendered as branded PDFs via `QuotePdfGenerator`. The inquiry inspector automatically lists saved quotes with download and email buttons (guarded by the employee’s view/edit permissions); the email action attaches the generated PDF using the module mail template `kl_quote_guest.*`. Deterministic hashes in `QuotePdfGeneratorTest` flag layout regressions whenever the PDF structure changes.
+Persisted quotes can now be rendered as branded PDFs via `QuotePdfGenerator`. The inquiry inspector automatically lists saved quotes with download and send buttons (guarded by the employee’s view/edit permissions); the send action routes through `KLQuoteMailDispatcher`, which delivers the new `kl_quote_notification.*` templates, attaches the generated PDF, injects a signed guest download link served by `QuoteShareModuleFrontController` and honours the configured sender/reply-to addresses. Deterministic hashes in `QuotePdfGeneratorTest` flag layout regressions whenever the PDF structure changes.
+
+Use the **Quote email settings** button on the inquiry board to set custom from/reply-to addresses; leave the fields blank to fall back to the shop email. Templates ship in English and German and include both the PDF attachment and a shareable download link for the guest.
 
 ### Operations automation module
 

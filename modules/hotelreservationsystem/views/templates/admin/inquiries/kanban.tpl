@@ -8,6 +8,9 @@
             <button type="button" class="btn btn-default" id="inquiry-refresh-board">
                 <i class="icon-refresh"></i> {l s='Refresh' mod='hotelreservationsystem'}
             </button>
+            <button type="button" class="btn btn-default" id="inquiry-open-quote-mail-settings" {if !$can_manage_quote_mail_settings}disabled="disabled"{/if}>
+                <i class="icon-envelope-alt"></i> {l s='Quote email settings' mod='hotelreservationsystem'}
+            </button>
             <button type="button" class="btn btn-primary" id="inquiry-create-trigger">
                 <i class="icon-plus"></i> {l s='New inquiry' mod='hotelreservationsystem'}
             </button>
@@ -230,6 +233,41 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">{l s='Cancel' mod='hotelreservationsystem'}</button>
                     <button type="submit" class="btn btn-primary">{l s='Save note' mod='hotelreservationsystem'}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="inquiry-quote-mail-settings-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="inquiry-quote-mail-settings-form">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{l s='Close' mod='hotelreservationsystem'}"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"><i class="icon-envelope"></i> {l s='Quote email settings' mod='hotelreservationsystem'}</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="quote-mail-from" class="control-label">{l s='From address' mod='hotelreservationsystem'}</label>
+                        <input type="email" class="form-control" id="quote-mail-from" name="from_address" value="{$quote_mail_settings.from_address|escape:'htmlall':'UTF-8'}" placeholder="{$quote_mail_settings.resolved_from_address|escape:'htmlall':'UTF-8'}" {if !$can_manage_quote_mail_settings}disabled="disabled"{/if}>
+                        <p class="help-block text-muted">
+                            {l s='Fallback sender:' mod='hotelreservationsystem'} <span data-role="quote-mail-from-resolved">{$quote_mail_settings.resolved_from_address|escape:'htmlall':'UTF-8'}</span>
+                        </p>
+                    </div>
+                    <div class="form-group">
+                        <label for="quote-mail-reply" class="control-label">{l s='Reply-to address' mod='hotelreservationsystem'}</label>
+                        <input type="email" class="form-control" id="quote-mail-reply" name="reply_to_address" value="{$quote_mail_settings.reply_to_address|escape:'htmlall':'UTF-8'}" placeholder="{$quote_mail_settings.resolved_reply_to_address|escape:'htmlall':'UTF-8'}" {if !$can_manage_quote_mail_settings}disabled="disabled"{/if}>
+                        <p class="help-block text-muted">
+                            {l s='Fallback reply-to:' mod='hotelreservationsystem'} <span data-role="quote-mail-reply-resolved">{$quote_mail_settings.resolved_reply_to_address|escape:'htmlall':'UTF-8'}</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{l s='Cancel' mod='hotelreservationsystem'}</button>
+                    {if $can_manage_quote_mail_settings}
+                        <button type="submit" class="btn btn-primary">{l s='Save settings' mod='hotelreservationsystem'}</button>
+                    {/if}
                 </div>
             </form>
         </div>

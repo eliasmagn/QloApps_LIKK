@@ -738,6 +738,10 @@ class HotelReservationSystem extends Module
         $this->installTab('AdminRoomTypeGlobalDemand', 'Additional Demand Configuration', 'AdminHotelConfigurationSetting', false);
         $this->installTab('AdminBookingDocument', 'Booking Documents', false, false);
 
+        if (!Configuration::get('KL_QUOTE_MAIL_SECRET')) {
+            Configuration::updateValue('KL_QUOTE_MAIL_SECRET', Tools::passwdGen(32));
+        }
+
         return true;
     }
 
@@ -858,7 +862,10 @@ class HotelReservationSystem extends Module
             'WK_HOTEL_NAME_ENABLE',
             'WK_CUSTOMER_SUPPORT_PHONE_NUMBER',
             'WK_CUSTOMER_SUPPORT_EMAIL',
-            'WK_DISPLAY_CONTACT_PAGE_HOTEL_LIST'
+            'WK_DISPLAY_CONTACT_PAGE_HOTEL_LIST',
+            'KL_QUOTE_MAIL_FROM_ADDRESS',
+            'KL_QUOTE_MAIL_REPLY_TO_ADDRESS',
+            'KL_QUOTE_MAIL_SECRET'
         );
         foreach ($configKeys as $key) {
             if (!Configuration::deleteByName($key)) {

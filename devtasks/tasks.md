@@ -12,6 +12,7 @@ This folder tracks near-term development efforts for the Kunstort Lehnin fork. E
 | [Operations timeline widget](operations-timeline-widget.task.md) | ⏳ Planned | Embed the operations summary widget on the booking timeline with console shortcuts. |
 | [Inquiry → Operations bridge](inquiry-to-operations.task.md) | ✅ Complete | Allow inquiry follow-ups and note submissions to raise operations tasks with bidirectional context links. |
 | [Inquiry quote PDF export](quote-pdf-export.task.md) | ✅ Complete | Generate branded PDFs from KLQuote payloads with download/email tooling in the inquiry board. |
+| [Quote email workflow](quote-email-workflow.task.md) | 🚧 In progress | Harden the guest delivery flow with templates, dispatcher, logging and configurable sender details. |
 | [Inquiry quote review workflow](inquiry-quote-review.task.md) | 🚧 In progress | Surface quote cards with approvals, declines, PDFs and emails directly in the inquiry inspector. |
 | [Ateliers storytelling landing](storytelling-ateliers.task.md) | 🚧 In progress | Launch the atelier-focused storytelling page with taxonomy sections, CMS copy and navigation links. |
 | [Gastronomy storytelling landing](storytelling-gastronomy.task.md) | 🚧 In progress | Publish the dining-focused storytelling page with amenity callouts, CMS slots and inquiry CTAs. |
