@@ -70,6 +70,7 @@
   - [x] Wire slot-specific inquiry CTAs so availability windows launch the inquiry form with matching resource codes and dates prefilled.
   - [x] Group featured packages by resource scope, add inquiry CTA buttons per card and provide a campus-wide fallback for unscoped bundles.
   - [x] Surface pricing highlights on storytelling package cards by caching canonical quotes from `KLQuotePricingEngine`.
+  - [x] Replace the home page hooks with a presenter-driven storytelling overview and inquiry navigation.
   - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
   - [x] Wire CMS content keys, testimonial feed and FAQ data sources via cached JSON actions and front-end hydration hooks.
   - [x] Add Lighthouse/Panther regression tests for performance and accessibility budgets.

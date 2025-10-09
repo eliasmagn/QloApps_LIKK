@@ -53,6 +53,13 @@ class HotelReservationSystemStorytellingPresenter
             'inquiry' => 'KL_STORY_PROGRAMME_INQUIRY',
             'faq' => 'KL_STORY_PROGRAMME_FAQ',
         ),
+        'home' => array(
+            'hero' => 'KL_STORY_HOME_HERO',
+            'residencies' => 'KL_STORY_HOME_RESIDENCIES',
+            'ateliers' => 'KL_STORY_HOME_ATELIERS',
+            'gastronomy' => 'KL_STORY_HOME_GASTRONOMY',
+            'programme' => 'KL_STORY_HOME_PROGRAMME',
+        ),
     );
 
     const MEDIA_BREAKPOINTS = array(480, 768, 1200);
@@ -270,6 +277,75 @@ class HotelReservationSystemStorytellingPresenter
                 : null,
             'resource_key' => 'programme',
             'cms_endpoints' => $this->getCmsEndpointsForGroup('programme'),
+        );
+    }
+
+    /**
+     * Builds the data payload used by the home storytelling landing.
+     *
+     * @param int|null $idLang
+     * @param int|null $idShop
+     *
+     * @return array<string, mixed>
+     */
+    public function presentHomeLanding($idLang = null, $idShop = null)
+    {
+        $context = $this->context;
+        $idLang = $idLang !== null ? (int) $idLang : ($context && $context->language ? (int) $context->language->id : (int) Configuration::get('PS_LANG_DEFAULT'));
+        $idShop = $idShop !== null ? (int) $idShop : ($context && $context->shop ? (int) $context->shop->id : 0);
+
+        $cms = $this->resolveCmsSlots('home', $idLang, $idShop);
+
+        $definitions = array(
+            'residencies' => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_ROOM,
+                'landing' => $this->presentResidenciesLanding($idLang, $idShop),
+                'controller' => 'residencies',
+                'utm_source' => 'story_home_residencies',
+            ),
+            'ateliers' => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_ATELIER,
+                'landing' => $this->presentAteliersLanding($idLang, $idShop),
+                'controller' => 'ateliers',
+                'utm_source' => 'story_home_ateliers',
+            ),
+            'gastronomy' => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_GASTRONOMY,
+                'landing' => $this->presentGastronomyLanding($idLang, $idShop),
+                'controller' => 'gastronomy',
+                'utm_source' => 'story_home_gastronomy',
+            ),
+            'programme' => array(
+                'resource_kind' => KLResourceProfile::RESOURCE_KIND_SEMINAR,
+                'landing' => $this->presentProgrammeLanding($idLang, $idShop),
+                'controller' => 'programme',
+                'utm_source' => 'story_home_programme',
+            ),
+        );
+
+        $link = $context && $context->link ? $context->link : null;
+        $sections = array();
+
+        foreach ($definitions as $resourceKey => $definition) {
+            $landing = isset($definition['landing']) && is_array($definition['landing']) ? $definition['landing'] : array();
+            $sections[] = $this->buildHomeSectionPayload(
+                $resourceKey,
+                $definition['resource_kind'],
+                $landing,
+                array(
+                    'cms' => isset($cms[$resourceKey]) ? $cms[$resourceKey] : null,
+                    'landing_url' => $link ? $link->getPageLink($definition['controller']) : null,
+                    'utm_source' => $definition['utm_source'],
+                )
+            );
+        }
+
+        return array(
+            'generated_at' => date(DATE_ATOM),
+            'resource_key' => 'home',
+            'hero' => $this->buildHomeHeroPayload(isset($cms['hero']) ? $cms['hero'] : null),
+            'sections' => array_values(array_filter($sections)),
+            'cms' => $cms,
         );
     }
 
@@ -972,6 +1048,164 @@ class HotelReservationSystemStorytellingPresenter
         $this->profileCache[$cacheKey] = $profiles;
 
         return $profiles;
+    }
+
+    /**
+     * @param array<string, mixed>|null $cmsHero
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildHomeHeroPayload($cmsHero)
+    {
+        $translator = $this->getTranslator();
+
+        return array(
+            'cms' => $cmsHero,
+            'headline' => $translator
+                ? $translator->trans('Artist campus in Lehnin', array(), 'Modules.Hotelreservationsystem.Front')
+                : 'Artist campus in Lehnin',
+            'lead' => $translator
+                ? $translator->trans('Residencies, studios, communal dining and programme spaces come together on a historic monastery campus. Explore the spaces and open an inquiry to plan your stay.', array(), 'Modules.Hotelreservationsystem.Front')
+                : 'Residencies, studios, communal dining and programme spaces come together on a historic monastery campus. Explore the spaces and open an inquiry to plan your stay.',
+            'cta_label' => $translator
+                ? $translator->trans('Start an inquiry', array(), 'Modules.Hotelreservationsystem.Front')
+                : 'Start an inquiry',
+            'cta_url' => $this->buildInquiryLink('story_home_hero'),
+        );
+    }
+
+    /**
+     * @param string $resourceKey
+     * @param string $resourceKind
+     * @param array<string, mixed> $landing
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildHomeSectionPayload($resourceKey, $resourceKind, array $landing, array $options = array())
+    {
+        $translator = $this->getTranslator();
+        $resourceLabel = $this->getResourceKindLabel($resourceKind);
+
+        $cms = isset($options['cms']) ? $options['cms'] : null;
+        $landingUrl = isset($options['landing_url']) ? $options['landing_url'] : null;
+        $utmSource = isset($options['utm_source']) ? $options['utm_source'] : 'story_home_'.$resourceKey;
+
+        $metadata = isset($landing['section_metadata']) && is_array($landing['section_metadata']) ? $landing['section_metadata'] : array();
+        $sectionMeta = array();
+        if ($metadata) {
+            $first = reset($metadata);
+            if (is_array($first)) {
+                $sectionMeta = $first;
+            }
+        }
+        if (!$sectionMeta) {
+            $sectionMeta = array(
+                'key' => $resourceKey,
+                'anchor' => $resourceKey,
+                'title' => $resourceLabel,
+                'intro' => '',
+            );
+        }
+
+        $sectionKey = isset($sectionMeta['key']) ? $sectionMeta['key'] : $resourceKey;
+        $anchor = 'home-'.$sectionKey;
+
+        $availability = array(
+            'slot' => null,
+            'message' => '',
+            'status' => null,
+        );
+        if (isset($landing['availability']) && is_array($landing['availability'])) {
+            $availabilityPayload = $this->applyInquiryUrls($landing['availability'], array(
+                'utm_source' => $utmSource,
+            ));
+            if (isset($availabilityPayload['groups'][$sectionKey]['slot'])) {
+                $availability['slot'] = $availabilityPayload['groups'][$sectionKey]['slot'];
+            } elseif (isset($availabilityPayload['slots']) && is_array($availabilityPayload['slots']) && $availabilityPayload['slots']) {
+                $availability['slot'] = $availabilityPayload['slots'][0];
+            }
+            if (isset($availabilityPayload['message'])) {
+                $availability['message'] = $availabilityPayload['message'];
+            }
+            if (isset($availabilityPayload['status'])) {
+                $availability['status'] = $availabilityPayload['status'];
+            }
+        }
+
+        $sections = isset($landing['sections']) && is_array($landing['sections']) ? $landing['sections'] : array();
+        $profiles = array();
+        if (isset($sections[$sectionKey]['profiles']) && is_array($sections[$sectionKey]['profiles'])) {
+            $profiles = array_slice($sections[$sectionKey]['profiles'], 0, 2);
+        }
+
+        $packageHighlight = null;
+        if (isset($landing['packages']) && is_array($landing['packages'])) {
+            foreach ($landing['packages'] as $group) {
+                if (!isset($group['packages']) || !is_array($group['packages'])) {
+                    continue;
+                }
+                foreach ($group['packages'] as $package) {
+                    $packageHighlight = array(
+                        'name' => isset($package['name']) ? $package['name'] : '',
+                        'tagline' => isset($package['tagline']) ? $package['tagline'] : '',
+                        'headline' => isset($package['highlight']['headline']) ? $package['highlight']['headline'] : '',
+                        'message' => isset($package['highlight']['message']) ? $package['highlight']['message'] : '',
+                        'cta_label' => isset($package['cta_label']) ? $package['cta_label'] : null,
+                        'inquiry_url' => isset($package['inquiry_url']) ? $package['inquiry_url'] : null,
+                    );
+                    break 2;
+                }
+            }
+        }
+
+        $summaryHtml = null;
+        if ($cms && isset($cms['content']) && trim((string) $cms['content']) !== '') {
+            $summaryHtml = $cms['content'];
+        }
+
+        $inquiryParameters = array('resource_interests[]' => $resourceKind);
+        $inquiryUrl = $this->buildInquiryLink($utmSource, $inquiryParameters);
+
+        return array(
+            'resource' => $resourceKey,
+            'resource_kind' => $resourceKind,
+            'key' => $sectionKey,
+            'anchor' => $anchor,
+            'title' => isset($sectionMeta['title']) ? $sectionMeta['title'] : $resourceLabel,
+            'intro' => isset($sectionMeta['intro']) ? $sectionMeta['intro'] : '',
+            'summary_html' => $summaryHtml,
+            'nav_label' => $resourceLabel,
+            'availability' => $availability,
+            'profiles' => $profiles,
+            'package' => $packageHighlight,
+            'landing_url' => $landingUrl,
+            'landing_label' => $translator
+                ? $translator->trans('Explore %resource%', array('%resource%' => Tools::strtolower($resourceLabel)), 'Modules.Hotelreservationsystem.Front')
+                : 'Explore '.Tools::strtolower($resourceLabel),
+            'inquiry_url' => $inquiryUrl,
+            'inquiry_label' => $translator
+                ? $translator->trans('Start a %resource% inquiry', array('%resource%' => Tools::strtolower($resourceLabel)), 'Modules.Hotelreservationsystem.Front')
+                : 'Start a '.Tools::strtolower($resourceLabel).' inquiry',
+        );
+    }
+
+    /**
+     * @param string $utmSource
+     * @param array<string, mixed> $parameters
+     *
+     * @return string|null
+     */
+    protected function buildInquiryLink($utmSource, array $parameters = array())
+    {
+        $link = $this->context && $this->context->link ? $this->context->link : null;
+        if (!$link) {
+            return null;
+        }
+
+        $query = array_merge(array('utm_source' => $utmSource), $parameters);
+
+        return $link->getPageLink('inquiry', true, null, $query);
     }
 
     /**
