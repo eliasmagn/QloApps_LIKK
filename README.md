@@ -10,7 +10,7 @@ Key characteristics of the fork:
 - 📨 **Inquiry workflow** – when inquiry mode is enabled, the legacy checkout paths forward to a multi-step inquiry form that collects structured stay preferences, persists directly to the Kanban board and emails confirmations, while cart-driven checkout remains available when the flag is disabled.
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
-- 🗺️ **Resource showcase** – the home page now renders a residency showcase fed by published resource profiles so rooms, studios, gastronomy and programme spaces surface real capacity and availability cues.
+- 🗺️ **Storytelling home landing** – the home page now reuses the storytelling presenter to surface residencies, ateliers, gastronomy and programme sections with live availability cues, featured package highlights and inquiry CTAs.
 - 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
 - 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
 - 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
@@ -58,6 +58,8 @@ While inquiry mode is active the cart controller refuses to mutate cart contents
 
 Set `_KUNSTORT_STORYTELLING_LAUNCH_` to `true` in `config/defines_custom.inc.php` to expose the storytelling landings at `/index.php?controller=residencies`, `/index.php?controller=ateliers`, `/index.php?controller=gastronomy` and `/index.php?controller=programme`. Each page is powered by `HotelReservationSystemStorytellingPresenter`, which aggregates taxonomy-driven sections with metadata, surfaces featured `KLPackage` entries flagged for promotion, caches grouped availability highlights, hydrates CMS-managed copy slots and now feeds amenity callouts alongside capacity summaries. Availability snapshots are flushed automatically via `KLStoryAvailabilityCache` whenever bookings, inquiries or room disable ranges mutate so the next front-office request rebuilds a fresh payload while cron-driven booking syncs keep the dataset current.
 
+When the flag is enabled the home page also consumes `presentHomeLanding()` to stitch together a campus overview: residencies, ateliers, gastronomy and programme sections appear inline with live availability slots, compact profile cards, featured package highlights and inquiry CTAs that deep-link into the form with prefilled interests.
+
 Storytelling templates expose `data-kl-storytelling-resource` plus slot-specific endpoint attributes that `storytelling-content.js` uses to fetch the cached `testimonials`/`faq` JSON payloads after page load. The helper respects same-origin credentials, normalises resource keys, honours the `resource_groups` ordering returned by the endpoint and keeps the server-rendered CMS copy as a fallback should the JSON lookup fail.
 
 All storytelling controllers register `themes/hotel-reservation-theme/css/storytelling.css`, which is authored in `sass/storytelling.scss` and scoped to the `.kl-storytelling` namespace. The bundle introduces responsive grid/flex layouts, WCAG 2.1 AA colour tokens and accessible focus states while a trimmed inline block (`_partials/storytelling-critical.tpl`) ensures hero and container styling render immediately without blocking requests.
@@ -81,6 +83,7 @@ Pricing highlights reuse those package groups: the presenter now assembles canon
 - **Ateliers CMS keys:** `KL_STORY_ATELIERS_HERO`, `KL_STORY_ATELIERS_AVAILABILITY`, `KL_STORY_ATELIERS_PRACTICAL`, `KL_STORY_ATELIERS_FAQ`, `KL_STORY_ATELIERS_TESTIMONIALS`.
 - **Gastronomy CMS keys:** `KL_STORY_GASTRONOMY_HERO`, `KL_STORY_GASTRONOMY_AVAILABILITY`, `KL_STORY_GASTRONOMY_PRACTICAL`, `KL_STORY_GASTRONOMY_FAQ`, `KL_STORY_GASTRONOMY_TESTIMONIALS`.
 - **Programme CMS keys:** `KL_STORY_PROGRAMME_HERO`, `KL_STORY_PROGRAMME_HIGHLIGHTS`, `KL_STORY_PROGRAMME_AVAILABILITY`, `KL_STORY_PROGRAMME_SCHEDULE`, `KL_STORY_PROGRAMME_INQUIRY`, `KL_STORY_PROGRAMME_FAQ`.
+- **Home CMS keys:** `KL_STORY_HOME_HERO`, `KL_STORY_HOME_RESIDENCIES`, `KL_STORY_HOME_ATELIERS`, `KL_STORY_HOME_GASTRONOMY`, `KL_STORY_HOME_PROGRAMME`.
 
 Assign the configuration keys to CMS page IDs (per shop) to hydrate copy blocks. Any missing content gracefully falls back to taxonomy data and placeholder messaging, keeping both pages navigable during rollout rehearsals.
 
@@ -145,7 +148,7 @@ Dragging a card to another column automatically updates its stage (and default s
 ## Resident-Focused Front Office
 
 - The theme header no longer invokes `HOOK_TOP`, `displayTopColumn`, or left/right column placeholders. Instead it renders a static residency navigation bar with anchors for residences, studios & ateliers, dining, programme spaces, and contact along with direct resident-service shortcuts and support contacts.
-- The home page now includes a residency showcase block sourced from the new resource taxonomy tables so rooms, ateliers, gastronomy and programme spaces present real metadata (capacity, availability posture, timezone) instead of mock content.
+- The home page now renders the storytelling landing so residencies, ateliers, gastronomy and programme spaces share live availability snapshots, compact profile cards, package highlights and inquiry CTAs without relying on module hooks.
 - The hotel description ribbon is rendered inline from configuration values so the chain name and tagline stay visible without needing module hooks.
 - Legacy e-commerce widgets (`blockcart`, `blockuserinfo`, `blockmyaccount`, `blocknewsletter`, `blocksocial`) have been removed from both `themes/hotel-reservation-theme/modules/` and `modules/`, and their default hook assignments have been stripped from installation metadata so fresh installs or upgrades never attempt to load them.
 - Core controllers now guard newsletter integration points so missing modules do not trigger autoload errors on identity or authentication flows.

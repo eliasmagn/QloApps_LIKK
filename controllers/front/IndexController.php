@@ -29,18 +29,83 @@ class IndexControllerCore extends FrontController
     public $php_self = 'index';
 
     /**
+     * @var bool
+     */
+    protected $useStorytellingLanding = false;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $storytellingPayload = array();
+
+    public function init()
+    {
+        parent::init();
+
+        $this->useStorytellingLanding = false;
+        $this->storytellingPayload = array();
+
+        if (!Module::isInstalled('hotelreservationsystem') || !Module::isEnabled('hotelreservationsystem')) {
+            return;
+        }
+
+        include_once _PS_MODULE_DIR_.'hotelreservationsystem/define.php';
+
+        $presenter = new HotelReservationSystemStorytellingPresenter($this->context);
+        if (!$presenter->isEnabled()) {
+            return;
+        }
+
+        $payload = $presenter->presentHomeLanding();
+        if (!is_array($payload) || !$payload) {
+            return;
+        }
+
+        $this->storytellingPayload = $payload;
+        $this->useStorytellingLanding = true;
+    }
+
+    public function setMedia()
+    {
+        parent::setMedia();
+
+        if ($this->useStorytellingLanding) {
+            $this->addCSS(_THEME_CSS_DIR_.'storytelling.css');
+            $this->addJS(_THEME_JS_DIR_.'storytelling-defer.js');
+            $this->addJS(_THEME_JS_DIR_.'storytelling-content.js');
+            $this->addJS(_THEME_JS_DIR_.'index-storytelling.js');
+        } else {
+            $this->addJS(_THEME_JS_DIR_.'index.js');
+        }
+    }
+
+    /**
      * Assign template vars related to page content
      * @see FrontController::initContent()
      */
     public function initContent()
     {
-        parent::initContent();
-        $this->addJS(_THEME_JS_DIR_.'index.js');
+        if ($this->useStorytellingLanding) {
+            $this->display_column_left = false;
+            $this->display_column_right = false;
+        }
 
-        $this->context->smarty->assign(array('HOOK_HOME' => Hook::exec('displayHome'),
-            'HOOK_HOME_TAB' => Hook::exec('displayHomeTab'),
-            'HOOK_HOME_TAB_CONTENT' => Hook::exec('displayHomeTabContent')
-        ));
+        parent::initContent();
+
+        if ($this->useStorytellingLanding) {
+            $this->context->smarty->assign(array(
+                'storytelling' => $this->storytellingPayload,
+                'use_storytelling_landing' => true,
+            ));
+        } else {
+            $this->context->smarty->assign(array(
+                'HOOK_HOME' => Hook::exec('displayHome'),
+                'HOOK_HOME_TAB' => Hook::exec('displayHomeTab'),
+                'HOOK_HOME_TAB_CONTENT' => Hook::exec('displayHomeTabContent'),
+                'use_storytelling_landing' => false,
+            ));
+        }
+
         $this->setTemplate(_PS_THEME_DIR_.'index.tpl');
     }
 }
