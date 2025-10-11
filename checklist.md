@@ -10,6 +10,7 @@
 - [x] Restored the full legacy order and one-page-checkout controllers/templates so disabling inquiry mode instantly re-enables checkout, with inquiry-mode requests returning friendly redirects or JSON errors.
 - [x] Blocked cart controller mutations while inquiry mode is active to prevent ghost carts.
 - [x] Replaced hook-driven header widgets with a static residency navigation and removed cart/account/newsletter/social modules from the codebase.
+- [x] Introduced a storytelling spotlight ribbon beneath the header navigation so weekly programme highlights and inquiry CTAs stay visible without the old search hook.
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 - [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.
@@ -72,7 +73,7 @@
   - [x] Surface pricing highlights on storytelling package cards by caching canonical quotes from `KLQuotePricingEngine`.
   - [x] Replace the home page hooks with a presenter-driven storytelling overview and inquiry navigation.
   - [x] Replace the legacy Our Properties listing with a presenter-driven residency/atelier/gastronomy overview and inquiry CTAs.
-  - [ ] Port shared components to ateliers/studios, gastronomy and programme templates.
+  - [x] Port shared components to ateliers/studios, gastronomy and programme templates (storytelling layout partial and shared padding rules).
   - [x] Wire CMS content keys, testimonial feed and FAQ data sources via cached JSON actions and front-end hydration hooks.
   - [x] Add Lighthouse/Panther regression tests for performance and accessibility budgets.
 
