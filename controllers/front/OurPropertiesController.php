@@ -35,103 +35,99 @@ class OurPropertiesControllerCore extends FrontController
         $this->display_column_right = false;
 
         parent::initContent();
-        $hotelsInfo = array();
-        $hotelLocationArray = 0;
-        $pageLimit = 0;
-        $displayHotelMap = Configuration::get('WK_DISPLAY_PROPERTIES_PAGE_GOOGLE_MAP');
-        if (Module::isInstalled('hotelreservationsystem') && Module::isEnabled('hotelreservationsystem')) {
-            $objModule = Module::getInstanceByName('hotelreservationsystem');
-            $objHotelInfo = new HotelBranchInformation();
-            if ($hotelsInfo = $objHotelInfo->hotelBranchesInfo(false, 1, 1)) {
-                $hotelIconDefault = $this->context->link->getMediaLink($objModule->getPathUri().'views/img/Slices/hotel-default-icon.png');
-                foreach ($hotelsInfo as $hotelKey => $hotel) {
-                    if (isset($hotel['id_cover_img'])
-                        && $hotel['id_cover_img']
-                        && Validate::isLoadedObject($objHotelImage = new HotelImage($hotel['id_cover_img']))
-                    ) {
-                        $htlImgLink = $this->context->link->getMediaLink($objHotelImage->getImageLink($hotel['id_cover_img'], ImageType::getFormatedName('medium')));
-                        if ((bool)Tools::file_get_contents($htlImgLink)) {
-                            $hotelsInfo[$hotelKey]['image_url'] = $htlImgLink;
-                        } else {
-                            $hotelsInfo[$hotelKey]['image_url'] = $hotelIconDefault;
-                        }
+        $ourProperties = array(
+            'generated_at' => date(DATE_ATOM),
+            'intro' => Configuration::get('WK_HTL_SHORT_DESC', $this->context->language->id),
+            'sections' => array(),
+            'storytelling_enabled' => false,
+            'module_active' => false,
+        );
+
+        $isModuleActive = Module::isInstalled('hotelreservationsystem') && Module::isEnabled('hotelreservationsystem');
+        if ($isModuleActive) {
+            include_once _PS_MODULE_DIR_.'hotelreservationsystem/define.php';
+
+            $presenter = new HotelReservationSystemStorytellingPresenter($this->context);
+            $storytellingEnabled = $presenter->isEnabled();
+            $ourProperties['storytelling_enabled'] = $storytellingEnabled;
+            $ourProperties['module_active'] = true;
+
+            $idLang = (int) $this->context->language->id;
+            $idShop = (int) $this->context->shop->id;
+
+            $definitions = array(
+                'residencies' => array(
+                    'method' => 'presentResidenciesLanding',
+                    'resource_kind' => KLResourceProfile::RESOURCE_KIND_ROOM,
+                    'controller' => 'residencies',
+                ),
+                'ateliers' => array(
+                    'method' => 'presentAteliersLanding',
+                    'resource_kind' => KLResourceProfile::RESOURCE_KIND_ATELIER,
+                    'controller' => 'ateliers',
+                ),
+                'gastronomy' => array(
+                    'method' => 'presentGastronomyLanding',
+                    'resource_kind' => KLResourceProfile::RESOURCE_KIND_GASTRONOMY,
+                    'controller' => 'gastronomy',
+                ),
+            );
+
+            foreach ($definitions as $sectionKey => $definition) {
+                if (!isset($definition['method']) || !method_exists($presenter, $definition['method'])) {
+                    continue;
+                }
+
+                $landing = $presenter->{$definition['method']}($idLang, $idShop);
+                if (!is_array($landing)) {
+                    continue;
+                }
+
+                $resourceKind = $definition['resource_kind'];
+                $metadata = isset($landing['section_metadata'][$resourceKind]) ? $landing['section_metadata'][$resourceKind] : array();
+                $sectionAnchor = isset($metadata['key']) ? $metadata['key'] : $sectionKey;
+
+                $profiles = array();
+                if (isset($landing['sections'][$sectionAnchor]['profiles']) && is_array($landing['sections'][$sectionAnchor]['profiles'])) {
+                    $profiles = $landing['sections'][$sectionAnchor]['profiles'];
+                }
+
+                $displayProfiles = array_slice($profiles, 0, 3);
+                $availability = array();
+                if (isset($landing['availability']) && is_array($landing['availability'])) {
+                    $availability['message'] = isset($landing['availability']['message']) ? $landing['availability']['message'] : null;
+
+                    if (isset($landing['availability']['slots']) && is_array($landing['availability']['slots'])) {
+                        $availability['slots'] = array_slice($landing['availability']['slots'], 0, 2);
                     } else {
-                        $hotelsInfo[$hotelKey]['image_url'] = $hotelIconDefault;
+                        $availability['slots'] = array();
                     }
-
-                    $hotelsInfo[$hotelKey]['view_rooms_link'] = $this->context->link->getCategoryLink(
-                        new Category($hotel['id_category'], $this->context->language->id),
-                        null,
-                        $this->context->language->id
-                    );
+                } else {
+                    $availability = array('message' => null, 'slots' => array());
                 }
 
-                // To store max number pages.
-                $pageLimit = ceil(count($hotelsInfo)/10);
-                if (!($page = Tools::getValue('pagination'))
-                    || (!$pageLimit || ($page > $pageLimit))
-                ) {
-                    $page = 1;
-                }
-
-                $pagination = array();
-                if ($pageLimit) {
-                    $pageNumber = $page - 2;
-                    if ($pageNumber < 1) {
-                        $pageNumber = 1;
-                    }
-
-                    while ($page + 4 >= $pageNumber && count($pagination) < 5) {
-                        if ($pageNumber > $pageLimit) {
-                            $firstItem = reset($pagination) - 1;
-                            if ($firstItem > 0) {
-                                $pagination[$firstItem] = $firstItem;
-                            }
-                        } else {
-                            $pagination[$pageNumber] = $pageNumber;
-                        }
-
-                        $pageNumber++;
-                    }
-                }
-
-                ksort($pagination);
-
-                $this->context->smarty->assign(
-                    array(
-                        'pagination' => $pagination,
-                        'currentPage' => $page,
-                        'pageLimit' => $pageLimit,
-                        'currentPageUrl' => $this->context->link->getPageLink($this->php_self)
-                    )
+                $section = array(
+                    'key' => $sectionAnchor,
+                    'resource_kind' => $resourceKind,
+                    'title' => isset($metadata['title']) ? $metadata['title'] : Tools::ucfirst($sectionKey),
+                    'intro' => isset($metadata['intro']) ? $metadata['intro'] : '',
+                    'profiles' => $displayProfiles,
+                    'total_profiles' => count($profiles),
+                    'additional_profiles' => max(0, count($profiles) - count($displayProfiles)),
+                    'availability' => $availability,
+                    'inquiry_url' => isset($landing['inquiry_url']) ? $landing['inquiry_url'] : null,
+                    'landing_url' => ($storytellingEnabled && isset($definition['controller']))
+                        ? $this->context->link->getPageLink($definition['controller'])
+                        : null,
                 );
 
-                $page--;
-                // To show 10 Hotel per page
-                $hotelsInfo = array_slice($hotelsInfo, $page * 10, 10);
-            }
-
-            if ($displayHotelMap && Configuration::get('PS_API_KEY') && Configuration::get('WK_GOOGLE_ACTIVE_MAP') && Configuration::get('PS_MAP_ID')) {
-                if ($hotelLocations = $objHotelInfo->getMapFormatHotelsInfo(Configuration::get('WK_MAP_HOTEL_ACTIVE_ONLY'))) {
-                    $hotelLocationArray = str_replace(array('\n', '\r'), '', json_encode($hotelLocations));
-                }
+                $ourProperties['sections'][] = $section;
             }
         }
 
-        Media::addJsDef(
-            array(
-                'hotelLocationArray' => $hotelLocationArray
-            )
-        );
-
         $this->context->smarty->assign(
             array(
-                'hotelsInfo' => $hotelsInfo,
-                'hotelLocationArray' => $hotelLocationArray,
-                'viewOnMap' => Configuration::get('WK_GOOGLE_ACTIVE_MAP'),
-                'displayHotelMap' => $displayHotelMap,
-                'WK_HTL_SHORT_DESC' => Configuration::get('WK_HTL_SHORT_DESC', $this->context->language->id),
-                'currentIndex' => $this->context->link->getPageLink('our-properties')
+                'our_properties' => $ourProperties,
             )
         );
 
@@ -141,21 +137,9 @@ class OurPropertiesControllerCore extends FrontController
     public function setMedia()
     {
         parent::setMedia();
-        $this->addJS(_THEME_JS_DIR_.'our-properties.js');
         $this->addCSS(_THEME_CSS_DIR_.'our-properties.css');
-        // GOOGLE MAP
-        if (($PS_API_KEY = Configuration::get('PS_API_KEY')) && ($PS_MAP_ID = Configuration::get('PS_MAP_ID')) && Configuration::get('WK_GOOGLE_ACTIVE_MAP')) {
-            Media::addJsDef(
-                array(
-                    'PS_STORES_ICON' => $this->context->link->getMediaLink(_PS_IMG_.Configuration::get('PS_STORES_ICON')),
-                    'PS_MAP_ID' => $PS_MAP_ID
-                )
-            );
-
-            $this->addJS(
-                'https://maps.googleapis.com/maps/api/js?key='.$PS_API_KEY.
-                '&libraries=places,marker&loading=async&callback=initMap&language='.$this->context->language->iso_code.'&region='.$this->context->country->iso_code
-            );
+        if (Module::isInstalled('hotelreservationsystem') && Module::isEnabled('hotelreservationsystem')) {
+            $this->addCSS(_THEME_CSS_DIR_.'storytelling.css');
         }
     }
 }

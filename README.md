@@ -11,6 +11,7 @@ Key characteristics of the fork:
 - 🔌 **Offline-friendly admin** – the Addons and Theme catalogues show local installation guidance instead of remote marketplace iframes.
 - 🧭 **Residency navigation** – the front-office header ships with a static residency nav bar and in-house quick links; cart/account/newsletter/social blocks have been excised from both the theme overrides and the module set.
 - 🗺️ **Storytelling home landing** – the home page now reuses the storytelling presenter to surface residencies, ateliers, gastronomy and programme sections with live availability cues, featured package highlights and inquiry CTAs.
+- 🏡 **Residencies & spaces overview** – the legacy Our Properties page now draws from the storytelling presenter to showcase residency, atelier and gastronomy summaries with availability snippets, inquiry CTAs and navigation/sitemap links pointing at the refreshed view.
 - 🔒 **Legacy API removed** – `/webservice` now responds with HTTP 410 and the back office no longer advertises API key management.
 - 💳 **Payments deferred** – legacy bank wire, cheque and PayPal Commerce modules are stripped out so stays are confirmed and settled off-platform.
 - 🔄 **Interactive timeline** – bookings can be reallocated by dragging directly on the admin timeline, with conflict checks against disabled rooms and occupancy caps.
