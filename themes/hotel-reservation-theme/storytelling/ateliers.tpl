@@ -20,10 +20,11 @@
 
 {block name='storytelling_ateliers'}
   {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
-  <div class="kl-storytelling kl-storytelling--ateliers"
-    {if isset($storytelling.resource_key) && $storytelling.resource_key} data-kl-storytelling-resource="{$storytelling.resource_key|escape:'html':'UTF-8'}"{/if}
-    {if isset($storytelling.cms_endpoints.testimonials) && $storytelling.cms_endpoints.testimonials} data-kl-storytelling-testimonials-endpoint="{$storytelling.cms_endpoints.testimonials|escape:'html':'UTF-8'}"{/if}
-    {if isset($storytelling.cms_endpoints.faq) && $storytelling.cms_endpoints.faq} data-kl-storytelling-faq-endpoint="{$storytelling.cms_endpoints.faq|escape:'html':'UTF-8'}"{/if}>
+  {capture assign=storytellingSlimLayout}
+    <div class="kl-storytelling kl-storytelling--ateliers"
+      {if isset($storytelling.resource_key) && $storytelling.resource_key} data-kl-storytelling-resource="{$storytelling.resource_key|escape:'html':'UTF-8'}"{/if}
+      {if isset($storytelling.cms_endpoints.testimonials) && $storytelling.cms_endpoints.testimonials} data-kl-storytelling-testimonials-endpoint="{$storytelling.cms_endpoints.testimonials|escape:'html':'UTF-8'}"{/if}
+      {if isset($storytelling.cms_endpoints.faq) && $storytelling.cms_endpoints.faq} data-kl-storytelling-faq-endpoint="{$storytelling.cms_endpoints.faq|escape:'html':'UTF-8'}"{/if}>
     <section class="kl-storytelling__hero">
       <div class="kl-storytelling__hero-copy">
         {if isset($storytelling.cms.hero) && $storytelling.cms.hero}
@@ -214,5 +215,7 @@
         </div>
       {/if}
     {/block}
-  </div>
+    </div>
+  {/capture}
+  {include file="$tpl_dir./_partials/storytelling-layout-slim.tpl" content=$storytellingSlimLayout}
 {/block}

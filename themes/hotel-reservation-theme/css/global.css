@@ -9254,6 +9254,105 @@ div a.our_properties_link{
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.residency-storytelling-ribbon {
+  background: linear-gradient(135deg, #0f1f3a 0%, #183153 100%);
+  border-radius: 18px;
+  color: #f8fbff;
+  margin: clamp(20px, 4vw, 36px) auto 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.residency-storytelling-ribbon::after {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 65%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.residency-storytelling-ribbon__inner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(16px, 3vw, 32px);
+  justify-content: space-between;
+  padding: clamp(20px, 4vw, 36px);
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.residency-storytelling-ribbon__copy {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.residency-storytelling-ribbon__eyebrow {
+  color: rgba(248, 251, 255, 0.75);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.residency-storytelling-ribbon__message {
+  margin: 0;
+  max-width: 44rem;
+}
+
+.residency-storytelling-ribbon__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.residency-storytelling-ribbon__link {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 10px 22px;
+  text-transform: none;
+}
+
+.residency-storytelling-ribbon .btn-default {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: transparent;
+  color: #0f1f3a;
+}
+
+.residency-storytelling-ribbon .btn-default:hover,
+.residency-storytelling-ribbon .btn-default:focus {
+  background-color: #ffffff;
+  color: #0b1f35;
+}
+
+.residency-storytelling-ribbon .btn-primary {
+  box-shadow: 0 8px 20px rgba(23, 50, 99, 0.35);
+}
+
+.residency-storytelling-ribbon .btn-primary:hover,
+.residency-storytelling-ribbon .btn-primary:focus {
+  box-shadow: 0 12px 24px rgba(23, 50, 99, 0.45);
+}
+
+@media (max-width: 991px) {
+  .residency-storytelling-ribbon__inner {
+    align-items: flex-start;
+  }
+
+  .residency-storytelling-ribbon__actions {
+    justify-content: flex-start;
+  }
+
+  .residency-storytelling-ribbon__link {
+    text-align: center;
+    width: 100%;
+  }
+}
+
 .residency-top-actions {
   text-align: right;
 }

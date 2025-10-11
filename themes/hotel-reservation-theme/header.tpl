@@ -187,9 +187,28 @@
                                                                                 </div>
                                                                         </div>
                                                                 </div>
-                                                                {block name='displaySearchHotelPanel'}
-                                                                        {hook h='displaySearchHotelPanel'}
-                                                                {/block}
+                                                                <div class="residency-storytelling-ribbon">
+                                                                        <div class="residency-storytelling-ribbon__inner">
+                                                                                <div class="residency-storytelling-ribbon__copy">
+                                                                                        <p class="residency-storytelling-ribbon__eyebrow">{l s='Storytelling spotlight' d='Shop.Theme.Kunstort'}</p>
+                                                                                        <p class="residency-storytelling-ribbon__message">
+                                                                                                {if $storytellingLaunch}
+                                                                                                        {l s='Our residency editors refresh programme storytelling every week. Explore current highlights or open an inquiry to co-design your stay.' d='Shop.Theme.Kunstort'}
+                                                                                                {else}
+                                                                                                        {l s='Storytelling pilots are staging now. Preview upcoming programmes and message our residency concierge to reserve an early slot.' d='Shop.Theme.Kunstort'}
+                                                                                                {/if}
+                                                                                        </p>
+                                                                                </div>
+                                                                                <div class="residency-storytelling-ribbon__actions">
+                                                                                        <a class="btn btn-default residency-storytelling-ribbon__link" href="{$link->getPageLink('programme', true)|escape:'html':'UTF-8'}">
+                                                                                                {l s='Browse current programmes' d='Shop.Theme.Kunstort'}
+                                                                                        </a>
+                                                                                        <a class="btn btn-primary residency-storytelling-ribbon__link" href="{$link->getPageLink('inquiry', true)|escape:'html':'UTF-8'}">
+                                                                                                {l s='Plan an inquiry' d='Shop.Theme.Kunstort'}
+                                                                                        </a>
+                                                                                </div>
+                                                                        </div>
+                                                                </div>
                                                         </div>
                                                 </div>
                                         {/block}

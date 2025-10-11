@@ -66,6 +66,10 @@ This guide gives writers, translators and designers a single reference for shapi
 
 ## 4. Sample Layouts
 
+### 4.0 Shared Framework
+- **Slim layout partial:** All storytelling templates (`residencies`, `ateliers`, `gastronomy`, `programme` and the optional home landing) now render inside the `storytelling-layout-slim` partial. It constrains the canvas to a 70rem max width with generous side padding that scales down under 992px. When adding new storytelling views, capture the page markup and pass it to this partial so typography and spacing stay consistent.
+- **Header spotlight ribbon:** The global header replaces the search widget with a `Storytelling spotlight` ribbon that highlights weekly programme updates and deep-links to the inquiry form. Update the message copy in translations if programme cadence or inquiry URLs change, and keep the CTA verbs actionable (e.g. “Browse current programmes”, “Plan an inquiry”).
+
 ### 4.1 Residency Landing Structure
 1. **Hero Band** – headline, strapline, primary CTA (Inquiry) and optional secondary CTA (Factsheet).
 2. **Availability Snapshot** – next window (two cards max), CTA per slot.

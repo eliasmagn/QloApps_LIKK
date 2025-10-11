@@ -30,6 +30,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Gastronomy storytelling landing extends the presenter with amenity callouts, CMS slots and gastronomy-scoped availability/packages while navigation, quick links and the sitemap point to `/index.php?controller=gastronomy` when the flag is active.
   - ✅ Programme storytelling landing layers grouped availability cues, CMS-managed highlights/schedule/inquiry slots and feature-flagged navigation/sitemap links for `/index.php?controller=programme`.
   - ✅ Storytelling style layer ships with a shared SCSS/CSS bundle, inline critical hero rules and a `klStorytellingDefer` helper so optional scripts load after first paint.
+  - ✅ Introduced a shared `storytelling-layout-slim` partial so residencies, ateliers, gastronomy, programme and home storytelling pages reuse the same 70rem canvas and responsive padding rhythm.
   - ✅ Storytelling hero media pipeline generates WebP/JPEG variants via `npm run build:hero-media`, exposes taxonomy alt text in the presenter payload and renders lazy-loaded `<picture>` components with accessible captions across all storytelling templates.
   - ✅ Storytelling availability slots now surface CTA buttons wired to slot-specific inquiry URLs so arrival/departure dates, resource kind and resource codes prefill the inquiry flow.
   - ✅ Featured packages now display as scope-aware groups with inquiry CTA buttons and a campus-wide fallback when scope metadata is missing.
@@ -39,6 +40,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Resource profile API endpoints expose authenticated JSON listings/detail payloads (capacity, amenities, storytelling copy, next-availability snippets) for internal tools, guarded by `_KUNSTORT_RESOURCE_API_TOKEN_` and documented for downstream consumers.
   - ✅ Storytelling presenter payloads are now covered by PHPUnit tests while Panther smoke tests verify residencies template rendering and Lighthouse navigation timing targets.
   - ✅ Storytelling editorial & localisation styleguide ([`docs/storytelling-styleguide.md`](docs/storytelling-styleguide.md)) documents tone, imagery specs, translation workflow and layout cues so content teams can publish updates independently.
+  - ✅ Header search hook retired in favour of a `Storytelling spotlight` ribbon that surfaces programme highlights and inquiry CTAs directly beneath the navigation.
 
 ## Phase 3 – Operations Automation (🚧 In progress)
 - ✅ **Housekeeping automation** – the `kloperations` module now generates arrival/checkout housekeeping tasks via cron, syncs booking lifecycle statuses and exposes an Operations → Tasks console. Architectural notes live in [`docs/blueprints/operations-automation.md`](docs/blueprints/operations-automation.md) with implementation details tracked in [`devtasks/operations-automation.task.md`](devtasks/operations-automation.task.md).

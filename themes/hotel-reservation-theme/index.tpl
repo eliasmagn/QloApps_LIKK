@@ -23,8 +23,9 @@
 {block name='page_content'}
   {if isset($use_storytelling_landing) && $use_storytelling_landing}
     {include file="$tpl_dir./_partials/storytelling-critical.tpl"}
-    <div class="kl-storytelling kl-storytelling--home"
-      {if isset($storytelling.resource_key) && $storytelling.resource_key}data-kl-storytelling-resource="{$storytelling.resource_key|escape:'html':'UTF-8'}"{/if}>
+    {capture assign=storytellingSlimLayout}
+      <div class="kl-storytelling kl-storytelling--home"
+        {if isset($storytelling.resource_key) && $storytelling.resource_key}data-kl-storytelling-resource="{$storytelling.resource_key|escape:'html':'UTF-8'}"{/if}>
       <section class="kl-storytelling__hero">
         <div class="kl-storytelling__hero-copy">
           {if isset($storytelling.hero.cms) && $storytelling.hero.cms}
@@ -155,7 +156,9 @@
       {else}
         <p class="text-muted">{l s='Storytelling sections will appear soon.' d='Shop.Theme.Kunstort'}</p>
       {/if}
-    </div>
+      </div>
+    {/capture}
+    {include file="$tpl_dir./_partials/storytelling-layout-slim.tpl" content=$storytellingSlimLayout}
   {else}
     {block name='displayHomeTabContent'}
       {if isset($HOOK_HOME_TAB_CONTENT) && $HOOK_HOME_TAB_CONTENT|trim}
