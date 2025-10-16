@@ -36,15 +36,35 @@ class StorytellingTemplatePantherTest extends PantherTestCase
         $client = $this->createClientOrSkip();
 
         $crawler = $client->request('GET', 'http://127.0.0.1:9080/story/residencies');
-        $client->waitFor('#storytelling');
+        $client->waitFor('.kl-storytelling');
 
-        $this->assertGreaterThan(0, $crawler->filter('[data-story-hero]')->count(), 'Hero block missing');
-        $this->assertGreaterThan(0, $crawler->filter('[data-story-section="residencies"]')->count(), 'Residency section missing');
-        $this->assertGreaterThan(0, $crawler->filter('[data-story-packages] [data-story-package]')->count(), 'Package cards missing');
-        $this->assertGreaterThan(0, $crawler->filter('[data-story-availability] [data-slot]')->count(), 'Availability slots missing');
+        $storytelling = $crawler->filter('.kl-storytelling');
+        $this->assertGreaterThan(0, $storytelling->count(), 'Storytelling root missing');
+        $this->assertSame('residencies', $storytelling->attr('data-kl-storytelling-resource'));
+        $this->assertSame(
+            '/api/storytelling/residencies/testimonials',
+            $storytelling->attr('data-kl-storytelling-testimonials-endpoint')
+        );
+        $this->assertSame(
+            '/api/storytelling/residencies/faq',
+            $storytelling->attr('data-kl-storytelling-faq-endpoint')
+        );
+
+        $this->assertGreaterThan(0, $crawler->filter('.kl-storytelling__hero')->count(), 'Hero block missing');
+        $this->assertGreaterThan(0, $crawler->filter('.kl-storytelling__section')->count(), 'Story sections missing');
+        $this->assertGreaterThan(0, $crawler->filter('.kl-storytelling__package')->count(), 'Package cards missing');
+        $this->assertGreaterThan(0, $crawler->filter('.kl-storytelling__availability-slot')->count(), 'Availability slots missing');
+        $this->assertSame(
+            'testimonials',
+            $crawler->filter('[data-kl-storytelling-slot="testimonials"]')->attr('data-kl-storytelling-slot')
+        );
+        $this->assertSame(
+            'faq',
+            $crawler->filter('[data-kl-storytelling-slot="faq"]')->attr('data-kl-storytelling-slot')
+        );
         $this->assertStringContainsString(
             'utm_source=story_residencies_package',
-            $crawler->filter('[data-story-package] a')->attr('href')
+            $crawler->filter('.kl-storytelling__package-actions a')->attr('href')
         );
     }
 
@@ -53,7 +73,7 @@ class StorytellingTemplatePantherTest extends PantherTestCase
         $client = $this->createClientOrSkip();
 
         $client->request('GET', 'http://127.0.0.1:9080/story/residencies');
-        $client->waitFor('#storytelling');
+        $client->waitFor('.kl-storytelling');
 
         $navigation = $client->executeScript('return (performance.getEntriesByType("navigation")[0] || null);');
         if (!$navigation) {

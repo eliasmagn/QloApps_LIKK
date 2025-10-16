@@ -201,7 +201,7 @@ composer install
 ./vendor/bin/phpunit
 ```
 
-Run specific suites with `./vendor/bin/phpunit --testsuite Unit` or `./vendor/bin/phpunit --testsuite Storytelling`. Set `PANTHER_NO_WEBDRIVER=1` if Chrome or Chromedriver are unavailable to skip the Panther UI checks; otherwise the storytelling suite boots a lightweight PHP server that the browser exercises while asserting navigation timing thresholds.
+Run specific suites with `./vendor/bin/phpunit --testsuite Unit` or `./vendor/bin/phpunit --testsuite Storytelling`. Set `PANTHER_NO_WEBDRIVER=1` if Chrome or Chromedriver are unavailable to skip the Panther UI checks; otherwise the storytelling suite boots a lightweight PHP server that the browser exercises while asserting navigation timing thresholds. The router fixture now boots Smarty, renders `themes/hotel-reservation-theme/storytelling/residencies.tpl` and exposes the `data-kl-storytelling-*` attributes that the assertions expect, so failures reflect the live template markup instead of a synthetic HTML stub.
 
 ## Known issues
 

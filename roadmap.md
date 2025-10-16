@@ -39,6 +39,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ The Our Properties controller/template now reuse the storytelling presenter to showcase residency, atelier and gastronomy summaries with inquiry CTAs while navigation and sitemap links point to the refreshed page.
   - ✅ Resource profile API endpoints expose authenticated JSON listings/detail payloads (capacity, amenities, storytelling copy, next-availability snippets) for internal tools, guarded by `_KUNSTORT_RESOURCE_API_TOKEN_` and documented for downstream consumers.
   - ✅ Storytelling presenter payloads are now covered by PHPUnit tests while Panther smoke tests verify residencies template rendering and Lighthouse navigation timing targets.
+  - ✅ The storytelling Panther router now bootstraps Smarty to render the live residencies template with `data-kl-storytelling-*` attributes, replacing the static HTML fixture and aligning browser assertions with production markup.
   - ✅ Storytelling editorial & localisation styleguide ([`docs/storytelling-styleguide.md`](docs/storytelling-styleguide.md)) documents tone, imagery specs, translation workflow and layout cues so content teams can publish updates independently.
   - ✅ Header search hook retired in favour of a `Storytelling spotlight` ribbon that surfaces programme highlights and inquiry CTAs directly beneath the navigation.
 
