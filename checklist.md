@@ -58,6 +58,8 @@
 - [x] Exposed an authenticated resource profile API that surfaces list/detail JSON with capacity, amenity, storytelling and next-availability data for internal consumers.
 - [x] Published a storytelling editorial & localisation styleguide (`docs/storytelling-styleguide.md`) covering tone, imagery specs, translation workflow and sample layouts for all storytelling templates.
 
+- [x] Published `Shop.Theme.Kunstort` translation catalogues (EN/DE) returning a shared `ShopThemeKunstort` message array so inquiry/storytelling copy localises cleanly without committed binary packs.
+
 ## In Progress
 - [ ] Rebuild front-office templates around availability storytelling.
   - [x] Scaffold presenter/services plus feature flag for the storytelling rollout.

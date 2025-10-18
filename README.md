@@ -306,5 +306,11 @@ See [`checklist.md`](checklist.md) for the current implementation status.
 ## Contributing
 This fork welcomes contributions that reinforce the above goals. Keep the codebase libre and avoid reintroducing external marketplaces or proprietary dependencies. Please open issues or discussions before large structural changes.
 
+### Translating Shop.Theme.Kunstort
+The inquiry/storytelling copy now lives in the `Shop.Theme.Kunstort` domain. Language catalogues reside in `translations/en/ShopThemeKunstort.php` and `translations/de/ShopThemeKunstort.php`. When you add or update strings:
+1. Edit the PHP catalogues, keeping placeholders (e.g. `%count%`, `%price%`) intact. Each file returns an array keyed by `ShopThemeKunstort` so Symfony's translator can load the domain without extra configuration.
+2. If you need downloadable language packs for deployments, generate them locally with PrestaShop's translation exporter or a short `tar | gzip` pipeline, but do not commit the resulting archives—this repository avoids binary assets.
+3. Mirror updates across both languages or leave a TODO note when native translations are pending.
+
 ## License
 The original QloApps core remains licensed under OSL-3.0. Custom additions in this fork inherit the same license unless stated otherwise. Review [`LICENSE.md`](LICENSE.md) for details.

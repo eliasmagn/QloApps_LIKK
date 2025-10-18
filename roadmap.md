@@ -41,6 +41,7 @@ This roadmap tracks how the Kunstort Lehnin fork evolves from a de-bloated QloAp
   - ✅ Storytelling presenter payloads are now covered by PHPUnit tests while Panther smoke tests verify residencies template rendering and Lighthouse navigation timing targets.
   - ✅ The storytelling Panther router now bootstraps Smarty to render the live residencies template with `data-kl-storytelling-*` attributes, replacing the static HTML fixture and aligning browser assertions with production markup.
   - ✅ Storytelling editorial & localisation styleguide ([`docs/storytelling-styleguide.md`](docs/storytelling-styleguide.md)) documents tone, imagery specs, translation workflow and layout cues so content teams can publish updates independently.
+  - ✅ `Shop.Theme.Kunstort` translation domain ships with English/German catalogues (via `translations/{en,de}/ShopThemeKunstort.php`) so Symfony lookups and the back-office translator expose the new inquiry/storytelling strings without requiring bundled archives.
   - ✅ Header search hook retired in favour of a `Storytelling spotlight` ribbon that surfaces programme highlights and inquiry CTAs directly beneath the navigation.
 
 ## Phase 3 – Operations Automation (🚧 In progress)

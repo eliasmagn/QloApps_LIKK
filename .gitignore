@@ -226,10 +226,13 @@ admin/themes/default/css/screen.css
 
 /translations/**
 !/translations/index.php
-!/translations/en.gzip
 
 !/translations/export/
 !/translations/export/index.php
+!/translations/en/
+!/translations/en/ShopThemeKunstort.php
+!/translations/de/
+!/translations/de/ShopThemeKunstort.php
 
 /mails/*
 !/mails/.htaccess
