@@ -37,6 +37,14 @@ If you have an idea to make the system more optimized and you can make the syste
 
 The better-written code the better the software performance.
 
+### Translating Shop.Theme.Kunstort
+
+The residency storytelling UI now pulls copy from the `Shop.Theme.Kunstort` translation domain. To update or add a language:
+
+1. Edit the catalogue in `translations/<locale>/ShopThemeKunstort.php` (English and German ship in `translations/en` and `translations/de`). Keep placeholders such as `%count%` or `%price%` intact and make sure the returned array stays nested under the `ShopThemeKunstort` key.
+2. Generate downloadable packs locally only when you need them for deployment (`php bin/console prestashop:translations:export ...` or a short `tar | gzip` pipeline). Do not commit the resulting archives—this repository excludes binary assets on purpose.
+3. Mirror updates across languages or leave follow-up notes in the merge request when native copy still needs review.
+
 ### Report Security Issues
 
 QloApps values the contributions of the security research community, and we look forward to working with you to minimize risk to QloApps users.
