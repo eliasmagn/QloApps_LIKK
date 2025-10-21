@@ -21,6 +21,36 @@ class AteliersControllerCore extends FrontController
 {
     public $php_self = 'ateliers';
 
+    public function init()
+    {
+        parent::init();
+
+        $breadcrumbLabel = $this->trans('Studios & ateliers', array(), 'Shop.Theme.Kunstort');
+        $headline = $this->trans('Atelier storytelling', array(), 'Shop.Theme.Kunstort');
+        $description = $this->trans('Explore the production studios, rehearsal rooms and ateliers ready for Kunstort Lehnin residencies, including equipment details, availability cues and inquiry guidance.', array(), 'Shop.Theme.Kunstort');
+
+        $shopName = Configuration::get('PS_SHOP_NAME', (int) $this->context->language->id);
+        $metaTitle = $headline;
+        if (!empty($shopName)) {
+            $metaTitle = sprintf('%s – %s', $headline, $shopName);
+        }
+
+        $canonicalLink = $this->context->link ? $this->context->link->getPageLink($this->php_self, true) : null;
+
+        $assignments = array(
+            'meta_title' => $metaTitle,
+            'meta_description' => $description,
+            'path' => $breadcrumbLabel,
+        );
+
+        if ($canonicalLink) {
+            $assignments['canonical_link'] = $canonicalLink;
+        }
+
+        $this->context->smarty->assign($assignments);
+        $this->show_breadcrump = true;
+    }
+
     public function setMedia()
     {
         parent::setMedia();

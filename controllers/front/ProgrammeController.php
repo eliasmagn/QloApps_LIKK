@@ -21,6 +21,36 @@ class ProgrammeControllerCore extends FrontController
 {
     public $php_self = 'programme';
 
+    public function init()
+    {
+        parent::init();
+
+        $breadcrumbLabel = $this->trans('Programme spaces', array(), 'Shop.Theme.Kunstort');
+        $headline = $this->trans('Programme storytelling', array(), 'Shop.Theme.Kunstort');
+        $description = $this->trans('Review event halls, rehearsal rooms and programme spaces ready for workshops, showcases and retreats at Kunstort Lehnin, with scheduling highlights and inquiry direction.', array(), 'Shop.Theme.Kunstort');
+
+        $shopName = Configuration::get('PS_SHOP_NAME', (int) $this->context->language->id);
+        $metaTitle = $headline;
+        if (!empty($shopName)) {
+            $metaTitle = sprintf('%s – %s', $headline, $shopName);
+        }
+
+        $canonicalLink = $this->context->link ? $this->context->link->getPageLink($this->php_self, true) : null;
+
+        $assignments = array(
+            'meta_title' => $metaTitle,
+            'meta_description' => $description,
+            'path' => $breadcrumbLabel,
+        );
+
+        if ($canonicalLink) {
+            $assignments['canonical_link'] = $canonicalLink;
+        }
+
+        $this->context->smarty->assign($assignments);
+        $this->show_breadcrump = true;
+    }
+
     public function setMedia()
     {
         parent::setMedia();

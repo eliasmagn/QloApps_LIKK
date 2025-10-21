@@ -31,12 +31,28 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>{$meta_title|escape:'html':'UTF-8'}</title>
-		{if isset($meta_description) AND $meta_description}
-			<meta name="description" content="{$meta_description|escape:'html':'UTF-8'}" />
-		{/if}
-		{if isset($meta_keywords) AND $meta_keywords}
-			<meta name="keywords" content="{$meta_keywords|escape:'html':'UTF-8'}" />
-		{/if}
+                {if isset($meta_description) AND $meta_description}
+                        <meta name="description" content="{$meta_description|escape:'html':'UTF-8'}" />
+                {/if}
+                {if isset($canonical_link) && $canonical_link}
+                        <link rel="canonical" href="{$canonical_link|escape:'html':'UTF-8'}" />
+                {/if}
+                <meta property="og:type" content="website" />
+                {if isset($shop_name) && $shop_name}
+                        <meta property="og:site_name" content="{$shop_name|escape:'html':'UTF-8'}" />
+                {/if}
+                {if isset($meta_title) && $meta_title}
+                        <meta property="og:title" content="{$meta_title|escape:'html':'UTF-8'}" />
+                {/if}
+                {if isset($meta_description) AND $meta_description}
+                        <meta property="og:description" content="{$meta_description|escape:'html':'UTF-8'}" />
+                {/if}
+                {if isset($canonical_link) && $canonical_link}
+                        <meta property="og:url" content="{$canonical_link|escape:'html':'UTF-8'}" />
+                {/if}
+                {if isset($meta_keywords) AND $meta_keywords}
+                        <meta name="keywords" content="{$meta_keywords|escape:'html':'UTF-8'}" />
+                {/if}
 		<meta name="generator" content="QloApps" />
 		<meta name="robots" content="{if isset($nobots)}no{/if}index,{if isset($nofollow) && $nofollow}no{/if}follow" />
 		<meta name="viewport" content="width=device-width, minimum-scale=0.25, maximum-scale=1.6, initial-scale=1.0" />
