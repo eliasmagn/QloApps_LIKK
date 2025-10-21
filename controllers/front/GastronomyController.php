@@ -21,6 +21,36 @@ class GastronomyControllerCore extends FrontController
 {
     public $php_self = 'gastronomy';
 
+    public function init()
+    {
+        parent::init();
+
+        $breadcrumbLabel = $this->trans('Dining & gastronomy', array(), 'Shop.Theme.Kunstort');
+        $headline = $this->trans('Gastronomy storytelling', array(), 'Shop.Theme.Kunstort');
+        $description = $this->trans('Learn about communal dining, catering partnerships and gastronomy experiences supporting Kunstort Lehnin residencies, with availability cues and inquiry contact points.', array(), 'Shop.Theme.Kunstort');
+
+        $shopName = Configuration::get('PS_SHOP_NAME', (int) $this->context->language->id);
+        $metaTitle = $headline;
+        if (!empty($shopName)) {
+            $metaTitle = sprintf('%s – %s', $headline, $shopName);
+        }
+
+        $canonicalLink = $this->context->link ? $this->context->link->getPageLink($this->php_self, true) : null;
+
+        $assignments = array(
+            'meta_title' => $metaTitle,
+            'meta_description' => $description,
+            'path' => $breadcrumbLabel,
+        );
+
+        if ($canonicalLink) {
+            $assignments['canonical_link'] = $canonicalLink;
+        }
+
+        $this->context->smarty->assign($assignments);
+        $this->show_breadcrump = true;
+    }
+
     public function setMedia()
     {
         parent::setMedia();
