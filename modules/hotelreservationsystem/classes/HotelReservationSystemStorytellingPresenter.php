@@ -107,7 +107,7 @@ class HotelReservationSystemStorytellingPresenter
      */
     public function isEnabled()
     {
-        return defined('_KUNSTORT_STORYTELLING_LAUNCH_') && _KUNSTORT_STORYTELLING_LAUNCH_;
+        return HotelReservationSystemStorytellingConfiguration::isEnabled();
     }
 
     /**

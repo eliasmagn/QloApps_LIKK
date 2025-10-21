@@ -118,7 +118,7 @@
                                                                 <div class="row">
                                                                         <div class="col-xs-12">
                                                                                 {assign var='residencyChainName' value=Configuration::get('WK_HTL_CHAIN_NAME', $cookie->id_lang)}
-                                                                                {assign var='storytellingLaunch' value=(isset($smarty.const._KUNSTORT_STORYTELLING_LAUNCH_) && $smarty.const._KUNSTORT_STORYTELLING_LAUNCH_)}
+                                                                                {assign var='storytellingLaunch' value=$wk_storytelling_enabled}
                                                                                 <nav class="residency-primary-nav" role="navigation" aria-label="{l s='Residency primary navigation'}">
                                                                                         <ul class="nav nav-pills nav-justified">
                                                                                                 <li>

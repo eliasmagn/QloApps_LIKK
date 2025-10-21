@@ -175,7 +175,7 @@ class AdminHotelGeneralSettingsController extends ModuleAdminController
                         'name' => 'WK_HOTEL_HEADER_IMAGE',
                         'url' => _PS_IMG_,
                     ),
-                     'WK_DISPLAY_PROPERTIES_LINK_IN_HEADER' => array(
+                    'WK_DISPLAY_PROPERTIES_LINK_IN_HEADER' => array(
                         'title' => $this->l('Display Our Properties link in Header'),
                         'cast' => 'intval',
                         'type' => 'bool',
@@ -191,6 +191,23 @@ class AdminHotelGeneralSettingsController extends ModuleAdminController
                             ),
                         ),
                         'hint' => $this->l('Display Our Properties link in header in the front office'),
+                    ),
+                    HotelReservationSystemStorytellingConfiguration::CONFIGURATION_KEY => array(
+                        'title' => $this->l('Enable storytelling landing pages'),
+                        'cast' => 'intval',
+                        'type' => 'bool',
+                        'default' => '0',
+                        'values' => array(
+                            array(
+                                'id' => 'active_on',
+                                'value' => 1,
+                            ),
+                            array(
+                                'id' => 'active_off',
+                                'value' => 0,
+                            ),
+                        ),
+                        'hint' => $this->l('Expose residencies, ateliers, gastronomy and programme storytelling pages across the front-office.'),
                     ),
                     'WK_DISPLAY_CONTACT_PAGE_HOTEL_LIST' => array(
                         'title' => $this->l('Display Contact Page Hotel List'),
