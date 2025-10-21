@@ -33,7 +33,7 @@ class HotelReservationSystem extends Module
     {
         $this->name = 'hotelreservationsystem';
         $this->tab = 'administration';
-        $this->version = '1.9.0';
+        $this->version = '1.9.1';
         $this->author = 'Webkul';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -61,6 +61,8 @@ class HotelReservationSystem extends Module
 
     public function hookDisplayHeader()
     {
+        HotelReservationSystemStorytellingConfiguration::assignToSmarty($this->context);
+
         if (!Configuration::get('PS_CATALOG_MODE')) {
             /*To remove room from cart before todays date*/
             if (isset($this->context->cart->id) && $this->context->cart->id) {
@@ -85,6 +87,8 @@ class HotelReservationSystem extends Module
 
     public function hookDisplayNav()
     {
+        HotelReservationSystemStorytellingConfiguration::assignToSmarty($this->context);
+
         $this->smarty->assign(array(
             'phone' => Configuration::get('WK_CUSTOMER_SUPPORT_PHONE_NUMBER'),
             'email' => Configuration::get('WK_CUSTOMER_SUPPORT_EMAIL'),
@@ -95,6 +99,8 @@ class HotelReservationSystem extends Module
 
     public function hookDisplayExternalNavigationHook()
     {
+        HotelReservationSystemStorytellingConfiguration::assignToSmarty($this->context);
+
         $this->smarty->assign(array(
             'phone' => Configuration::get('WK_CUSTOMER_SUPPORT_PHONE_NUMBER'),
             'email' => Configuration::get('WK_CUSTOMER_SUPPORT_EMAIL'),
@@ -105,6 +111,8 @@ class HotelReservationSystem extends Module
 
     public function hookDisplayHome($params)
     {
+        HotelReservationSystemStorytellingConfiguration::assignToSmarty($this->context);
+
         $idLang = (int) $this->context->language->id;
         $idShop = (int) $this->context->shop->id;
         $profiles = KLResourceProfile::getPublishedProfilesWithDetails($idLang, $idShop);
@@ -742,6 +750,8 @@ class HotelReservationSystem extends Module
             Configuration::updateValue('KL_QUOTE_MAIL_SECRET', Tools::passwdGen(32));
         }
 
+        Configuration::updateValue(HotelReservationSystemStorytellingConfiguration::CONFIGURATION_KEY, 0);
+
         return true;
     }
 
@@ -865,7 +875,8 @@ class HotelReservationSystem extends Module
             'WK_DISPLAY_CONTACT_PAGE_HOTEL_LIST',
             'KL_QUOTE_MAIL_FROM_ADDRESS',
             'KL_QUOTE_MAIL_REPLY_TO_ADDRESS',
-            'KL_QUOTE_MAIL_SECRET'
+            'KL_QUOTE_MAIL_SECRET',
+            HotelReservationSystemStorytellingConfiguration::CONFIGURATION_KEY,
         );
         foreach ($configKeys as $key) {
             if (!Configuration::deleteByName($key)) {

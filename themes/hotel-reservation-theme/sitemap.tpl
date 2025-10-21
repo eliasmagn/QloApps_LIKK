@@ -190,7 +190,7 @@
                         {l s='Residencies & spaces' d='Shop.Theme.Kunstort'}
                     </a>
                 </li>
-                {if isset($smarty.const._KUNSTORT_STORYTELLING_LAUNCH_) && $smarty.const._KUNSTORT_STORYTELLING_LAUNCH_}
+                {if $wk_storytelling_enabled}
                     <li>
                         <a href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Residency storytelling' d='Shop.Theme.Kunstort'}">
                             {l s='Residencies' d='Shop.Theme.Kunstort'}

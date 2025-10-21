@@ -1,5 +1,5 @@
 <div class="col-xs-6 col-sm-5 col-md-4 pull-right padding-top-5">
-    {assign var='storytellingLaunch' value=(isset($smarty.const._KUNSTORT_STORYTELLING_LAUNCH_) && $smarty.const._KUNSTORT_STORYTELLING_LAUNCH_)}
+    {assign var='storytellingLaunch' value=$wk_storytelling_enabled}
     <div class="residency-top-actions">
         <ul class="list-unstyled residency-top-links">
             <li>

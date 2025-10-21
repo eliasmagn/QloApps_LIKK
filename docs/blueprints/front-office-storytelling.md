@@ -81,7 +81,7 @@ The FAQ action mirrors the structure with the `faq` key. Clients should treat `r
 ## Rollout Plan
 1. **Scaffolding (Milestone Kick-off)**
    - Build the presenter/service layer, register CMS keys, and stub Smarty templates with placeholder sections. ✅ Implemented via `HotelReservationSystemStorytellingPresenter`, a new `ResidenciesController` front controller and `themes/hotel-reservation-theme/storytelling/residencies.tpl`.
-   - Ship feature flags in `config/defines_custom.inc.php` for incremental rollout (`_KUNSTORT_STORYTELLING_LAUNCH_`, default `false`).
+   - Ship an admin-controlled toggle under *Hotel Reservation System → General Settings* so rollout can be staged without editing `config/defines_custom.inc.php`.
    - CMS slot identifiers for the residency landing: `KL_STORY_RESIDENCIES_HERO`, `KL_STORY_RESIDENCIES_AVAILABILITY`, `KL_STORY_RESIDENCIES_PRACTICAL`, `KL_STORY_RESIDENCIES_FAQ`, `KL_STORY_RESIDENCIES_TESTIMONIALS`. Populate each with CMS page IDs via `Configuration` to hydrate the template.
 2. **Residencies Template**
    - Implement full content flow and availability snapshot.
