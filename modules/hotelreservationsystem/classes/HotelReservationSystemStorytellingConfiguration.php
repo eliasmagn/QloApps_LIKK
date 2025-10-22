@@ -22,12 +22,36 @@ class HotelReservationSystemStorytellingConfiguration
     const CONFIGURATION_KEY = 'WK_STORYTELLING_ENABLED';
 
     /**
+     * Ensures the configuration toggle exists for installs that previously
+     * relied on the `_KUNSTORT_STORYTELLING_LAUNCH_` constant.
+     *
+     * @return void
+     */
+    public static function bootstrapFromLegacyConstant()
+    {
+        if (Configuration::hasKey(self::CONFIGURATION_KEY)) {
+            return;
+        }
+
+        if (!defined('_KUNSTORT_STORYTELLING_LAUNCH_')) {
+            return;
+        }
+
+        Configuration::updateValue(
+            self::CONFIGURATION_KEY,
+            (int) _KUNSTORT_STORYTELLING_LAUNCH_
+        );
+    }
+
+    /**
      * Checks whether storytelling pages should be exposed on the front-office.
      *
      * @return bool
      */
     public static function isEnabled()
     {
+        self::bootstrapFromLegacyConstant();
+
         if (Configuration::hasKey(self::CONFIGURATION_KEY)) {
             return (bool) Configuration::get(self::CONFIGURATION_KEY);
         }

@@ -33,11 +33,13 @@ class HotelReservationSystem extends Module
     {
         $this->name = 'hotelreservationsystem';
         $this->tab = 'administration';
-        $this->version = '1.9.1';
+        $this->version = '1.9.2';
         $this->author = 'Webkul';
         $this->need_instance = 0;
         $this->bootstrap = true;
         parent::__construct();
+
+        HotelReservationSystemStorytellingConfiguration::bootstrapFromLegacyConstant();
         $this->displayName = $this->l('Hotel Booking and Reservation System');
         $this->description = $this->l('This module is the backbone of QloApps and handles all booking processes on your website.');
         $this->confirmUninstall = $this->l('This module should not be uninstalled under any circumstances. Doing so may cause undesired results.');

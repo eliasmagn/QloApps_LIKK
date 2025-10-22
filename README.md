@@ -68,6 +68,8 @@ Use the **Storytelling landing pages** toggle exposed in *Hotel Reservation Syst
 2. Open the **Website Configuration** tab.
 3. Switch the **Storytelling landing pages** toggle to **Yes** to expose residencies, ateliers, gastronomy and programme storytelling routes in navigation, or toggle it to **No** to hide them from guests.
 
+The switch persists to the `WK_STORYTELLING_ENABLED` configuration key so environments stay in sync across deploys. Legacy installs that still define `_KUNSTORT_STORYTELLING_LAUNCH_` continue to work—the constant is read once to seed the new configuration value during upgrade/bootstrap.
+
 When the flag is enabled the home page also consumes `presentHomeLanding()` to stitch together a campus overview: residencies, ateliers, gastronomy and programme sections appear inline with live availability slots, compact profile cards, featured package highlights and inquiry CTAs that deep-link into the form with prefilled interests.
 
 Storytelling templates expose `data-kl-storytelling-resource` plus slot-specific endpoint attributes that `storytelling-content.js` uses to fetch the cached `testimonials`/`faq` JSON payloads after page load. The helper respects same-origin credentials, normalises resource keys, honours the `resource_groups` ordering returned by the endpoint and keeps the server-rendered CMS copy as a fallback should the JSON lookup fail.
