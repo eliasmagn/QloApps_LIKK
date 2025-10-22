@@ -23,10 +23,9 @@ if (!defined('_PS_VERSION_')) {
 
 require_once _PS_MODULE_DIR_.'hotelreservationsystem/classes/HotelReservationSystemStorytellingConfiguration.php';
 
-function upgrade_module_1_9_1(HotelReservationSystem $module)
+function upgrade_module_1_9_2(HotelReservationSystem $module)
 {
     HotelReservationSystemStorytellingConfiguration::bootstrapFromLegacyConstant();
-
     HotelReservationSystemStorytellingConfiguration::assignToSmarty();
 
     return true;

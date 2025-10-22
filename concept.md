@@ -13,7 +13,7 @@ Create a lean, fully self-hosted hospitality operations tool tailored to Kunstor
 - The `hotelreservationsystem` module remains the functional core (ObjectModels for rooms, bookings, pricing).
 - PrestaShop marketplace hooks have been disabled globally via `_QLOAPP_DISABLE_MARKETPLACE_`.
 - Admin module catalogue interactions are short-circuited to keep the back office free from external promotions.
-- `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`).
+- `config/defines_custom.inc.php` houses feature flags for the Kunstort distribution (e.g. `_KUNSTORT_CORE_MODE_ = 'inquiry'`) while legacy flags such as `_KUNSTORT_STORYTELLING_LAUNCH_` now simply seed the persisted `WK_STORYTELLING_ENABLED` configuration that the Hotel General Settings UI manages.
 - Legacy offline payment modules (bank wire, cheque) and the PayPal Commerce gateway have been removed to keep the stack focused on inquiry-driven fulfilment.
 - When `_KUNSTORT_CORE_MODE_` is set to `inquiry`, the legacy checkout controllers short-circuit to the inquiry landing page (and AJAX calls return friendly errors) instead of exposing cart mechanics, while the full cart-first flow immediately returns once the flag is cleared.
 - Inquiry mode now also blocks the cart controller from mutating cart contents so direct requests cannot create ghost carts behind the scenes, and the original checkout templates/controllers remain intact for instant fallback.

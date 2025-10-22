@@ -57,7 +57,7 @@
 - [x] Finalised the storytelling content API payload (resource/resource_groups metadata) and hardened the front-end hydration helper so templates consume the cached testimonials/FAQ endpoints consistently.
 - [x] Exposed an authenticated resource profile API that surfaces list/detail JSON with capacity, amenity, storytelling and next-availability data for internal consumers.
 - [x] Published a storytelling editorial & localisation styleguide (`docs/storytelling-styleguide.md`) covering tone, imagery specs, translation workflow and sample layouts for all storytelling templates.
-- [x] Surfaced a configuration-backed storytelling toggle in Hotel General Settings with upgrade coverage for legacy `_KUNSTORT_STORYTELLING_LAUNCH_` installs.
+- [x] Surfaced a configuration-backed storytelling toggle (`WK_STORYTELLING_ENABLED`) in Hotel General Settings with upgrade coverage for legacy `_KUNSTORT_STORYTELLING_LAUNCH_` installs.
 
 - [x] Published `Shop.Theme.Kunstort` translation catalogues (EN/DE) returning a shared `ShopThemeKunstort` message array so inquiry/storytelling copy localises cleanly without committed binary packs.
 - [x] Added translated metadata, canonical links and breadcrumbs for storytelling landings with matching Open Graph tags in the theme header.
