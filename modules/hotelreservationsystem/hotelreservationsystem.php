@@ -33,7 +33,7 @@ class HotelReservationSystem extends Module
     {
         $this->name = 'hotelreservationsystem';
         $this->tab = 'administration';
-        $this->version = '1.9.2';
+        $this->version = '1.9.3';
         $this->author = 'Webkul';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -59,6 +59,56 @@ class HotelReservationSystem extends Module
         } else {
             KLStoryAvailabilityCache::invalidateAll();
         }
+    }
+
+    /**
+     * Ensure SEO-friendly storytelling routes resolve to their controllers and refresh the dispatcher cache.
+     *
+     * @return bool
+     */
+    public function synchronizeStorytellingRoutes()
+    {
+        $routes = array(
+            'residencies' => 'residencies',
+            'ateliers' => 'studios',
+            'gastronomy' => 'gastronomy',
+            'programme' => 'programme',
+        );
+
+        $shopIds = Shop::getShops(true, null, true);
+        if (!is_array($shopIds)) {
+            $shopIds = array();
+        }
+
+        foreach ($routes as $routeId => $rule) {
+            if (!Configuration::updateValue('PS_ROUTE_'.$routeId, $rule)) {
+                return false;
+            }
+
+            foreach ($shopIds as $idShop) {
+                if (!Configuration::updateValue('PS_ROUTE_'.$routeId, $rule, false, null, (int) $idShop)) {
+                    return false;
+                }
+            }
+        }
+
+        Dispatcher::$instance = null;
+
+        if (Configuration::get('PS_REWRITING_SETTINGS')) {
+            try {
+                Tools::generateHtaccess();
+            } catch (Exception $exception) {
+                PrestaShopLogger::addLog(
+                    sprintf(
+                        'Failed regenerating .htaccess after syncing storytelling routes: %s',
+                        $exception->getMessage()
+                    ),
+                    3
+                );
+            }
+        }
+
+        return true;
     }
 
     public function hookDisplayHeader()
@@ -753,6 +803,10 @@ class HotelReservationSystem extends Module
         }
 
         Configuration::updateValue(HotelReservationSystemStorytellingConfiguration::CONFIGURATION_KEY, 0);
+
+        if (!$this->synchronizeStorytellingRoutes()) {
+            return false;
+        }
 
         return true;
     }
