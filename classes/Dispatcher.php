@@ -106,6 +106,26 @@ class DispatcherCore
                 'fc' => 'module',
             ),
         ),
+        'residencies' => array(
+            'controller' => 'residencies',
+            'rule' => 'residencies',
+            'keywords' => array(),
+        ),
+        'ateliers' => array(
+            'controller' => 'ateliers',
+            'rule' => 'studios',
+            'keywords' => array(),
+        ),
+        'gastronomy' => array(
+            'controller' => 'gastronomy',
+            'rule' => 'gastronomy',
+            'keywords' => array(),
+        ),
+        'programme' => array(
+            'controller' => 'programme',
+            'rule' => 'programme',
+            'keywords' => array(),
+        ),
         'product_rule' => array(
             'controller' =>    'product',
             'rule' =>        '{category:/}{id}-{rewrite}{-:ean13}.html',

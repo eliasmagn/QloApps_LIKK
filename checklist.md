@@ -11,6 +11,7 @@
 - [x] Blocked cart controller mutations while inquiry mode is active to prevent ghost carts.
 - [x] Replaced hook-driven header widgets with a static residency navigation and removed cart/account/newsletter/social modules from the codebase.
 - [x] Introduced a storytelling spotlight ribbon beneath the header navigation so weekly programme highlights and inquiry CTAs stay visible without the old search hook.
+- [x] Published clean storytelling slugs (`/residencies`, `/studios`, `/gastronomy`, `/programme`), refreshed navigation/sitemap links to use them and synced install/upgrade flows so rewrite rules and dispatcher caches pick up the routes automatically.
 - [x] Retired the legacy PrestaShop webservice (dispatcher now returns 410, admin tab removed, classes stubbed).
 - [x] Removed legacy bank wire, cheque and PayPal Commerce payment modules plus their theme overrides.
 - [x] Modeled a dedicated Inquiry entity plus Kanban board with reminders, assignments and mail notes that email guests when flagged.

@@ -198,7 +198,7 @@ class WkCustomNavigationLink extends ObjectModel
                 'show_at_navigation' => 1,
                 'show_at_footer' => 0,
                 'is_custom_link' => 1,
-                'link' => $objLink->getPageLink('our-properties'),
+                'link' => $objLink->getPageLink('residencies'),
             ),
         );
 

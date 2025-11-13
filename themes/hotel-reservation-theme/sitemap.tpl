@@ -186,7 +186,7 @@
                     </li>
                 {/foreach}
                 <li>
-                    <a href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}" title="{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}">
+                    <a href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}">
                         {l s='Residencies & spaces' d='Shop.Theme.Kunstort'}
                     </a>
                 </li>

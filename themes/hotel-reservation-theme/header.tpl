@@ -120,34 +120,22 @@
                                                                                 {assign var='residencyChainName' value=Configuration::get('WK_HTL_CHAIN_NAME', $cookie->id_lang)}
                                                                                 {assign var='storytellingLaunch' value=$wk_storytelling_enabled}
                                                                                 <nav class="residency-primary-nav" role="navigation" aria-label="{l s='Residency primary navigation'}">
+                                                                                        {assign var='residencyNavResidenciesLink' value=$link->getPageLink('residencies', true)}
+                                                                                        {assign var='residencyNavStudiosLink' value=$link->getPageLink('ateliers', true)}
+                                                                                        {assign var='residencyNavGastronomyLink' value=$link->getPageLink('gastronomy', true)}
+                                                                                        {assign var='residencyNavProgrammeLink' value=$link->getPageLink('programme', true)}
                                                                                         <ul class="nav nav-pills nav-justified">
                                                                                                 <li>
-                                                                                                        {if $storytellingLaunch}
-                                                                                                                <a href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}">{l s='Residences'}</a>
-                                                                                                        {else}
-                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#residences-overview">{l s='Residences'}</a>
-                                                                                                        {/if}
+                                                                                                        <a href="{$residencyNavResidenciesLink|escape:'html':'UTF-8'}">{l s='Residences'}</a>
                                                                                                 </li>
                                                                                                 <li>
-                                                                                                        {if $storytellingLaunch}
-                                                                                                                <a href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}">{l s='Studios & ateliers'}</a>
-                                                                                                        {else}
-                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#resident-ateliers">{l s='Studios & ateliers'}</a>
-                                                                                                        {/if}
+                                                                                                        <a href="{$residencyNavStudiosLink|escape:'html':'UTF-8'}">{l s='Studios & ateliers'}</a>
                                                                                                 </li>
                                                                                                 <li>
-                                                                                                        {if $storytellingLaunch}
-                                                                                                                <a href="{$link->getPageLink('gastronomy', true)|escape:'html':'UTF-8'}">{l s='Dining & gastronomy'}</a>
-                                                                                                        {else}
-                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#dining">{l s='Dining & gastronomy'}</a>
-                                                                                                        {/if}
+                                                                                                        <a href="{$residencyNavGastronomyLink|escape:'html':'UTF-8'}">{l s='Dining & gastronomy'}</a>
                                                                                                 </li>
                                                                                                 <li>
-                                                                                                        {if $storytellingLaunch}
-                                                                                                                <a href="{$link->getPageLink('programme', true)|escape:'html':'UTF-8'}">{l s='Programme spaces'}</a>
-                                                                                                        {else}
-                                                                                                                <a href="{$base_dir|escape:'html':'UTF-8'}#programme-spaces">{l s='Programme spaces'}</a>
-                                                                                                        {/if}
+                                                                                                        <a href="{$residencyNavProgrammeLink|escape:'html':'UTF-8'}">{l s='Programme spaces'}</a>
                                                                                                 </li>
                                                                                                 <li><a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='Contact'}</a></li>
                                                                                         </ul>
@@ -188,17 +176,14 @@
                                                                                                 {/if}
                                                                                         </div>
                                                                                         <div class="residency-quick-actions">
-                                                                                                {if $storytellingLaunch}
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}" title="{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}">{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('residencies', true)|escape:'html':'UTF-8'}" title="{l s='Explore residencies' d='Shop.Theme.Kunstort'}">{l s='Residencies' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('ateliers', true)|escape:'html':'UTF-8'}" title="{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}">{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('gastronomy', true)|escape:'html':'UTF-8'}" title="{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}">{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}</a>
-                                                                                                {else}
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}" title="{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}">{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}#campus-residences" title="{l s='Residency houses' d='Shop.Theme.Kunstort'}">{l s='Residencies' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}#campus-ateliers" title="{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}">{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}</a>
-                                                                                                        <a class="our_properties_link" href="{$link->getPageLink('our-properties', true)|escape:'html':'UTF-8'}#campus-gastronomy" title="{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}">{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}</a>
-                                                                                                {/if}
+                                                                                                {assign var='ourPropertiesLink' value=$link->getPageLink('our-properties', true)}
+                                                                                                {assign var='residenciesLink' value=$link->getPageLink('residencies', true)}
+                                                                                                {assign var='studiosLink' value=$link->getPageLink('ateliers', true)}
+                                                                                                {assign var='gastronomyLink' value=$link->getPageLink('gastronomy', true)}
+                                                                                                <a class="our_properties_link" href="{$ourPropertiesLink|escape:'html':'UTF-8'}" title="{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}">{l s='Residencies & spaces' d='Shop.Theme.Kunstort'}</a>
+                                                                                                <a class="our_properties_link" href="{$residenciesLink|escape:'html':'UTF-8'}" title="{l s='Explore residencies' d='Shop.Theme.Kunstort'}">{l s='Residencies' d='Shop.Theme.Kunstort'}</a>
+                                                                                                <a class="our_properties_link" href="{$studiosLink|escape:'html':'UTF-8'}" title="{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}">{l s='Studios & ateliers' d='Shop.Theme.Kunstort'}</a>
+                                                                                                <a class="our_properties_link" href="{$gastronomyLink|escape:'html':'UTF-8'}" title="{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}">{l s='Dining & gastronomy' d='Shop.Theme.Kunstort'}</a>
                                                                                         </div>
                                                                                 </div>
                                                                         </div>
